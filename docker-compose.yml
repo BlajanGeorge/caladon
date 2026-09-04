@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: caladon
+      POSTGRES_USER: caladon
+      POSTGRES_PASSWORD: caladon
+    ports:
+      - "5433:5432"
+    volumes:
+      - caladon-pgdata:/var/lib/postgresql/data
+
+volumes:
+  caladon-pgdata:
