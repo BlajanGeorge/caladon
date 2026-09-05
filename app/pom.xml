@@ -19,6 +19,10 @@
             <groupId>com.caladon</groupId>
             <artifactId>users</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.caladon</groupId>
+            <artifactId>worlds</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -4,10 +4,13 @@ Backend for a browser strategy MMO. See [ARCHITECTURE.md](ARCHITECTURE.md) for t
 
 ## Modules
 
-| module  | contents                                                                 |
-|---------|--------------------------------------------------------------------------|
-| `users` | users, roles, JWT authentication (`/api/v1/auth/*`), Flyway migrations   |
-| `app`   | the runnable Spring Boot application; depends on every feature module    |
+| module   | contents                                                                                     |
+|----------|----------------------------------------------------------------------------------------------|
+| `users`  | users, roles, JWT authentication (`/api/v1/auth/*`)                                          |
+| `worlds` | world generation (terrain, city slots, barbarian villages), lifecycle, join, map viewport     |
+| `app`    | the runnable Spring Boot application; depends on every feature module                        |
+
+Each feature module owns its Flyway migrations (`users`: V1–V99, `worlds`: V100–V199).
 
 ## Requirements
 
@@ -34,6 +37,15 @@ mvn test
 The API tests in `users` start a throwaway PostgreSQL via Testcontainers and are skipped when Docker
 is not available.
 
+## Administrators
+
+Registration always creates a `PLAYER`. To get an administrator, promote an account directly in
+the database:
+
+```sql
+UPDATE users SET role = 'ADMINISTRATOR' WHERE email = 'admin@example.com';
+```
+
 ## Try the API
 
 ```bash
@@ -45,4 +57,11 @@ curl -s -X POST $B/login -H 'Content-Type: application/json' \
 curl -s -X POST $B/refresh -H 'Content-Type: application/json' -d '{"refreshToken":"<jwt>"}'
 curl -i -X POST $B/logout -H 'Authorization: Bearer <access jwt>' \
   -H 'Content-Type: application/json' -d '{"refreshToken":"<jwt>"}'
+
+# worlds (W = http://localhost:8080/api/v1, T = an access token)
+curl -s -X POST $W/admin/worlds -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"name":"Caladon I"}'
+curl -s -X POST $W/admin/worlds/1/approve -H "Authorization: Bearer $T"
+curl -s $W/worlds -H "Authorization: Bearer $T"
+curl -s -X POST $W/worlds/1/join -H "Authorization: Bearer $T"
+curl -s "$W/worlds/1/map?startX=205&startY=205&endX=294&endY=294" -H "Authorization: Bearer $T"
 ```

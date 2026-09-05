@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+caladon:
+  jwt:
+    secret: test-secret-test-secret-test-secret-test-secret
+    access-token-ttl: 1h
+    refresh-token-ttl: 7d

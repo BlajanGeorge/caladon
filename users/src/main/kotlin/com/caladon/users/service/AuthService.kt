@@ -35,6 +35,7 @@ class AuthService(
             email = normalizedEmail,
             passwordHash = passwordEncoder.encode(rawPassword),
             nickname = normalizedNickname,
+            createdAt = clock.instant(),
         )
         try {
             userRepository.saveAndFlush(user)
