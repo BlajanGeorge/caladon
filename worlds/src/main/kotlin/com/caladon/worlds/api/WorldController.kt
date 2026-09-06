@@ -28,8 +28,13 @@ class WorldController(private val worldService: WorldService) {
     fun join(@AuthenticationPrincipal user: AuthenticatedUser, @PathVariable id: Long): JoinResponse {
         val result = worldService.join(id, user.id)
         val c = result.startCity
-        return JoinResponse(result.worldId, StartCityResponse(c.id, c.x, c.y, c.name))
+        return JoinResponse(result.worldId, StartCityResponse(c.id, c.x, c.y, c.name, c.points))
     }
+
+    /** The caller's cities in the world (today: the start city). */
+    @GetMapping("/{id}/cities/mine")
+    fun myCities(@AuthenticationPrincipal user: AuthenticatedUser, @PathVariable id: Long): List<OwnedCityResponse> =
+        worldService.myCities(id, user.id).map { OwnedCityResponse(it.id, it.x, it.y, it.name, it.points) }
 
     @GetMapping("/{id}/map")
     fun map(

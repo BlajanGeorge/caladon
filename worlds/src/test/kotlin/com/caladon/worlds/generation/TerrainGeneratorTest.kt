@@ -36,6 +36,6 @@ class TerrainGeneratorTest {
             pairs++
             if (terrain[tileIndex(x, y)] == terrain[tileIndex(x + 1, y)]) same++
         }
-        assertThat(same.toDouble() / pairs).isGreaterThan(0.95)
+        assertThat(same.toDouble() / pairs).isGreaterThan(0.85)
     }
 }

@@ -9,6 +9,8 @@ Backend for a browser strategy MMO. See [ARCHITECTURE.md](ARCHITECTURE.md) for t
 | `users`  | users, roles, JWT authentication (`/api/v1/auth/*`)                                          |
 | `worlds` | world generation (terrain, city slots, barbarian villages), lifecycle, join, map viewport     |
 | `app`    | the runnable Spring Boot application; depends on every feature module                        |
+| `ui/`    | the single-page app (React + TypeScript + Vite); not a Maven module                          |
+| `web/assets/` | procedural placeholder sprites (`procedural-sprites.js`) and a standalone `preview.html` |
 
 Each feature module owns its Flyway migrations (`users`: V1–V99, `worlds`: V100–V199).
 
@@ -16,6 +18,7 @@ Each feature module owns its Flyway migrations (`users`: V1–V99, `worlds`: V10
 
 - JDK 17+, Maven 3.9+
 - Docker (for the local PostgreSQL and for the integration tests)
+- Node 22+ (see `ui/.nvmrc`) for the frontend
 
 ## Run locally
 
@@ -28,10 +31,20 @@ java -jar app/target/app-0.1.0-SNAPSHOT.jar
 Configuration (all optional for local development): `CALADON_DB_URL`, `CALADON_DB_USER`,
 `CALADON_DB_PASSWORD`, `CALADON_JWT_SECRET` (at least 32 bytes; **must** be set outside local dev).
 
+## Run the UI
+
+```bash
+cd ui
+npm install
+npm run dev        # http://localhost:5173, proxies /api to the backend on :8080
+```
+
 ## Test
 
 ```bash
-mvn test
+mvn test                 # backend
+cd ui && npm test        # frontend unit tests (vitest)
+cd ui && npm run build   # typecheck + production bundle in ui/dist
 ```
 
 The API tests in `users` start a throwaway PostgreSQL via Testcontainers and are skipped when Docker

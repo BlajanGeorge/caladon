@@ -18,7 +18,9 @@ data class PlayableWorldResponse(val id: Long, val name: String, val joined: Boo
 
 data class MyWorldResponse(val id: Long, val name: String)
 
-data class StartCityResponse(val id: Long, val x: Int, val y: Int, val name: String)
+data class OwnedCityResponse(val id: Long, val x: Int, val y: Int, val name: String, val points: Int)
+
+data class StartCityResponse(val id: Long, val x: Int, val y: Int, val name: String, val points: Int)
 
 data class JoinResponse(val worldId: Long, val startCity: StartCityResponse)
 

@@ -100,8 +100,8 @@ class WorldApiTest {
         }
         val id = json(result)["id"].asLong()
 
-        assertThat(citySlotRepository.countByWorldId(id)).isBetween(17_000L, 22_000L)
-        assertThat(barbarianVillageRepository.countByWorldId(id)).isBetween(2_000L, 6_000L)
+        assertThat(citySlotRepository.countByWorldId(id)).isBetween(1_800L, 4_000L)
+        assertThat(barbarianVillageRepository.countByWorldId(id)).isBetween(300L, 3_000L)
 
         post("/api/v1/admin/worlds", adminToken, mapOf("name" to "caladon i")).andExpect {
             status { isConflict() }
@@ -187,13 +187,14 @@ class WorldApiTest {
             jsonPath("$.worldId") { value(id) }
             jsonPath("$.startCity.id") { isNumber() }
             jsonPath("$.startCity.name") { value("george's city") }
+            jsonPath("$.startCity.points") { value(0) }
         })["startCity"]
         val centre = (MapConstants.SIZE - 1) / 2.0
-        assertThat(hypot(first["x"].asDouble() - centre, first["y"].asDouble() - centre)).isLessThan(10.0)
+        assertThat(hypot(first["x"].asDouble() - centre, first["y"].asDouble() - centre)).isLessThan(15.0)
 
         val second = json(post("/api/v1/worlds/$id/join", otherPlayerToken).andExpect { status { isOk() } })["startCity"]
         val distance = hypot(first["x"].asDouble() - second["x"].asDouble(), first["y"].asDouble() - second["y"].asDouble())
-        assertThat(distance).isGreaterThanOrEqualTo(MapConstants.START_CITY_MIN_DISTANCE).isLessThan(10.0)
+        assertThat(distance).isGreaterThanOrEqualTo(MapConstants.START_CITY_MIN_DISTANCE).isLessThan(20.0)
 
         assertThat(membershipRepository.countByIdWorldId(id)).isEqualTo(2)
         assertThat(cityRepository.count()).isEqualTo(2)
@@ -214,6 +215,33 @@ class WorldApiTest {
             jsonPath("$.error") { value("ALREADY_JOINED") }
         }
         post("/api/v1/worlds/999999/join", playerToken).andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `cities mine lists the player's cities once joined`() {
+        val draft = createWorld("Draft")
+        get("/api/v1/worlds/$draft/cities/mine", playerToken).andExpect {
+            status { isNotFound() }
+            jsonPath("$.error") { value("WORLD_NOT_FOUND") }
+        }
+
+        val id = createPlayableWorld()
+        get("/api/v1/worlds/$id/cities/mine", playerToken).andExpect {
+            status { isForbidden() }
+            jsonPath("$.error") { value("NOT_JOINED") }
+        }
+
+        val start = json(post("/api/v1/worlds/$id/join", playerToken).andExpect { status { isOk() } })["startCity"]
+        get("/api/v1/worlds/$id/cities/mine", playerToken).andExpect {
+            status { isOk() }
+            jsonPath("$.length()") { value(1) }
+            jsonPath("$[0].id") { value(start["id"].asLong()) }
+            jsonPath("$[0].x") { value(start["x"].asInt()) }
+            jsonPath("$[0].y") { value(start["y"].asInt()) }
+            jsonPath("$[0].name") { value("george's city") }
+            jsonPath("$[0].points") { value(0) }
+        }
+        get("/api/v1/worlds/$id/cities/mine", otherPlayerToken).andExpect { status { isForbidden() } }
     }
 
     @Test

@@ -134,10 +134,12 @@ A **world** is an independent game server (instance) for players: its own map, i
 its own cities and its own state. A player may play on several worlds at once; nothing is shared
 between worlds except the user account itself.
 
-- **Capacity**: a world targets **~1000 players** (soft cap). The exact registration open/close
-  rules are not settled yet.
-- **Size**: the map is a **square measured in unit tiles** — the whole map is **500 × 500 = 250,000
-  tiles**. Coordinates are `(x, y)`; distances are Euclidean and flat (terrain does not affect
+- **Capacity**: a world is sized for **~100 players** at the current map size (soft cap; the exact
+  registration open/close rules are not settled yet). Long-term target: **~20 city slots per
+  player**, so capacity scales with the map.
+- **Size**: the map is a **square measured in unit tiles** — currently **500 × 500 = 250,000 tiles**,
+  a constant. Making the size configurable per world (bigger maps ⇒ more players) is planned for
+  later. Coordinates are `(x, y)`; distances are Euclidean and flat (terrain does not affect
   movement).
 
 ### Lifecycle
@@ -191,11 +193,12 @@ nothing is recomputed per request.
    Thresholds are tuned so ~60–70% of tiles are `GRASS` (the only terrain eligible for slots). The
    result is the terrain grid, saved as the per-world blob.
 
-2. **City slots.** Target ~20–25k slots, spaced apart, only on `GRASS`, via a **jittered grid**:
-   split the map into `C × C` cells (`C` = minimum spacing, e.g. ~3); in each cell take one
-   candidate at the cell origin plus a random in-cell offset (the jitter); if the tile under it is
-   `GRASS` it becomes a city slot, otherwise skip the cell. One candidate per cell guarantees the
-   minimum spacing by construction.
+2. **City slots.** Target ~4–5k slots (plenty for ~1000 players), clearly spaced apart, only on
+   `GRASS`, via a **jittered grid**: split the map into `C × C` cells (`C` = **5**); in each cell take one
+   candidate at the cell origin plus a random in-cell offset (the jitter). A candidate becomes a
+   slot only if it sits on **open grass** (every tile within 2 is `GRASS`, so no mountain/forest/lake
+   sprite overhangs it) and is at least **4 tiles** from every slot accepted so far; otherwise the
+   cell is skipped.
 
 3. **Barbarian villages.** A second jittered-grid pass (offset so it interleaves with the slots),
    over remaining `GRASS` tiles, rejecting any candidate closer than the minimum distance `D` to a
@@ -209,7 +212,7 @@ The world stays in `DRAFT` after generation until an administrator approves it.
 
 ### Entities
 
-Only per-world columns are stored; anything identical across all worlds (map size 500×500, world
+Only per-world columns are stored; anything identical across all worlds (map size 500×500 for now, world
 speed, ~1000 player cap) is a **constant in config**, not a column.
 
 **`worlds`** — the world plus its terrain (kept together; splitting terrain out is not required):
@@ -327,7 +330,7 @@ player's **first city on a free slot at the frontier** (the outer edge of the po
 players cluster together as the world grows outward).
 ```json
 // 200
-{ "worldId": 1, "startCity": { "id": 99, "x": 128, "y": 240, "name": "..." } }
+{ "worldId": 1, "startCity": { "id": 99, "x": 128, "y": 240, "name": "...", "points": 0 } }
 // 409 -> { "error": "ALREADY_JOINED" } | { "error": "WORLD_NOT_PLAYABLE" }
 ```
 `WORLD_NOT_PLAYABLE` covers any non-playable state (DRAFT/ENDED) — the reason is not distinguished;
@@ -353,6 +356,14 @@ such worlds are not listed in the UI anyway.
 - Terrain is sliced in memory from the cached per-world blob; entities come from range queries on
   `(world_id, x, y)`.
 
+**GET `/api/v1/worlds/{id}/cities/mine`** — the caller's cities in that world (today: the start
+city; a list so it survives multi-city play).
+```json
+// 200
+[ { "id": 99, "x": 128, "y": 240, "name": "george's city", "points": 0 } ]
+// 403 -> { "error": "NOT_JOINED" }   404 -> { "error": "WORLD_NOT_FOUND" } (also for DRAFT worlds)
+```
+
 **GET `/api/v1/worlds/mine`** — worlds the player is enrolled in.
 ```json
 // 200
@@ -374,11 +385,11 @@ This is a client concern — `/map` itself stays a plain rectangle query._
 
 - **Administrators** are created by hand (`UPDATE users SET role = 'ADMINISTRATOR' ...`); there is
   no bootstrap mechanism in code.
-- **Terrain** thresholds are applied to rank-normalised noise fields, so they are exact map
-  fractions: **mountains 12%, lakes 10%, forest ~12%, GRASS ≈ 66%**. With a slot cell of `C = 3`
-  this yields **~18.5k slots** (slightly under the ~20k note; more relief was preferred). Barbarian
-  villages use a cell of 4 and `D = 2`, giving **~2.5k villages** per world. Cosmetic scatter is not
-  implemented.
+- **Terrain** noise is scaled to ~20 tiles per feature (3 fBm octaves), so mountains, forests and
+  lakes come as many patches of roughly 10–25 tiles mixed in with the slots, not a few huge blobs.
+  Thresholds are applied to rank-normalised noise fields, so they are exact map fractions: **mountains 12%, lakes 10%, forest ~12%, GRASS ≈ 66%**. With a slot cell of `C = 5`, a
+  grass buffer of 2 and a minimum slot distance of 4 this yields **~2.5k slots**. Barbarian villages
+  use a cell of 9, the same buffer and `D = 3`, giving **~500 villages** per world. Cosmetic scatter is not implemented.
 - **Frontier** for the start city: the free slot nearest the centre of mass of the world's cities
   (the map centre for an empty world), at least 2 tiles from every existing city. Joins are
   serialized per world with a row lock on `worlds`. If no slot qualifies: `409 WORLD_FULL`.
@@ -450,4 +461,61 @@ Logout, Back to Lobby. This stays a stub until the city feature (resources/build
   free slot (coords), barbarian village (coords).
 - **Controls**: **Home** (recentre on your city), **Go to coordinate** (`x,y` input), Back to City,
   plus the top bar.
+
+### Asset manifest & rendering
+
+The map is drawn from a small **asset registry** keyed by BE type. Each key currently resolves to a
+**procedural SVG/canvas placeholder** (low-poly, oblique, seeded from the tile so a given tile always
+looks the same). Swapping in finished art later means pointing the same key at a **PNG sprite**
+(oblique low-poly, transparent background, soft shadow, **no tile/cube base**) — no other code
+changes. Everything sits on a flat tiled grass ground and is drawn **back-to-front** (painter's
+order by tile `y`, then `x`).
+
+**Terrain** — from the `/map` `terrain` codes:
+
+| code | type | asset key | role |
+|------|------|-----------|------|
+| 0 | GRASS | `terrain.grass` | tiled ground texture (base layer) |
+| 1 | FOREST | `terrain.forest` | object sprite drawn over the grass |
+| 2 | LAKE | `terrain.lake` | object sprite drawn over the grass |
+| 3 | MOUNTAIN | `terrain.mountain` | object sprite drawn over the grass |
+
+**Entities** — from `/map` `slots` / `cities` / `barbarians`:
+
+| entity | asset key | notes |
+|--------|-----------|-------|
+| free city slot | `entity.slot` | marker for a foundable, unoccupied spot |
+| player city | `entity.city.t1` / `.t2` / `.t3` | tier chosen from `points` — placeholder thresholds: t1 `< 1000`, t2 `1000–4999`, t3 `≥ 5000` (tunable) |
+| barbarian village | `entity.barbarian` | farmable, never occupied/conquered |
+
+**Per-frame draw order:** grass ground → then FOREST/LAKE/MOUNTAIN object sprites and all entities in
+a single depth-sorted pass by `(y, x)` → then city name + points labels on top.
+
+Placeholders are the procedural set already prototyped (grass, forest, mountain, lake, slot, city
+t1/t2/t3, barbarian camp); final art is dropped in per registry key without touching the renderer.
+They live in **`web/assets/procedural-sprites.js`** (each generator returns SVG markup, keyed by the
+registry names above; `cityTierKey(points)` picks the city tier) with **`web/assets/preview.html`** as
+a standalone preview.
+
+### Implementation notes (ui)
+
+- **Stack**: React 18 + TypeScript + Vite, in `ui/` (outside Maven). `react-router-dom` for
+  screens; no component library. Vite's dev server proxies `/api` to the backend, so there is no
+  CORS configuration; production serving of `ui/dist` is not decided yet.
+- **Placeholders** stay in `web/assets/procedural-sprites.js` (so `preview.html` keeps working
+  standalone) and are imported through the `@assets` alias. `ui/src/map/assets.ts` is the registry:
+  each key rasterises its SVG generator into an offscreen canvas at load time (several seeded
+  variants per key, chosen per tile), and the renderer only ever sees those bitmaps — dropping in a
+  PNG means changing that one entry.
+- **Renderer**: Canvas 2D, tile = 48 CSS px, redraws only when dirty (camera/data change). Ground is
+  the grass pattern scrolled with the camera; terrain objects and entities go through one
+  `(y, x)`-sorted pass; labels last. Lakes are the one exception: contiguous lake tiles are painted
+  as flat water with a shoreline on land-facing sides (the `terrain.lake` registry key is kept for
+  a future PNG but unused by the placeholder).
+- **Data**: `/map` window of 90×90 around the camera, refetched when the camera is within 15 tiles
+  of a non-map edge; the visible area (+3 tiles) is refreshed 400 ms after a pan ends; the whole
+  window is refetched every 15 s.
+- **Join response** now carries `startCity.points` so the City view can show points without a
+  second request.
+- Admin panel: not built (deferred in the spec).
 

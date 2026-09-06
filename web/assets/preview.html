@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Caladon — asset preview</title>
+<style>
+  body{ margin:0; background:#eef1e3; color:#20301a; font-family:system-ui,sans-serif; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+  h1{ font-size:20px; } h2{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#5f7350; margin:24px 0 10px; }
+  .scene{ width:100%; border:1px solid #dfe3cf; border-radius:12px; display:block; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:12px; }
+  .card{ background:#f4f1e6; border:1px solid #dfe3cf; border-radius:12px; padding:10px; text-align:center; }
+  .card svg{ width:100%; height:140px; display:block; border-radius:8px; }
+  .cap{ margin-top:6px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#5f7350; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Caladon — procedural placeholder assets</h1>
+  <p>Rendered from <code>procedural-sprites.js</code>. Same generators the game renderer will use until real PNG sprites replace them per registry key.</p>
+  <h2>Mini-map</h2>
+  <svg class="scene" id="scene" viewBox="0 0 1040 460"></svg>
+  <h2>Each asset</h2>
+  <div class="grid" id="grid"></div>
+</div>
+
+<script src="./procedural-sprites.js"></script>
+<script>
+  const S = window.CaladonSprites;
+  const cell = (label, body, seed) =>
+    `<div class="card"><svg viewBox="0 0 180 150"><defs>${S.grassPattern('g'+seed)}</defs>`+
+    `<rect width="180" height="150" fill="url(#g${seed})"/>${body}</svg><div class="cap">${label}</div></div>`;
+
+  document.getElementById('grid').innerHTML = [
+    cell("Grass", "", 1),
+    cell("Forest", S.forest(90,95,16,3), 2),
+    cell("Mountain", S.mountain(90,120,0.95), 3),
+    cell("Lake", S.lake(90,80,1.1), 4),
+    cell("Free slot", S.slot(90,92), 5),
+    cell("City I", S.village(90,98,1,6), 6),
+    cell("City II", S.village(90,100,2,7), 7),
+    cell("City III", S.village(90,108,3,8), 8),
+    cell("Barbarian", S.barbarians(90,96,9), 9),
+  ].join("");
+
+  (function(){
+    const objs=[
+      {y:150,s:()=>S.mountain(180,150,1.05)},
+      {y:120,s:()=>S.lake(430,120,1.2)},
+      {y:200,s:()=>S.forest(650,200,20,3)},
+      {y:250,s:()=>S.forest(300,250,14,7)},
+      {y:305,s:()=>S.village(180,305,2,6)},
+      {y:335,s:()=>S.village(510,335,3,8)},
+      {y:360,s:()=>S.village(760,360,1,2)},
+      {y:250,s:()=>S.barbarians(905,250,4)},
+      {y:395,s:()=>S.barbarians(360,395,9)},
+      {y:170,s:()=>S.slot(560,170)},
+      {y:220,s:()=>S.slot(850,220)},
+      {y:415,s:()=>S.village(945,415,2,5)},
+      {y:300,s:()=>S.forest(880,300,10,11)},
+    ].sort((a,b)=>a.y-b.y);
+    document.getElementById('scene').innerHTML =
+      `<defs>${S.grassPattern('gscene')}</defs><rect width="1040" height="460" fill="url(#gscene)"/>`+
+      objs.map(o=>o.s()).join("");
+  })();
+</script>
+</body>
+</html>

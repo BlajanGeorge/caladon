@@ -10,5 +10,6 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class NotPlayable : WorldException(HttpStatus.CONFLICT, "WORLD_NOT_PLAYABLE")
     class AlreadyJoined : WorldException(HttpStatus.CONFLICT, "ALREADY_JOINED")
     class Full : WorldException(HttpStatus.CONFLICT, "WORLD_FULL")
+    class NotJoined : WorldException(HttpStatus.FORBIDDEN, "NOT_JOINED")
     class InvalidViewport(details: Map<String, String>) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", details)
 }

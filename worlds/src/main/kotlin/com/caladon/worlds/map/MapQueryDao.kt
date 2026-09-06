@@ -12,6 +12,7 @@ class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
 
     data class CityOnMap(val id: Long, val x: Int, val y: Int, val name: String, val points: Int, val owner: String)
     data class SlotRef(val id: Long, val x: Int, val y: Int)
+    data class OwnedCity(val id: Long, val x: Int, val y: Int, val name: String, val points: Int)
 
     fun insertSlots(worldId: Long, tiles: List<Tile>) = bulkInsert("city_slot", worldId, tiles)
 
@@ -55,6 +56,16 @@ class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
         """,
         params(worldId, v),
     ) { rs, _ -> Tile(rs.getInt("x"), rs.getInt("y")) }
+
+    fun citiesOwnedBy(worldId: Long, userId: Long): List<OwnedCity> = jdbc.query(
+        """
+        SELECT c.id, s.x, s.y, c.name, c.points
+        FROM city c JOIN city_slot s ON s.id = c.slot_id
+        WHERE c.world_id = :worldId AND c.owner_user_id = :userId
+        ORDER BY c.id
+        """,
+        mapOf("worldId" to worldId, "userId" to userId),
+    ) { rs, _ -> OwnedCity(rs.getLong("id"), rs.getInt("x"), rs.getInt("y"), rs.getString("name"), rs.getInt("points")) }
 
     /**
      * The "frontier" slot for a new player: the free slot nearest the centre of mass of the world's

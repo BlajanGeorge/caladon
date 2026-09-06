@@ -40,7 +40,7 @@ class WorldService(
     private val seeds = SecureRandom()
 
     data class WorldSummary(val world: World, val players: Long)
-    data class StartCity(val id: Long, val x: Int, val y: Int, val name: String)
+    data class StartCity(val id: Long, val x: Int, val y: Int, val name: String, val points: Int)
     data class JoinResult(val worldId: Long, val startCity: StartCity)
     data class MapView(
         val viewport: Viewport,
@@ -125,7 +125,16 @@ class WorldService(
         val city = cityRepository.save(
             City(worldId = worldId, slotId = slot.id, ownerUserId = userId, name = "${user.nickname}'s city", createdAt = now),
         )
-        return JoinResult(worldId, StartCity(requireNotNull(city.id), slot.x, slot.y, city.name))
+        return JoinResult(worldId, StartCity(requireNotNull(city.id), slot.x, slot.y, city.name, city.points))
+    }
+
+    /** The player's cities in a world. Requires membership; DRAFT worlds are invisible to players. */
+    @Transactional(readOnly = true)
+    fun myCities(worldId: Long, userId: Long): List<MapQueryDao.OwnedCity> {
+        val world = worldRepository.findById(worldId).orElse(null) ?: throw WorldException.NotFound()
+        if (world.state == WorldState.DRAFT) throw WorldException.NotFound()
+        if (!membershipRepository.existsById(WorldMembershipId(worldId, userId))) throw WorldException.NotJoined()
+        return mapQueryDao.citiesOwnedBy(worldId, userId)
     }
 
     /** Everything inside the rectangle. DRAFT worlds are visible to administrators only. */
