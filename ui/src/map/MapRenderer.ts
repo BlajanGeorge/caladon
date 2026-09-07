@@ -1,6 +1,6 @@
 import type { SpriteSet, AssetKey } from './assets'
 import { cityTierKey, tileRandom, variantFor } from './assets'
-import { MAP_SIZE, TILE, visibleRect } from './camera'
+import { TILE, visibleRect } from './camera'
 import type { MapCache } from './MapCache'
 
 export interface Camera {
@@ -96,12 +96,9 @@ export class MapRenderer {
     ctx.fillStyle = '#2b3a25'
     ctx.fillRect(0, 0, width, height)
 
-    // Ground: the grass pattern scrolls with the world, clipped to the map's extent.
+    // Ground: the grass pattern scrolls with the world and fills the whole view (no map-edge band).
     const origin = this.tileToScreen(0, 0)
     ctx.save()
-    ctx.beginPath()
-    ctx.rect(origin.sx, origin.sy, MAP_SIZE * TILE, MAP_SIZE * TILE)
-    ctx.clip()
     ctx.translate(origin.sx, origin.sy)
     ctx.fillStyle = this.sprites.grass
     ctx.fillRect(-origin.sx, -origin.sy, width, height)
