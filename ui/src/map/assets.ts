@@ -188,12 +188,12 @@ export async function loadSprites(ctx: CanvasRenderingContext2D): Promise<Sprite
   return { grass, byKey: Object.fromEntries(entries) as Record<AssetKey, Sprite[]> }
 }
 
-/** Points thresholds per tier (tunable): t1 <1000, t2 1000–2999, t3 3000–7999, t4 8000–19999, t5 >=20000. */
+/** Points thresholds per tier: t1 0–2000, t2 2001–5000, t3 5001–8000, t4 8001–12000, t5 12001+. */
 export function cityTierKey(points: number): AssetKey {
-  if (points >= 20000) return 'entity.city.t5'
-  if (points >= 8000) return 'entity.city.t4'
-  if (points >= 3000) return 'entity.city.t3'
-  if (points >= 1000) return 'entity.city.t2'
+  if (points > 12000) return 'entity.city.t5'
+  if (points > 8000) return 'entity.city.t4'
+  if (points > 5000) return 'entity.city.t3'
+  if (points > 2000) return 'entity.city.t2'
   return 'entity.city.t1'
 }
 
