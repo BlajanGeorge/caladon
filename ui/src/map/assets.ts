@@ -1,4 +1,20 @@
 import '@assets/procedural-sprites.js'
+import cityT1Url from '@assets/sprites/city-t1.png'
+import cityT2Url from '@assets/sprites/city-t2.png'
+import grassUrl from '@assets/sprites/grass2.png'
+import forestUrl from '@assets/sprites/forest.png'
+import rockhillUrl from '@assets/sprites/rockhill.png'
+import treeFirUrl from '@assets/sprites/tree-fir.png'
+import treeOakUrl from '@assets/sprites/tree-oak.png'
+import bush1Url from '@assets/sprites/bush1.png'
+import bush2Url from '@assets/sprites/bush2.png'
+import bush3Url from '@assets/sprites/bush3.png'
+import bush4Url from '@assets/sprites/bush4.png'
+import rock1Url from '@assets/sprites/rock1.png'
+import rock2Url from '@assets/sprites/rock2.png'
+import rock3Url from '@assets/sprites/rock3.png'
+import slotUrl from '@assets/sprites/slot.png'
+import barbarianUrl from '@assets/sprites/barbarian.png'
 import { TILE } from './camera'
 
 /**
@@ -9,13 +25,14 @@ import { TILE } from './camera'
  */
 export type AssetKey =
   | 'terrain.forest'
-  | 'terrain.lake'
   | 'terrain.mountain'
   | 'entity.slot'
   | 'entity.city.t1'
   | 'entity.city.t2'
   | 'entity.city.t3'
   | 'entity.barbarian'
+  | 'decor.bush'
+  | 'decor.rock'
 
 export interface Sprite {
   image: CanvasImageSource
@@ -44,6 +61,27 @@ interface Placeholder {
   variants: number
 }
 
+/** Final PNG art for a key: overrides the procedural placeholder in `loadSprites`. One or more
+ *  variant images; the renderer picks a stable variant per tile. */
+interface ImageSprite {
+  urls: string[]
+  /** Drawn width, in tile widths. */
+  widthTiles: number
+  /** Ground-anchor height as a fraction of the drawn height (bottom-centre contact point). */
+  anchorYFrac: number
+}
+
+const imageSprites: Partial<Record<AssetKey, ImageSprite>> = {
+  'terrain.forest': { urls: [forestUrl, treeFirUrl, treeOakUrl], widthTiles: 0.9, anchorYFrac: 0.96 },
+  'terrain.mountain': { urls: [rockhillUrl], widthTiles: 2.6, anchorYFrac: 0.85 },
+  'decor.bush': { urls: [bush1Url, bush2Url, bush3Url, bush4Url], widthTiles: 0.28, anchorYFrac: 0.85 },
+  'decor.rock': { urls: [rock1Url, rock2Url, rock3Url], widthTiles: 0.45, anchorYFrac: 0.85 },
+  'entity.slot': { urls: [slotUrl], widthTiles: 1.5, anchorYFrac: 0.72 },
+  'entity.city.t1': { urls: [cityT1Url], widthTiles: 2.2, anchorYFrac: 0.86 },
+  'entity.city.t2': { urls: [cityT2Url], widthTiles: 2.2, anchorYFrac: 0.9 },
+  'entity.barbarian': { urls: [barbarianUrl], widthTiles: 1.8, anchorYFrac: 0.9 },
+}
+
 const S = () => window.CaladonSprites
 const unit = TILE / 64
 
@@ -52,14 +90,12 @@ const TREE_SHAPES: [number, number][] = [[34, 11], [40, 12], [46, 13], [52, 14],
 // Mountains: a few peak sizes; the renderer places peaks on a jittered subset of MOUNTAIN tiles.
 const PEAK_SIZES = [0.8, 1.0, 1.2, 1.45]
 
-const placeholders: Record<AssetKey, Placeholder> = {
+const placeholders: Partial<Record<AssetKey, Placeholder>> = {
   'terrain.forest': {
     svg: (x, y, seed) => { const [h, w] = TREE_SHAPES[(seed - 1) % TREE_SHAPES.length]; return S().tree(x, y, h, w) },
     scale: unit * 1.1,
     variants: TREE_SHAPES.length,
   },
-  // Drawn on lake-edge tiles only (the interior is flat water, see MapRenderer): sized to a tile.
-  'terrain.lake': { svg: (x, y) => S().lake(x, y, 1.0), scale: unit * 1.1, variants: 1 },
   'terrain.mountain': {
     svg: (x, y, seed) => S().mountain(x, y, PEAK_SIZES[(seed - 1) % PEAK_SIZES.length]),
     scale: unit * 1.0,
@@ -93,27 +129,48 @@ async function rasterise(markup: string, scale: number, dpr: number): Promise<Sp
   return { image: canvas, width: css, height: css, anchorX: css / 2, anchorY: ANCHOR_Y * scale }
 }
 
-async function grassPattern(ctx: CanvasRenderingContext2D, dpr: number): Promise<CanvasPattern> {
-  const size = 64
-  const px = Math.ceil(size * dpr)
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}" viewBox="0 0 ${size} ${size}"><defs>${S().grassPattern('g')}</defs><rect width="${size}" height="${size}" fill="url(#g)"/></svg>`
-  const img = await loadImage(svg, px, px)
+function loadPng(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('png sprite failed to load: ' + url))
+    img.src = url
+  })
+}
+
+async function rasterisePng(url: string, cfg: ImageSprite): Promise<Sprite> {
+  const img = await loadPng(url)
+  const width = cfg.widthTiles * TILE
+  const height = (width * img.height) / img.width
+  return { image: img, width, height, anchorX: width / 2, anchorY: height * cfg.anchorYFrac }
+}
+
+/** CSS px of one texture repeat on screen (tune for how tight the detail reads). */
+const GRASS_TILE_PX = 900
+
+async function texturePattern(ctx: CanvasRenderingContext2D, dpr: number, url: string, tilePx: number): Promise<CanvasPattern> {
+  const img = await loadPng(url)
+  const px = Math.ceil(tilePx * dpr)
   const canvas = document.createElement('canvas')
   canvas.width = px
   canvas.height = px
   canvas.getContext('2d')!.drawImage(img, 0, 0, px, px)
   const pattern = ctx.createPattern(canvas, 'repeat')!
-  // Keep the pattern at 64 CSS px regardless of device pixel ratio.
   pattern.setTransform(new DOMMatrix().scale(1 / dpr))
   return pattern
 }
 
 export async function loadSprites(ctx: CanvasRenderingContext2D): Promise<SpriteSet> {
   const dpr = window.devicePixelRatio || 1
-  const grass = await grassPattern(ctx, dpr)
+  const grass = await texturePattern(ctx, dpr, grassUrl, GRASS_TILE_PX)
+  const allKeys = Array.from(
+    new Set<AssetKey>([...(Object.keys(placeholders) as AssetKey[]), ...(Object.keys(imageSprites) as AssetKey[])]),
+  )
   const entries = await Promise.all(
-    (Object.keys(placeholders) as AssetKey[]).map(async (key) => {
-      const p = placeholders[key]
+    allKeys.map(async (key) => {
+      const image = imageSprites[key]
+      if (image) return [key, await Promise.all(image.urls.map((u) => rasterisePng(u, image)))] as const
+      const p = placeholders[key]!
       const variants = await Promise.all(
         Array.from({ length: p.variants }, (_, i) => rasterise(p.svg(BOX / 2, ANCHOR_Y, i + 1), p.scale, dpr)),
       )

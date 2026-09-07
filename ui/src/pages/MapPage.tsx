@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { worldsApi, type OwnedCity } from '../api/worlds'
-import { TopBar } from '../components/TopBar'
+import { MapTopBar } from '../components/MapTopBar'
 import { useToast } from '../components/Toast'
 import { MapView } from '../map/MapView'
 import { useWorldName } from '../useWorldName'
@@ -36,7 +36,7 @@ export function MapPage() {
 
   return (
     <div className="map-shell">
-      <TopBar worldName={worldName} links={[{ to: `/worlds/${worldId}/city`, label: 'Back to City', state: { worldName, city } }, { to: '/lobby', label: 'Lobby' }]} />
+      <MapTopBar worldName={worldName} worldId={worldId} city={city} />
       {city ? <MapView worldId={worldId} home={city} /> : <div className="map-body"><div className="map-loading">Loading…</div></div>}
     </div>
   )

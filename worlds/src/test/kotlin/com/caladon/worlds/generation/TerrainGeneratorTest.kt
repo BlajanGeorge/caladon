@@ -21,8 +21,7 @@ class TerrainGeneratorTest {
 
         assertThat(share[Terrain.GRASS]).isBetween(0.62, 0.70)
         assertThat(share[Terrain.MOUNTAIN]).isCloseTo(0.12, within(0.01))
-        assertThat(share[Terrain.LAKE]).isCloseTo(0.10, within(0.01))
-        assertThat(share[Terrain.FOREST]).isCloseTo(0.12, within(0.01))
+        assertThat(share[Terrain.FOREST]).isCloseTo(0.22, within(0.02))
         assertThat(share.values.sum()).isCloseTo(1.0, within(1e-9))
     }
 

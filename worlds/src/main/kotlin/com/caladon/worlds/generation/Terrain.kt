@@ -4,7 +4,6 @@ package com.caladon.worlds.generation
 enum class Terrain(val code: Byte) {
     GRASS(0),
     FOREST(1),
-    LAKE(2),
     MOUNTAIN(3),
     ;
 

@@ -33,7 +33,7 @@ data class MapResponse(
     val startY: Int,
     val endX: Int,
     val endY: Int,
-    /** One terrain code per tile, flat row-major from (startX, startY): 0=GRASS 1=FOREST 2=LAKE 3=MOUNTAIN. */
+    /** One terrain code per tile, flat row-major from (startX, startY): 0=GRASS 1=FOREST 3=MOUNTAIN. */
     val terrain: IntArray,
     /** Free (unoccupied) city slots only. */
     val slots: List<TileResponse>,

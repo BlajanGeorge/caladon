@@ -14,21 +14,21 @@ interface Drawable {
   y: number
   key: AssetKey
   variant: number
+  scale?: number
   label?: { name: string; points: number }
 }
 
 const FOREST = 1
-const LAKE = 2
 const MOUNTAIN = 3
-const WATER = '#3b7aa8'
-const SHORE = '#c9b884'
-const SHORE_PX = 5
-/** Subtle ground tints so patches read as areas even between scattered objects. */
-const FOREST_GROUND = 'rgba(40, 90, 40, 0.08)'
-const MOUNTAIN_GROUND = 'rgba(120, 118, 110, 0.3)'
 /** Trees per FOREST tile and the share of MOUNTAIN tiles that carry a peak. */
-const TREES_PER_TILE = 3
-const PEAK_SHARE = 0.55
+const TREES_PER_TILE = 5
+const PEAK_SHARE = 0.5
+/** Fraction of open GRASS tiles that get a decorative bush / rock / dirt patch. */
+const BUSH_SHARE = 0.03
+const ROCK_SHARE = 0.05
+/** Cross-mingling: rocks inside forest tiles, trees inside mountain tiles. */
+const FOREST_ROCK_SHARE = 0.15
+const MOUNTAIN_TREE_SHARE = 0.5
 
 /** Canvas 2D renderer: grass ground, then one depth-sorted pass of terrain objects + entities, then labels. */
 export class MapRenderer {
@@ -110,45 +110,66 @@ export class MapRenderer {
     // Depth-sorted objects. Extra rows above/below so tall sprites near the edges still show.
     const view = visibleRect(this.camera.x, this.camera.y, width, height, 4)
     const drawables: Drawable[] = []
-    const isLake = (x: number, y: number) => { const t = this.cache.terrainAt(x, y); return t === undefined || t === LAKE }
     for (let y = view.startY; y <= view.endY; y++) {
       for (let x = view.startX; x <= view.endX; x++) {
         const code = this.cache.terrainAt(x, y) ?? 0
-        if (code === LAKE) {
-          // Lakes are contiguous patches: flat water with a sandy shore on the sides facing land.
-          // (The registry's `terrain.lake` sprite is unused by this placeholder; a PNG can take over.)
-          const { sx, sy } = this.tileToScreen(x, y)
-          ctx.fillStyle = WATER
-          ctx.fillRect(sx, sy, TILE + 0.5, TILE + 0.5)
-          ctx.fillStyle = SHORE
-          if (!isLake(x, y - 1)) ctx.fillRect(sx, sy, TILE + 0.5, SHORE_PX)
-          if (!isLake(x, y + 1)) ctx.fillRect(sx, sy + TILE - SHORE_PX, TILE + 0.5, SHORE_PX)
-          if (!isLake(x - 1, y)) ctx.fillRect(sx, sy, SHORE_PX, TILE + 0.5)
-          if (!isLake(x + 1, y)) ctx.fillRect(sx + TILE - SHORE_PX, sy, SHORE_PX, TILE + 0.5)
-        } else if (code === FOREST) {
+        if (code === FOREST) {
           // A few trees per tile at stable random offsets (spilling a little into neighbours).
-          const { sx, sy } = this.tileToScreen(x, y)
-          ctx.fillStyle = FOREST_GROUND
-          ctx.fillRect(sx, sy, TILE + 0.5, TILE + 0.5)
           for (let i = 0; i < TREES_PER_TILE; i++) {
             drawables.push({
-              x: x - 0.2 + tileRandom(x, y, 11 + i * 3) * 1.4,
-              y: y - 0.2 + tileRandom(x, y, 12 + i * 3) * 1.4,
+              x: x - 0.3 + tileRandom(x, y, 11 + i * 3) * 1.6,
+              y: y - 0.3 + tileRandom(x, y, 12 + i * 3) * 1.6,
               key: 'terrain.forest',
               variant: variantFor(x, y, this.sprites.byKey['terrain.forest'].length, 13 + i * 3),
+              scale: 0.7 + tileRandom(x, y, 14 + i * 3) * 0.6,
+            })
+          }
+          // A rock now and then, so forests and rocky ground mingle.
+          if (tileRandom(x, y, 51) < FOREST_ROCK_SHARE) {
+            drawables.push({
+              x: x + tileRandom(x, y, 52),
+              y: y + tileRandom(x, y, 53),
+              key: 'decor.rock',
+              variant: variantFor(x, y, this.sprites.byKey['decor.rock'].length, 54),
+              scale: 0.6 + tileRandom(x, y, 55) * 0.7,
             })
           }
         } else if (code === MOUNTAIN) {
-          // Rocky ground everywhere; a peak of random size on a jittered subset of tiles.
-          const { sx, sy } = this.tileToScreen(x, y)
-          ctx.fillStyle = MOUNTAIN_GROUND
-          ctx.fillRect(sx, sy, TILE + 0.5, TILE + 0.5)
           if (tileRandom(x, y, 21) < PEAK_SHARE) {
             drawables.push({
               x: x + tileRandom(x, y, 22),
               y: y + tileRandom(x, y, 23),
               key: 'terrain.mountain',
               variant: variantFor(x, y, this.sprites.byKey['terrain.mountain'].length, 24),
+            })
+          }
+          // Trees growing on and around the rocks, so mountains aren't bare.
+          if (tileRandom(x, y, 26) < MOUNTAIN_TREE_SHARE) {
+            drawables.push({
+              x: x - 0.2 + tileRandom(x, y, 27) * 1.4,
+              y: y - 0.2 + tileRandom(x, y, 28) * 1.4,
+              key: 'terrain.forest',
+              variant: variantFor(x, y, this.sprites.byKey['terrain.forest'].length, 29),
+              scale: 0.6 + tileRandom(x, y, 30) * 0.5,
+            })
+          }
+        } else {
+          const r = tileRandom(x, y, 31)
+          if (r < BUSH_SHARE) {
+            drawables.push({
+              x: x + tileRandom(x, y, 32),
+              y: y + tileRandom(x, y, 33),
+              key: 'decor.bush',
+              variant: variantFor(x, y, this.sprites.byKey['decor.bush'].length, 34),
+              scale: 0.7 + tileRandom(x, y, 35) * 0.3,
+            })
+          } else if (r < BUSH_SHARE + ROCK_SHARE) {
+            drawables.push({
+              x: x + tileRandom(x, y, 36),
+              y: y + tileRandom(x, y, 37),
+              key: 'decor.rock',
+              variant: variantFor(x, y, this.sprites.byKey['decor.rock'].length, 38),
+              scale: 0.4 + tileRandom(x, y, 39) * 1.1,
             })
           }
         }
@@ -167,9 +188,10 @@ export class MapRenderer {
     const labels: { sx: number; sy: number; name: string; points: number }[] = []
     for (const d of drawables) {
       const sprite = this.sprites.byKey[d.key][d.variant]
+      const s = d.scale ?? 1
       const baseX = origin.sx + d.x * TILE
       const baseY = origin.sy + d.y * TILE
-      ctx.drawImage(sprite.image, baseX - sprite.anchorX, baseY - sprite.anchorY, sprite.width, sprite.height)
+      ctx.drawImage(sprite.image, baseX - sprite.anchorX * s, baseY - sprite.anchorY * s, sprite.width * s, sprite.height * s)
       if (d.label) labels.push({ sx: baseX, sy: baseY - TILE - 6, ...d.label })
     }
 

@@ -7,6 +7,7 @@ import { CityPage } from './pages/CityPage'
 import { LobbyPage } from './pages/LobbyPage'
 import { LoginPage } from './pages/LoginPage'
 import { MapPage } from './pages/MapPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
 
 function useSession() {
@@ -46,6 +47,7 @@ export function App() {
           <Route path="/register" element={<RedirectIfLoggedIn><RegisterPage /></RedirectIfLoggedIn>} />
           <Route path="/login" element={<RedirectIfLoggedIn><LoginPage /></RedirectIfLoggedIn>} />
           <Route path="/lobby" element={<RequireSession><LobbyPage /></RequireSession>} />
+          <Route path="/profile" element={<RequireSession><ProfilePage /></RequireSession>} />
           <Route path="/worlds/:id/city" element={<RequireSession><CityPage /></RequireSession>} />
           <Route path="/worlds/:id/map" element={<RequireSession><MapPage /></RequireSession>} />
           <Route path="*" element={<Navigate to="/lobby" replace />} />

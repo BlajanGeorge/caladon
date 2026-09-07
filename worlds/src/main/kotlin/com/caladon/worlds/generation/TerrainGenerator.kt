@@ -21,7 +21,7 @@ class TerrainGenerator {
             val e = elevation[i]
             terrain[i] = when {
                 e > MOUNTAIN_ABOVE -> Terrain.MOUNTAIN
-                e < LAKE_BELOW -> Terrain.LAKE
+                e < FOREST_BELOW -> Terrain.FOREST
                 moisture[i] > FOREST_ABOVE -> Terrain.FOREST
                 else -> Terrain.GRASS
             }.code
@@ -54,10 +54,10 @@ class TerrainGenerator {
         const val MOISTURE_SCALE = 16.0
         private const val MOISTURE_SEED_SALT = 0x5DEECE66DL
 
-        // Fractions of the map (see class doc): 12% mountain, 10% lake, 15% of the rest forest,
-        // so GRASS ≈ 0.78 * 0.85 ≈ 66%, which after slot spacing/buffer filtering yields ~2.5k city slots.
+        // Fractions of the map (see class doc): 12% mountain, the lowest 10% of tiles forest, plus
+        // 15% of the rest forest by moisture, so GRASS ≈ 66% and FOREST ≈ 22%.
         const val MOUNTAIN_ABOVE = 0.88f
-        const val LAKE_BELOW = 0.10f
+        const val FOREST_BELOW = 0.10f
         const val FOREST_ABOVE = 0.85f
     }
 }
