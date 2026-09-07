@@ -11,10 +11,10 @@
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
-body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 15px; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 15px; cursor: url('@assets/sprites/cursor-point.png') 1 0, auto; }
 a { color: var(--accent); }
-button { font: inherit; cursor: pointer; }
-input { font: inherit; }
+button { font: inherit; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; }
+input { font: inherit; cursor: text; }
 
 .topbar {
   display: flex; align-items: center; gap: 16px; height: 52px; padding: 0 20px;
@@ -42,7 +42,7 @@ input { font: inherit; }
 .map-topbar .mtb-right { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .map-topbar .mtb-account { position: relative; }
 .map-topbar .mtb-icon-btn {
-  padding: 0; border: none; background: transparent; cursor: pointer; line-height: 0;
+  padding: 0; border: none; background: transparent; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; line-height: 0;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,.5));
 }
 .map-topbar .mtb-icon-btn img { height: 70px; width: auto; display: block; }
@@ -63,14 +63,14 @@ input { font: inherit; }
   pointer-events: none;
 }
 .map-topbar .mtb-btn {
-  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
   background: linear-gradient(180deg, #2e333b, #20242a); color: #e7ddc4; text-decoration: none;
   border: 1px solid #6b5a34; border-radius: 7px; padding: 7px 12px; font-size: 13px; font-weight: 600;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
 }
 .map-topbar .mtb-btn:hover { border-color: #c79a44; background: linear-gradient(180deg, #363c45, #262b31); color: #fff; }
 .map-topbar .mtb-avatar {
-  width: 42px; height: 42px; padding: 0; cursor: pointer; display: grid; place-items: center;
+  width: 42px; height: 42px; padding: 0; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; display: grid; place-items: center;
   border-radius: 50%; background: radial-gradient(circle at 50% 35%, #333a42, #1b1e23);
   border: 2px solid #c79a44; box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 2px 5px rgba(0,0,0,.4);
 }
@@ -84,7 +84,7 @@ input { font: inherit; }
   padding: 6px; display: flex; flex-direction: column;
 }
 .map-topbar .mtb-menu button {
-  background: transparent; border: none; text-align: left; cursor: pointer;
+  background: transparent; border: none; text-align: left; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
   padding: 10px 14px; border-radius: 6px;
 }
 .map-topbar .mtb-menu button span {
@@ -131,8 +131,8 @@ input { font: inherit; }
 /* ---- map ---- */
 .map-shell { display: flex; flex-direction: column; height: 100%; }
 .map-body { position: relative; flex: 1; min-height: 0; background: #a08748; overflow: hidden; }
-.map-body canvas { display: block; width: 100%; height: 100%; cursor: grab; }
-.map-body canvas.dragging { cursor: grabbing; }
+.map-body canvas { display: block; width: 100%; height: 100%; cursor: url('@assets/sprites/cursor-point.png') 1 0, grab; }
+.map-body canvas.dragging { cursor: url('@assets/sprites/cursor-grab.png') 19 19, grabbing; }
 .map-controls {
   position: absolute; z-index: 2; top: 14px; left: 14px;
   display: flex; gap: 8px; align-items: center; padding: 8px;
@@ -141,7 +141,7 @@ input { font: inherit; }
   box-shadow: 0 4px 14px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.4);
 }
 .map-controls .map-ctl-btn {
-  padding: 0; border: none; background: transparent; cursor: pointer; line-height: 0;
+  padding: 0; border: none; background: transparent; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; line-height: 0;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,.5));
 }
 .map-controls .map-ctl-btn img { height: 44px; width: auto; display: block; }
@@ -154,11 +154,27 @@ input { font: inherit; }
 .map-controls input::placeholder { color: #8a8574; }
 .map-controls input:focus { outline: none; border-color: #c79a44; }
 .map-status { position: absolute; bottom: 12px; left: 12px; font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-.map-tooltip { position: absolute; pointer-events: none; background: rgba(36,57,31,.92); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; transform: translate(12px, 12px); }
-.map-panel { position: absolute; top: 12px; right: 12px; width: 240px; background: rgba(247,245,236,.97); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); }
-.map-panel h3 { margin: 0 0 8px; font-size: 15px; }
-.map-panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font-size: 13px; }
-.map-panel dt { color: var(--muted); }
-.map-panel dd { margin: 0; font-weight: 600; }
+.map-tooltip { position: absolute; pointer-events: none; background: rgba(36,57,31,.92); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; transform: translate(38px, 10px); }
+.map-panel {
+  position: absolute; top: 16px; right: 16px;
+  width: 270px; height: 214px;
+  background: url('@assets/sprites/panel.png') center / 100% 100% no-repeat;
+  padding: 46px 30px 28px;
+  color: #e7ddc4;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.5));
+}
+.map-panel h3 {
+  margin: 0 0 10px;
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 16px; letter-spacing: .05em;
+  color: #f1e7c9; text-shadow: 0 1px 2px rgba(0,0,0,.75);
+}
+.map-panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; font-size: 13px; }
+.map-panel dt { color: #a99f86; }
+.map-panel dd { margin: 0; font-weight: 600; color: #e7ddc4; }
+/* transparent hit-target over the frame's built-in X */
+.map-panel .close {
+  position: absolute; top: 8px; right: 8px; width: 36px; height: 36px;
+  padding: 0; border: none; background: transparent; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; font-size: 0;
+}
 .map-panel .close { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; font-size: 16px; color: var(--muted); }
 .map-loading { position: absolute; inset: 0; pointer-events: none; display: grid; place-items: center; color: #fff; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
