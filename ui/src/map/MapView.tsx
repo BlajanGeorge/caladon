@@ -4,6 +4,9 @@ import { ApiError } from '../api/client'
 import { worldsApi, type MapResponse, type OwnedCity } from '../api/worlds'
 import { useToast } from '../components/Toast'
 import { loadSprites } from './assets'
+import recenterUrl from '@assets/sprites/ctl-recenter.png'
+import cityUrl from '@assets/sprites/ctl-city.png'
+import goUrl from '@assets/sprites/ctl-go.png'
 import { clampCamera, needsRefetch, parseCoordinate, TILE, VISIBLE_PAD, visibleRect, windowFor, type Rect } from './camera'
 import { MapCache, type Entity } from './MapCache'
 import { MapRenderer, type Camera } from './MapRenderer'
@@ -175,16 +178,22 @@ export function MapView({ worldId, home }: Props) {
       />
       {!ready && <div className="map-loading">Loading map…</div>}
       <div className="map-controls">
-        <button className="secondary" onClick={goHome} title="Recentre on your city">Home</button>
+        <button className="map-ctl-btn" onClick={goHome} title="Recentre on your city" aria-label="Recentre on your city">
+          <img src={recenterUrl} alt="" />
+        </button>
         <input
-          placeholder="x,y"
+          placeholder="x, y"
           value={goto}
           onChange={(e) => setGoto(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') goToCoordinate() }}
           aria-label="Go to coordinate"
         />
-        <button className="secondary" onClick={goToCoordinate}>Go</button>
-        <Link className="secondary" to={`/worlds/${worldId}/city`} style={{ textDecoration: 'none' }}>Back to City</Link>
+        <button className="map-ctl-btn" onClick={goToCoordinate} title="Go to coordinate" aria-label="Go to coordinate">
+          <img src={goUrl} alt="" />
+        </button>
+        <Link className="map-ctl-btn" to={`/worlds/${worldId}/city`} title="Back to your city" aria-label="Back to your city" style={{ textDecoration: 'none' }}>
+          <img src={cityUrl} alt="" />
+        </Link>
       </div>
       <div className="map-status">centre {center.x}, {center.y}</div>
       {hover && !dragging && <div className="map-tooltip" style={{ left: hover.px, top: hover.py }}>{hover.text}</div>}
