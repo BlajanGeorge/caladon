@@ -214,7 +214,7 @@ function describe(entity: Entity): string {
 function InfoPanel({ entity, onClose }: { entity: Entity; onClose: () => void }) {
   return (
     <aside className="map-panel">
-      <button className="close" onClick={onClose} aria-label="Close">×</button>
+      <button className="close" onClick={onClose} aria-label="Close" />
       {entity.kind === 'city' && (
         <>
           <h3>{entity.city.name}</h3>

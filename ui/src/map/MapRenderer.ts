@@ -15,7 +15,7 @@ interface Drawable {
   key: AssetKey
   variant: number
   scale?: number
-  label?: { name: string; points: number }
+  label?: { name: string; points?: number }
 }
 
 const FOREST = 1
@@ -176,13 +176,13 @@ export class MapRenderer {
     const entity = (x: number, y: number, key: AssetKey): Drawable =>
       ({ x: x + 0.5, y: y + 1, key, variant: variantFor(x, y, this.sprites.byKey[key].length) })
     for (const s of this.cache.slots.values()) if (inView(s.x, s.y)) drawables.push(entity(s.x, s.y, 'entity.slot'))
-    for (const b of this.cache.barbarians.values()) if (inView(b.x, b.y)) drawables.push(entity(b.x, b.y, 'entity.barbarian'))
+    for (const b of this.cache.barbarians.values()) if (inView(b.x, b.y)) drawables.push({ ...entity(b.x, b.y, 'entity.barbarian'), label: { name: 'Barbarians' } })
     for (const c of this.cache.cities.values()) {
       if (inView(c.x, c.y)) drawables.push({ ...entity(c.x, c.y, cityTierKey(c.points)), label: { name: c.name, points: c.points } })
     }
     drawables.sort((a, b) => a.y - b.y || a.x - b.x)
 
-    const labels: { sx: number; sy: number; name: string; points: number }[] = []
+    const labels: { sx: number; sy: number; name: string; points?: number }[] = []
     for (const d of drawables) {
       const sprite = this.sprites.byKey[d.key][d.variant]
       const s = d.scale ?? 1
@@ -199,6 +199,12 @@ export class MapRenderer {
     ctx.lineJoin = 'round'
     for (const l of labels) {
       ctx.strokeStyle = 'rgba(20, 30, 15, 0.85)'
+      if (l.points === undefined) {
+        ctx.fillStyle = '#ff6a4d'
+        ctx.strokeText(l.name, l.sx, l.sy)
+        ctx.fillText(l.name, l.sx, l.sy)
+        continue
+      }
       ctx.fillStyle = '#ffffff'
       ctx.strokeText(l.name, l.sx, l.sy - 13)
       ctx.fillText(l.name, l.sx, l.sy - 13)
