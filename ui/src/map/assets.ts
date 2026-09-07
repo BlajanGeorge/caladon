@@ -1,6 +1,9 @@
 import '@assets/procedural-sprites.js'
 import cityT1Url from '@assets/sprites/city-t1.png'
 import cityT2Url from '@assets/sprites/city-t2.png'
+import cityT3Url from '@assets/sprites/city-t3.png'
+import cityT4Url from '@assets/sprites/city-t4.png'
+import cityT5Url from '@assets/sprites/city-t5.png'
 import grassUrl from '@assets/sprites/grass2.png'
 import forestUrl from '@assets/sprites/forest.png'
 import rockhillUrl from '@assets/sprites/rockhill.png'
@@ -30,6 +33,8 @@ export type AssetKey =
   | 'entity.city.t1'
   | 'entity.city.t2'
   | 'entity.city.t3'
+  | 'entity.city.t4'
+  | 'entity.city.t5'
   | 'entity.barbarian'
   | 'decor.bush'
   | 'decor.rock'
@@ -79,6 +84,9 @@ const imageSprites: Partial<Record<AssetKey, ImageSprite>> = {
   'entity.slot': { urls: [slotUrl], widthTiles: 1.5, anchorYFrac: 0.72 },
   'entity.city.t1': { urls: [cityT1Url], widthTiles: 2.2, anchorYFrac: 0.86 },
   'entity.city.t2': { urls: [cityT2Url], widthTiles: 2.2, anchorYFrac: 0.9 },
+  'entity.city.t3': { urls: [cityT3Url], widthTiles: 3.2, anchorYFrac: 0.84 },
+  'entity.city.t4': { urls: [cityT4Url], widthTiles: 4.0, anchorYFrac: 0.86 },
+  'entity.city.t5': { urls: [cityT5Url], widthTiles: 4.6, anchorYFrac: 0.88 },
   'entity.barbarian': { urls: [barbarianUrl], widthTiles: 1.8, anchorYFrac: 0.9 },
 }
 
@@ -180,9 +188,13 @@ export async function loadSprites(ctx: CanvasRenderingContext2D): Promise<Sprite
   return { grass, byKey: Object.fromEntries(entries) as Record<AssetKey, Sprite[]> }
 }
 
-/** Placeholder thresholds (tunable): t1 < 1000, t2 1000–4999, t3 >= 5000. */
+/** Points thresholds per tier: t1 0–2000, t2 2001–5000, t3 5001–8000, t4 8001–12000, t5 12001+. */
 export function cityTierKey(points: number): AssetKey {
-  return points >= 5000 ? 'entity.city.t3' : points >= 1000 ? 'entity.city.t2' : 'entity.city.t1'
+  if (points > 12000) return 'entity.city.t5'
+  if (points > 8000) return 'entity.city.t4'
+  if (points > 5000) return 'entity.city.t3'
+  if (points > 2000) return 'entity.city.t2'
+  return 'entity.city.t1'
 }
 
 /** Stable per-tile pseudo-random number in [0, 1); `salt` gives independent streams per use. */
