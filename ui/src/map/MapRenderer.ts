@@ -23,11 +23,7 @@ const MOUNTAIN = 3
 /** Trees per FOREST tile and the share of MOUNTAIN tiles that carry a peak. */
 const TREES_PER_TILE = 5
 const PEAK_SHARE = 0.5
-/** Fraction of open GRASS tiles that get a decorative bush / rock / dirt patch. */
-const BUSH_SHARE = 0.03
-const ROCK_SHARE = 0.05
-/** Cross-mingling: rocks inside forest tiles, trees inside mountain tiles. */
-const FOREST_ROCK_SHARE = 0.15
+/** Cross-mingling: trees growing inside mountain tiles. */
 const MOUNTAIN_TREE_SHARE = 0.5
 
 /** Canvas 2D renderer: grass ground, then one depth-sorted pass of terrain objects + entities, then labels. */
@@ -121,16 +117,6 @@ export class MapRenderer {
               scale: 0.7 + tileRandom(x, y, 14 + i * 3) * 0.6,
             })
           }
-          // A rock now and then, so forests and rocky ground mingle.
-          if (tileRandom(x, y, 51) < FOREST_ROCK_SHARE) {
-            drawables.push({
-              x: x + tileRandom(x, y, 52),
-              y: y + tileRandom(x, y, 53),
-              key: 'decor.rock',
-              variant: variantFor(x, y, this.sprites.byKey['decor.rock'].length, 54),
-              scale: 0.6 + tileRandom(x, y, 55) * 0.7,
-            })
-          }
         } else if (code === MOUNTAIN) {
           if (tileRandom(x, y, 21) < PEAK_SHARE) {
             drawables.push({
@@ -148,25 +134,6 @@ export class MapRenderer {
               key: 'terrain.forest',
               variant: variantFor(x, y, this.sprites.byKey['terrain.forest'].length, 29),
               scale: 0.6 + tileRandom(x, y, 30) * 0.5,
-            })
-          }
-        } else {
-          const r = tileRandom(x, y, 31)
-          if (r < BUSH_SHARE) {
-            drawables.push({
-              x: x + tileRandom(x, y, 32),
-              y: y + tileRandom(x, y, 33),
-              key: 'decor.bush',
-              variant: variantFor(x, y, this.sprites.byKey['decor.bush'].length, 34),
-              scale: 0.7 + tileRandom(x, y, 35) * 0.3,
-            })
-          } else if (r < BUSH_SHARE + ROCK_SHARE) {
-            drawables.push({
-              x: x + tileRandom(x, y, 36),
-              y: y + tileRandom(x, y, 37),
-              key: 'decor.rock',
-              variant: variantFor(x, y, this.sprites.byKey['decor.rock'].length, 38),
-              scale: 0.4 + tileRandom(x, y, 39) * 1.1,
             })
           }
         }

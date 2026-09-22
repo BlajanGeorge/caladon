@@ -9,13 +9,6 @@ import forestUrl from '@assets/sprites/forest.png'
 import rockhillUrl from '@assets/sprites/rockhill.png'
 import treeFirUrl from '@assets/sprites/tree-fir.png'
 import treeOakUrl from '@assets/sprites/tree-oak.png'
-import bush1Url from '@assets/sprites/bush1.png'
-import bush2Url from '@assets/sprites/bush2.png'
-import bush3Url from '@assets/sprites/bush3.png'
-import bush4Url from '@assets/sprites/bush4.png'
-import rock1Url from '@assets/sprites/rock1.png'
-import rock2Url from '@assets/sprites/rock2.png'
-import rock3Url from '@assets/sprites/rock3.png'
 import slotUrl from '@assets/sprites/slot.png'
 import barbarianUrl from '@assets/sprites/barbarian.png'
 import { TILE } from './camera'
@@ -36,8 +29,6 @@ export type AssetKey =
   | 'entity.city.t4'
   | 'entity.city.t5'
   | 'entity.barbarian'
-  | 'decor.bush'
-  | 'decor.rock'
 
 export interface Sprite {
   image: CanvasImageSource
@@ -79,15 +70,13 @@ interface ImageSprite {
 const imageSprites: Partial<Record<AssetKey, ImageSprite>> = {
   'terrain.forest': { urls: [forestUrl, treeFirUrl, treeOakUrl], widthTiles: 0.9, anchorYFrac: 0.96 },
   'terrain.mountain': { urls: [rockhillUrl], widthTiles: 2.6, anchorYFrac: 0.85 },
-  'decor.bush': { urls: [bush1Url, bush2Url, bush3Url, bush4Url], widthTiles: 0.28, anchorYFrac: 0.85 },
-  'decor.rock': { urls: [rock1Url, rock2Url, rock3Url], widthTiles: 0.45, anchorYFrac: 0.85 },
   'entity.slot': { urls: [slotUrl], widthTiles: 1.5, anchorYFrac: 0.72 },
   'entity.city.t1': { urls: [cityT1Url], widthTiles: 2.2, anchorYFrac: 0.86 },
   'entity.city.t2': { urls: [cityT2Url], widthTiles: 2.2, anchorYFrac: 0.9 },
   'entity.city.t3': { urls: [cityT3Url], widthTiles: 3.2, anchorYFrac: 0.84 },
   'entity.city.t4': { urls: [cityT4Url], widthTiles: 4.0, anchorYFrac: 0.86 },
   'entity.city.t5': { urls: [cityT5Url], widthTiles: 4.6, anchorYFrac: 0.88 },
-  'entity.barbarian': { urls: [barbarianUrl], widthTiles: 1.8, anchorYFrac: 0.9 },
+  'entity.barbarian': { urls: [barbarianUrl], widthTiles: 1.4, anchorYFrac: 0.94 },
 }
 
 const S = () => window.CaladonSprites
