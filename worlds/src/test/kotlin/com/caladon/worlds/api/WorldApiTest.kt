@@ -7,6 +7,7 @@ import com.caladon.users.security.JwtService
 import com.caladon.worlds.generation.MapConstants
 import com.caladon.worlds.repository.BarbarianVillageRepository
 import com.caladon.worlds.repository.CityRepository
+import com.caladon.worlds.repository.CityResourcesRepository
 import com.caladon.worlds.repository.CitySlotRepository
 import com.caladon.worlds.repository.WorldMembershipRepository
 import com.caladon.worlds.repository.WorldRepository
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
@@ -27,12 +29,14 @@ import org.springframework.test.web.servlet.post
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.time.Duration
 import java.time.Instant
 import kotlin.math.hypot
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
+@Import(MutableClockConfig::class)
 class WorldApiTest {
 
     companion object {
@@ -51,6 +55,8 @@ class WorldApiTest {
     @Autowired lateinit var citySlotRepository: CitySlotRepository
     @Autowired lateinit var barbarianVillageRepository: BarbarianVillageRepository
     @Autowired lateinit var membershipRepository: WorldMembershipRepository
+    @Autowired lateinit var cityResourcesRepository: CityResourcesRepository
+    @Autowired lateinit var clock: MutableClock
 
     private lateinit var adminToken: String
     private lateinit var playerToken: String
@@ -58,6 +64,7 @@ class WorldApiTest {
 
     @BeforeEach
     fun setUp() {
+        clock.reset()
         worldRepository.deleteAll() // cascades to slots, cities, villages, memberships
         userRepository.deleteAll()
         adminToken = tokenFor(createUser("admin@caladon.test", "admin", Role.ADMINISTRATOR))
@@ -318,6 +325,74 @@ class WorldApiTest {
         get(query, adminToken).andExpect {
             status { isOk() }
             jsonPath("$.terrain.length()") { value(100) }
+        }
+    }
+
+    // ---- resources ----
+
+    @Test
+    fun `join founds the city with the starting stock and population, and the detail settles production`() {
+        val id = createPlayableWorld()
+        val start = json(post("/api/v1/worlds/$id/join", playerToken).andExpect { status { isOk() } })["startCity"]
+        val cityId = start["id"].asLong()
+
+        val row = cityResourcesRepository.findById(cityId).orElseThrow()
+        assertThat(row.wood).isEqualByComparingTo("500")
+        assertThat(row.stone).isEqualByComparingTo("500")
+        assertThat(row.iron).isEqualByComparingTo("500")
+        assertThat(row.population).isEqualTo(100)
+
+        get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
+            status { isOk() }
+            jsonPath("$.id") { value(cityId) }
+            jsonPath("$.name") { value("george's city") }
+            jsonPath("$.x") { value(start["x"].asInt()) }
+            jsonPath("$.y") { value(start["y"].asInt()) }
+            jsonPath("$.points") { value(0) }
+            jsonPath("$.resources.wood.stock") { value(500) }
+            jsonPath("$.resources.wood.ratePerMinute") { value(30.0) }
+            jsonPath("$.resources.capacity") { value(2000) }
+            jsonPath("$.resources.serverTime") { exists() }
+            jsonPath("$.population") { value(100) }
+        }
+
+        clock.advance(Duration.ofSeconds(90)) // 1.5 min * 30/min = +45
+        get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
+            status { isOk() }
+            jsonPath("$.resources.wood.stock") { value(545) }
+            jsonPath("$.resources.stone.stock") { value(545) }
+            jsonPath("$.resources.iron.stock") { value(545) }
+            jsonPath("$.resources.serverTime") { value(clock.instant().toString()) }
+        }
+        assertThat(cityResourcesRepository.findById(cityId).orElseThrow().settledAt).isEqualTo(clock.instant())
+
+        clock.advance(Duration.ofMinutes(50)) // 545 + 50*30 > 2000; stays inside the 1 h access-token TTL (same clock)
+        get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
+            jsonPath("$.resources.wood.stock") { value(2000) }
+        }
+    }
+
+    @Test
+    fun `city detail is owner-only and hidden when the city or world is not visible`() {
+        val id = createPlayableWorld()
+        val cityId = json(post("/api/v1/worlds/$id/join", playerToken).andExpect { status { isOk() } })["startCity"]["id"].asLong()
+
+        get("/api/v1/worlds/$id/cities/$cityId", otherPlayerToken).andExpect {
+            status { isForbidden() }
+            jsonPath("$.error") { value("NOT_OWNER") }
+        }
+        get("/api/v1/worlds/$id/cities/999999", playerToken).andExpect {
+            status { isNotFound() }
+            jsonPath("$.error") { value("CITY_NOT_FOUND") }
+        }
+        get("/api/v1/worlds/999999/cities/$cityId", playerToken).andExpect {
+            status { isNotFound() }
+            jsonPath("$.error") { value("CITY_NOT_FOUND") }
+        }
+        val other = createPlayableWorld("Other")
+        get("/api/v1/worlds/$other/cities/$cityId", playerToken).andExpect {
+            status { isNotFound() }
+            jsonPath("$.error") { value("CITY_NOT_FOUND") }
         }
     }
 }

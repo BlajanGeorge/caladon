@@ -77,4 +77,6 @@ curl -s -X POST $W/admin/worlds/1/approve -H "Authorization: Bearer $T"
 curl -s $W/worlds -H "Authorization: Bearer $T"
 curl -s -X POST $W/worlds/1/join -H "Authorization: Bearer $T"
 curl -s "$W/worlds/1/map?startX=205&startY=205&endX=294&endY=294" -H "Authorization: Bearer $T"
+curl -s $W/worlds/1/cities/mine -H "Authorization: Bearer $T"
+curl -s $W/worlds/1/cities/99 -H "Authorization: Bearer $T"     # owner only: settled resources + population
 ```

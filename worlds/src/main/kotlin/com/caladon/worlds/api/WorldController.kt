@@ -1,6 +1,7 @@
 package com.caladon.worlds.api
 
 import com.caladon.users.security.AuthenticatedUser
+import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.map.Viewport
 import com.caladon.worlds.service.WorldService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -35,6 +36,28 @@ class WorldController(private val worldService: WorldService) {
     @GetMapping("/{id}/cities/mine")
     fun myCities(@AuthenticationPrincipal user: AuthenticatedUser, @PathVariable id: Long): List<OwnedCityResponse> =
         worldService.myCities(id, user.id).map { OwnedCityResponse(it.id, it.x, it.y, it.name, it.points) }
+
+    /** One of the caller's cities with its settled resources and population. */
+    @GetMapping("/{id}/cities/{cityId}")
+    fun cityDetail(
+        @AuthenticationPrincipal user: AuthenticatedUser,
+        @PathVariable id: Long,
+        @PathVariable cityId: Long,
+    ): CityDetailResponse {
+        val d = worldService.cityDetail(id, cityId, user.id, user.role)
+        fun stock(r: Resource) = ResourceStockResponse(d.stock(r), d.ratePerMinute)
+        return CityDetailResponse(
+            id = d.id, name = d.name, x = d.x, y = d.y, points = d.points,
+            resources = CityResourcesResponse(
+                wood = stock(Resource.WOOD),
+                stone = stock(Resource.STONE),
+                iron = stock(Resource.IRON),
+                capacity = d.capacity,
+                serverTime = d.settledAt,
+            ),
+            population = d.population,
+        )
+    }
 
     @GetMapping("/{id}/map")
     fun map(

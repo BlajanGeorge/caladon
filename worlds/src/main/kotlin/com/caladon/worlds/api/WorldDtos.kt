@@ -40,3 +40,26 @@ data class MapResponse(
     val cities: List<CityResponse>,
     val barbarians: List<TileResponse>,
 )
+
+data class ResourceStockResponse(val stock: Long, val ratePerMinute: Double)
+
+data class CityResourcesResponse(
+    val wood: ResourceStockResponse,
+    val stone: ResourceStockResponse,
+    val iron: ResourceStockResponse,
+    /** Max stock of each resource. */
+    val capacity: Int,
+    /** The instant the stocks are settled to; the client extrapolates from here. */
+    val serverTime: Instant,
+)
+
+data class CityDetailResponse(
+    val id: Long,
+    val name: String,
+    val x: Int,
+    val y: Int,
+    val points: Int,
+    val resources: CityResourcesResponse,
+    /** Remaining free population. */
+    val population: Int,
+)

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api/auth'
 import type { OwnedCity } from '../api/worlds'
@@ -9,9 +9,11 @@ interface Props {
   worldName?: string
   worldId: number
   city?: OwnedCity | null
+  /** Rendered in the right-hand group, just before the Profile icon (the City view's resource strip). */
+  strip?: ReactNode
 }
 
-export function MapTopBar({ worldName }: Props) {
+export function MapTopBar({ worldName, strip }: Props) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const rightRef = useRef<HTMLDivElement>(null)
@@ -40,6 +42,7 @@ export function MapTopBar({ worldName }: Props) {
       <span className="mtb-world">{worldName ?? 'Caladon'}</span>
 
       <div className="mtb-right" ref={rightRef}>
+        {strip}
         <button type="button" className="mtb-icon-btn" title="Profile" aria-label="Profile" onClick={() => navigate('/profile')}>
           <img src={profileUrl} alt="" />
         </button>
