@@ -32,7 +32,7 @@ export function ResourceStrip({ resources, population }: Props) {
         const value = resources ? resources[key].stock : null
         const full = resources !== undefined && value !== null && value >= resources.capacity
         const title = resources
-          ? `${ICONS[key].label}: +${resources[key].ratePerMinute}/min · ${resources.capacity} cap`
+          ? `${ICONS[key].label}: +${resources[key].ratePerHour}/h · ${resources.capacity} cap`
           : ICONS[key].label
         return (
           <span key={key} className={'mtb-res' + (full ? ' full' : '')} title={title}>

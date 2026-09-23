@@ -337,10 +337,10 @@ class WorldApiTest {
         val cityId = start["id"].asLong()
 
         val row = cityResourcesRepository.findById(cityId).orElseThrow()
-        assertThat(row.wood).isEqualByComparingTo("500")
-        assertThat(row.stone).isEqualByComparingTo("500")
-        assertThat(row.iron).isEqualByComparingTo("500")
-        assertThat(row.population).isEqualTo(100)
+        assertThat(row.wood).isEqualTo(500)
+        assertThat(row.stone).isEqualTo(500)
+        assertThat(row.iron).isEqualTo(500)
+        assertThat(row.population).isEqualTo(240)
 
         get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
             status { isOk() }
@@ -350,25 +350,31 @@ class WorldApiTest {
             jsonPath("$.y") { value(start["y"].asInt()) }
             jsonPath("$.points") { value(0) }
             jsonPath("$.resources.wood.stock") { value(500) }
-            jsonPath("$.resources.wood.ratePerMinute") { value(30.0) }
-            jsonPath("$.resources.capacity") { value(2000) }
+            jsonPath("$.resources.wood.ratePerHour") { value(30) }
+            jsonPath("$.resources.capacity") { value(1000) }
             jsonPath("$.resources.serverTime") { exists() }
-            jsonPath("$.population") { value(100) }
+            jsonPath("$.population") { value(240) }
         }
 
-        clock.advance(Duration.ofSeconds(90)) // 1.5 min * 30/min = +45
+        clock.advance(Duration.ofMinutes(5)) // 30/h = one unit per 2 min: +2, one minute of production carried as time
         get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
             status { isOk() }
-            jsonPath("$.resources.wood.stock") { value(545) }
-            jsonPath("$.resources.stone.stock") { value(545) }
-            jsonPath("$.resources.iron.stock") { value(545) }
+            jsonPath("$.resources.wood.stock") { value(502) }
+            jsonPath("$.resources.stone.stock") { value(502) }
+            jsonPath("$.resources.iron.stock") { value(502) }
             jsonPath("$.resources.serverTime") { value(clock.instant().toString()) }
         }
-        assertThat(cityResourcesRepository.findById(cityId).orElseThrow().settledAt).isEqualTo(clock.instant())
+        val row2 = cityResourcesRepository.findById(cityId).orElseThrow()
+        assertThat(row2.woodSettledAt).isEqualTo(clock.instant().minus(Duration.ofMinutes(1)))
 
-        clock.advance(Duration.ofMinutes(50)) // 545 + 50*30 > 2000; stays inside the 1 h access-token TTL (same clock)
+        clock.advance(Duration.ofMinutes(1)) // the carried minute completes the third unit
         get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
-            jsonPath("$.resources.wood.stock") { value(2000) }
+            jsonPath("$.resources.wood.stock") { value(503) }
+        }
+
+        clock.advance(Duration.ofMinutes(50)) // stays inside the 1 h access-token TTL (same clock): +25
+        get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
+            jsonPath("$.resources.wood.stock") { value(528) }
         }
     }
 

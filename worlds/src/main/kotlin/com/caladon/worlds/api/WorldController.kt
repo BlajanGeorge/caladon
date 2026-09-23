@@ -45,7 +45,7 @@ class WorldController(private val worldService: WorldService) {
         @PathVariable cityId: Long,
     ): CityDetailResponse {
         val d = worldService.cityDetail(id, cityId, user.id, user.role)
-        fun stock(r: Resource) = ResourceStockResponse(d.stock(r), d.ratePerMinute)
+        fun stock(r: Resource) = ResourceStockResponse(d.stock(r), d.rate(r))
         return CityDetailResponse(
             id = d.id, name = d.name, x = d.x, y = d.y, points = d.points,
             resources = CityResourcesResponse(
@@ -53,7 +53,7 @@ class WorldController(private val worldService: WorldService) {
                 stone = stock(Resource.STONE),
                 iron = stock(Resource.IRON),
                 capacity = d.capacity,
-                serverTime = d.settledAt,
+                serverTime = d.serverTime,
             ),
             population = d.population,
         )

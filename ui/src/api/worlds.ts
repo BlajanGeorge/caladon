@@ -44,9 +44,9 @@ export interface MapResponse {
 }
 
 export interface ResourceStock {
-  /** Floored stock, settled to `serverTime`. */
+  /** Whole units, settled to `serverTime`. */
   stock: number
-  ratePerMinute: number
+  ratePerHour: number
 }
 
 export interface CityResources {
@@ -55,7 +55,7 @@ export interface CityResources {
   iron: ResourceStock
   /** Max stock of each resource. */
   capacity: number
-  /** ISO instant the stocks are settled to; the client extrapolates from here. */
+  /** ISO instant the stocks are settled to. */
   serverTime: string
 }
 

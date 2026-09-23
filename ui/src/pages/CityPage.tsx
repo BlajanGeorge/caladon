@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import { worldsApi, type CityDetail, type OwnedCity } from '../api/worlds'
+import { worldsApi, type CityDetail, type CityResources, type OwnedCity } from '../api/worlds'
 import { MapTopBar } from '../components/MapTopBar'
 import { ResourceStrip } from '../components/ResourceStrip'
 import { useToast } from '../components/Toast'
@@ -12,8 +12,15 @@ interface NavState {
   city?: OwnedCity
 }
 
-/** How often the City view re-syncs resources and population with the server. */
-const POLL_MS = 60_000
+/**
+ * How often the City view re-syncs with the server: every minute when a stock can change every minute
+ * (more than 60/h), otherwise every 5 minutes (at 30/h a number changes only every two minutes).
+ */
+export function pollIntervalMs(resources?: CityResources): number {
+  if (!resources) return 60_000
+  const max = Math.max(resources.wood.ratePerHour, resources.stone.ratePerHour, resources.iron.ratePerHour)
+  return max > 60 ? 60_000 : 300_000
+}
 
 /** City view: the HUD top bar with the resource strip, plus the city card (buildings come later). */
 export function CityPage() {
@@ -44,24 +51,36 @@ export function CityPage() {
       .catch((err) => leaveIfGone(err, 'Could not load your city'))
   }, [city, worldId, toast, leaveIfGone])
 
-  // Resources + population: fetch on entry, then every minute; paused while the tab is hidden.
+  // Resources + population: fetch on entry, then on a rate-dependent cadence; paused while the tab is hidden.
   useEffect(() => {
     if (!city) return
     let cancelled = false
     let timer: number | null = null
+    let running = false
 
-    const load = () => {
+    const schedule = (ms: number) => { timer = window.setTimeout(tick, ms) }
+    const tick = () => {
+      timer = null
       worldsApi.cityDetail(worldId, city.id)
-        .then((d) => { if (!cancelled) setDetail(d) })
-        .catch((err) => { if (!cancelled) leaveIfGone(err, 'Could not load resources') })
+        .then((d) => {
+          if (cancelled) return
+          setDetail(d)
+          if (running) schedule(pollIntervalMs(d.resources))
+        })
+        .catch((err) => {
+          if (cancelled) return
+          leaveIfGone(err, 'Could not load resources')
+          if (running) schedule(60_000)
+        })
     }
     const start = () => {
-      if (timer !== null) return
-      load()
-      timer = window.setInterval(load, POLL_MS)
+      if (running) return
+      running = true
+      tick()
     }
     const stop = () => {
-      if (timer !== null) window.clearInterval(timer)
+      running = false
+      if (timer !== null) window.clearTimeout(timer)
       timer = null
     }
     const onVisibility = () => (document.hidden ? stop() : start())

@@ -22,7 +22,8 @@ import com.caladon.worlds.repository.WorldMembershipRepository
 import com.caladon.worlds.repository.WorldRepository
 import org.slf4j.LoggerFactory
 import com.caladon.worlds.resources.ResourceConstants
-import com.caladon.worlds.resources.Settlement
+import com.caladon.worlds.rules.BuildingRules
+import com.caladon.worlds.rules.Production
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -52,10 +53,11 @@ class WorldService(
     data class JoinResult(val worldId: Long, val startCity: StartCity)
     data class CityDetail(
         val id: Long, val name: String, val x: Int, val y: Int, val points: Int,
-        val stocks: Map<Resource, Long>, val ratePerMinute: Double, val capacity: Int,
-        val settledAt: java.time.Instant, val population: Int,
+        val stocks: Map<Resource, Long>, val rates: Map<Resource, Long>, val capacity: Long,
+        val serverTime: java.time.Instant, val population: Int,
     ) {
         fun stock(r: Resource): Long = stocks.getValue(r)
+        fun rate(r: Resource): Long = rates.getValue(r)
     }
     data class MapView(
         val viewport: Viewport,
@@ -146,8 +148,8 @@ class WorldService(
                 wood = ResourceConstants.STARTING_STOCK,
                 stone = ResourceConstants.STARTING_STOCK,
                 iron = ResourceConstants.STARTING_STOCK,
-                settledAt = now,
-                population = ResourceConstants.STARTING_POPULATION,
+                woodSettledAt = now, stoneSettledAt = now, ironSettledAt = now,
+                population = BuildingRules.farmPop(1).toInt(),
             ),
         )
         return JoinResult(worldId, StartCity(requireNotNull(city.id), slot.x, slot.y, city.name, city.points))
@@ -176,16 +178,19 @@ class WorldService(
 
         val res = cityResourcesRepository.findWithLockByCityId(cityId) ?: throw WorldException.CityNotFound()
         val now = clock.instant()
-        val rate = ResourceConstants.PRODUCTION_PER_MINUTE * ResourceConstants.WORLD_SPEED
-        val capacity = ResourceConstants.CAPACITY
-        val elapsed = Settlement.elapsedMinutes(res.settledAt, now)
-        for (r in Resource.entries) res.setStock(r, Settlement.settle(res.stock(r), rate, capacity, elapsed))
-        res.settledAt = if (now.isAfter(res.settledAt)) now else res.settledAt
+        // Level-1 buildings until the buildings feature lands.
+        val rate = BuildingRules.production(1) * ResourceConstants.WORLD_SPEED
+        val capacity = BuildingRules.capacity(1)
+        for (r in Resource.entries) {
+            val s = Production.settle(res.stock(r), rate, capacity, res.settledAt(r), now)
+            res.setStock(r, s.stock); res.setSettledAt(r, s.settledAt)
+        }
 
         return CityDetail(
             id = cityId, name = city.name, x = slot.x.toInt(), y = slot.y.toInt(), points = city.points,
-            stocks = Resource.entries.associateWith { res.stock(it).toLong() },
-            ratePerMinute = rate, capacity = capacity, settledAt = res.settledAt, population = res.population,
+            stocks = Resource.entries.associateWith { res.stock(it) },
+            rates = Resource.entries.associateWith { Math.round(rate) },
+            capacity = capacity, serverTime = now, population = res.population,
         )
     }
 
