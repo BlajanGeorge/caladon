@@ -35,6 +35,11 @@ class CityState(
 
     fun level(b: Building): Int = buildings[b]?.level ?: 0
 
+    fun isStudied(u: Unit): Boolean = !u.needsStudy || studies[u]?.let { !it.completesAt.isAfter(now) } == true
+
+    /** Studies still running, in queue order. */
+    fun studyQueue(): List<CityStudy> = studies.values.filter { it.completesAt.isAfter(now) }.sortedBy { it.completesAt }
+
     fun levels(): Map<Building, Int> = Building.entries.associateWith { level(it) }
 
     fun rate(r: Resource): Double = BuildingRules.production(level(producer(r))) * ResourceConstants.WORLD_SPEED

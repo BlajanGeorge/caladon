@@ -101,6 +101,12 @@ class CityController(
         @RequestBody request: StudyRequest,
     ): CityDetailResponse = toDetail(armyService.study(worldId, cityId, user.id, user.role, request.unit))
 
+    @DeleteMapping("/study-orders/{unit}")
+    fun cancelStudy(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @PathVariable unit: Unit,
+    ): CityDetailResponse = toDetail(armyService.cancelStudy(worldId, cityId, user.id, user.role, unit))
+
     @DeleteMapping("/recruit-orders/{orderId}")
     fun cancelRecruit(
         @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
@@ -127,7 +133,8 @@ class CityController(
             buildQueueSlots = BuildingRules.queueSlots(state.level(Building.TOWN_HALL)),
             units = Unit.entries.map { CityUnitResponse(it, it.displayName, state.units[it]?.count ?: 0) },
             recruitQueue = recruitQueue(state),
-            studies = state.studies.values.sortedBy { it.completesAt }.map { StudyResponse(it.id.unit, it.completesAt, !it.completesAt.isAfter(state.now)) },
+            studied = Unit.entries.filter { it.needsStudy && state.isStudied(it) },
+            studyQueue = state.studyQueue().mapIndexed { i, s -> StudyOrderResponse(s.id.unit, s.id.unit.displayName, i + 1, s.orderedAt, s.completesAt) },
         )
     }
 

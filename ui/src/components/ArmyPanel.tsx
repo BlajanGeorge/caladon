@@ -10,10 +10,11 @@ interface Props {
   onRecruit: (unit: UnitView['type'], count: number) => void
   onStudy: (unit: UnitView['type']) => void
   onCancel: (orderId: number) => void
+  onCancelStudy: (unit: UnitView['type']) => void
 }
 
 /** Units at home, the recruitment form per type, study status, and the recruitment queue. */
-export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCancel }: Props) {
+export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCancel, onCancelStudy }: Props) {
   const [counts, setCounts] = useState<Record<string, string>>({})
   const stocks = { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, iron: detail.resources.iron.stock }
 
@@ -33,7 +34,19 @@ export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCanc
                 {i === 0 && o.nextCompletesAt ? `next in ${formatDuration(secondsUntil(o.nextCompletesAt, now))}, ` : ''}
                 all in {formatDuration(secondsUntil(o.completesAt, now))}
               </span>
-              <button className="link" disabled={busy} onClick={() => onCancel(o.id)}>Cancel</button>
+              {i === detail.recruitQueue.length - 1 && <button className="link" disabled={busy} onClick={() => onCancel(o.id)}>Cancel</button>}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {detail.studyQueue.length > 0 && (
+        <ul className="queue">
+          {detail.studyQueue.map((s, i) => (
+            <li key={s.unit}>
+              <span className="q-name">Study {s.name}</span>
+              <span className="q-time">{i === 0 ? formatDuration(secondsUntil(s.completesAt, now)) : `after ${formatDuration(secondsUntil(s.completesAt, now))}`}</span>
+              {i === detail.studyQueue.length - 1 && <button className="link" disabled={busy} onClick={() => onCancelStudy(s.unit)}>Cancel</button>}
             </li>
           ))}
         </ul>
@@ -49,7 +62,7 @@ export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCanc
             const canRecruit = u.recruitable
             let reason = ''
             if (u.blockedBy.length > 0) reason = `Needs ${formatRequirements(u.blockedBy)}`
-            else if (!u.studied) reason = u.studyCompletesAt ? `Studying, ${formatDuration(secondsUntil(u.studyCompletesAt, now))}` : 'Not studied'
+            else if (!u.studied) reason = u.studyCompletesAt ? `Queued for study, ${formatDuration(secondsUntil(u.studyCompletesAt, now))}` : 'Not studied'
             else if (count < 1) reason = 'Count'
             else {
               const a = affordability(stocks, detail.population, u.cost, u.population, count)
@@ -84,7 +97,7 @@ export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCanc
                       <button className="primary small" disabled={busy || reason !== ''} title={reason} onClick={() => onRecruit(u.type, count)}>Recruit</button>
                     </div>
                   ) : u.studyCompletesAt ? (
-                    <span className="muted">Studying, {formatDuration(secondsUntil(u.studyCompletesAt, now))}</span>
+                    <span className="muted">Queued for study, {formatDuration(secondsUntil(u.studyCompletesAt, now))}</span>
                   ) : (
                     <>
                       <button className="secondary small" disabled={busy || studyReason !== ''} title={studyReason} onClick={() => onStudy(u.type)}>

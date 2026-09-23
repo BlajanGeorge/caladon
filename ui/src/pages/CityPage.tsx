@@ -36,6 +36,7 @@ const ERRORS: Record<string, string> = {
   NOT_STUDIED: 'Study this unit first',
   ALREADY_STUDIED: 'Already studied',
   ORDER_NOT_FOUND: 'That order is gone',
+  NOT_LAST_IN_QUEUE: 'Only the last order in a queue can be cancelled',
 }
 
 /** City view: the HUD top bar with the resource strip, the city card, the buildings and army panels. */
@@ -52,7 +53,7 @@ export function CityPage() {
   const [army, setArmy] = useState<UnitView[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const hasQueue = (detail?.buildQueue.length ?? 0) > 0 || (detail?.recruitQueue.length ?? 0) > 0 || (detail?.studies.some((s) => !s.studied) ?? false)
+  const hasQueue = (detail?.buildQueue.length ?? 0) > 0 || (detail?.recruitQueue.length ?? 0) > 0 || (detail?.studyQueue.length ?? 0) > 0
   const now = useNow(hasQueue)
 
   const leaveIfGone = useCallback((err: unknown, message: string) => {
@@ -144,6 +145,7 @@ export function CityPage() {
   const onRecruit = (u: UnitType, count: number) => act(() => worldsApi.recruit(worldId, city!.id, u, count))
   const onStudy = (u: UnitType) => act(() => worldsApi.study(worldId, city!.id, u))
   const onCancelRecruit = (orderId: number) => act(() => worldsApi.cancelRecruit(worldId, city!.id, orderId), 'Order cancelled and refunded')
+  const onCancelStudy = (u: UnitType) => act(() => worldsApi.cancelStudy(worldId, city!.id, u), 'Study cancelled and refunded')
 
   const shown = detail ?? city
 
@@ -179,7 +181,7 @@ export function CityPage() {
           <BuildingsPanel detail={detail} buildings={buildings} now={now} busy={busy} onUpgrade={onUpgrade} onCancel={onCancelBuild} />
         )}
         {detail && army && (
-          <ArmyPanel detail={detail} units={army} now={now} busy={busy} onRecruit={onRecruit} onStudy={onStudy} onCancel={onCancelRecruit} />
+          <ArmyPanel detail={detail} units={army} now={now} busy={busy} onRecruit={onRecruit} onStudy={onStudy} onCancel={onCancelRecruit} onCancelStudy={onCancelStudy} />
         )}
       </main>
     </div>

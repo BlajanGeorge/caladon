@@ -34,6 +34,8 @@ class CitySweeper(
             SELECT city_id FROM city_build_order WHERE completes_at <= :now
             UNION
             SELECT city_id FROM city_recruit_order WHERE next_completes_at <= :now
+            UNION
+            SELECT city_id FROM city_study WHERE completes_at <= :now AND NOT applied
             """,
             mapOf("now" to java.sql.Timestamp.from(now)),
             Long::class.java,

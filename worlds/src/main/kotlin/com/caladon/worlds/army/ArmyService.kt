@@ -32,7 +32,7 @@ class ArmyService(
         val academy = state.level(Building.ACADEMY)
         return Unit.entries.map { u ->
             val study = state.studies[u]
-            val studied = study != null && !study.completesAt.isAfter(state.now)
+            val studied = state.isStudied(u)
             val blocked = buildList {
                 if (barracks < u.barracksLevel) add(Requirement(Building.BARRACKS, u.barracksLevel))
             }
@@ -62,10 +62,7 @@ class ArmyService(
         val state = cityAccess.open(worldId, cityId, userId, role)
         val barracks = state.level(Building.BARRACKS)
         if (barracks < unit.barracksLevel) throw WorldException.RequirementsNotMet(mapOf(Building.BARRACKS.name to unit.barracksLevel.toString()))
-        if (unit.needsStudy) {
-            val study = state.studies[unit]
-            if (study == null || study.completesAt.isAfter(state.now)) throw WorldException.NotStudied()
-        }
+        if (!state.isStudied(unit)) throw WorldException.NotStudied()
         val cost = unit.cost * count.toLong()
         val pop = unit.population.toLong() * count
         val short = state.shortfall(cost)
@@ -96,23 +93,35 @@ class ArmyService(
         if (short.isNotEmpty()) throw WorldException.NotEnoughResources(short.entries.associate { it.key.name.lowercase() to it.value.toString() })
         state.pay(cost, 0)
         val seconds = Math.round(UnitRules.studySeconds(unit, academy) / ResourceConstants.WORLD_SPEED)
-        val study = studyRepository.save(CityStudy(CityUnitId(cityId, unit), state.now.plusSeconds(seconds)))
+        // One study at a time: this one starts when the last queued study completes (or now).
+        val startsAt = state.studyQueue().lastOrNull()?.completesAt ?: state.now
+        val study = studyRepository.save(CityStudy(CityUnitId(cityId, unit), orderedAt = state.now, completesAt = startsAt.plusSeconds(seconds)))
         state.studies[unit] = study
         return state
     }
 
-    /** Cancels a recruit order and refunds its unproduced remainder; the next order starts now if this was the head. */
+    /** Cancels the last queued study and refunds it in full; earlier ones → `409 NOT_LAST_IN_QUEUE`. */
+    @Transactional
+    fun cancelStudy(worldId: Long, cityId: Long, userId: Long, role: Role, unit: Unit): CityState {
+        val state = cityAccess.open(worldId, cityId, userId, role)
+        val queue = state.studyQueue()
+        val study = queue.firstOrNull { it.id.unit == unit } ?: throw WorldException.OrderNotFound()
+        if (queue.last() != study) throw WorldException.NotLastInQueue()
+        state.refund(requireNotNull(unit.studyCost), 0)
+        state.studies.remove(unit)
+        studyRepository.delete(study)
+        return state
+    }
+
+    /** Cancels the last recruit order and refunds its unproduced remainder; earlier ones → `409 NOT_LAST_IN_QUEUE`. */
     @Transactional
     fun cancel(worldId: Long, cityId: Long, userId: Long, role: Role, orderId: Long): CityState {
         val state = cityAccess.open(worldId, cityId, userId, role)
         val order = state.recruitOrders.firstOrNull { it.id == orderId } ?: throw WorldException.OrderNotFound()
-        val wasHead = state.recruitOrders.first() == order
+        if (state.recruitOrders.last() != order) throw WorldException.NotLastInQueue()
         state.refund(order.unit.cost * order.remaining.toLong(), order.unit.population.toLong() * order.remaining)
         state.recruitOrders.remove(order)
         recruitOrderRepository.delete(order)
-        if (wasHead) state.recruitOrders.firstOrNull()?.let {
-            it.nextCompletesAt = state.now.plusSeconds(recruitSeconds(it.unit, state.level(Building.BARRACKS)))
-        }
         return state
     }
 

@@ -87,29 +87,15 @@ class BuildingService(
         return state
     }
 
-    /**
-     * Cancels an order and refunds it. Later orders of the same building are cancelled too (their target
-     * levels would no longer follow), and the remaining chain is re-timed: an order that was not the head
-     * (not started) starts when its predecessor completes, or now.
-     */
+    /** Cancels the last order of the queue and refunds it in full; earlier orders → `409 NOT_LAST_IN_QUEUE`. */
     @Transactional
     fun cancel(worldId: Long, cityId: Long, userId: Long, role: Role, orderId: Long): CityState {
         val state = cityAccess.open(worldId, cityId, userId, role)
         val order = state.buildOrders.firstOrNull { it.id == orderId } ?: throw WorldException.OrderNotFound()
-        val head = state.buildOrders.first()
-        val cancelled = state.buildOrders.filter { it == order || (it.building == order.building && it.targetLevel > order.targetLevel) }
-        for (o in cancelled) {
-            state.refund(BuildingRules.cost(o.building, o.targetLevel), BuildingRules.popCost(o.building, o.targetLevel))
-            buildOrderRepository.delete(o)
-        }
-        state.buildOrders.removeAll(cancelled)
-        var t = state.now
-        for ((i, o) in state.buildOrders.withIndex()) {
-            if (i == 0 && o == head) { t = o.completesAt; continue } // in progress: unchanged
-            o.startedAt = t
-            o.completesAt = t.plusMillis(o.durationMs)
-            t = o.completesAt
-        }
+        if (state.buildOrders.last() != order) throw WorldException.NotLastInQueue()
+        state.refund(BuildingRules.cost(order.building, order.targetLevel), BuildingRules.popCost(order.building, order.targetLevel))
+        state.buildOrders.remove(order)
+        buildOrderRepository.delete(order)
         return state
     }
 

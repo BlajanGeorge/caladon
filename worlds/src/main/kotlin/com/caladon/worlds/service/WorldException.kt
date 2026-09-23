@@ -21,6 +21,7 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class NotEnoughResources(details: Map<String, String>) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_RESOURCES", details)
     class NotEnoughPopulation(shortfall: String) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_POPULATION", mapOf("population" to shortfall))
     class OrderNotFound : WorldException(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND")
+    class NotLastInQueue : WorldException(HttpStatus.CONFLICT, "NOT_LAST_IN_QUEUE")
     class AlreadyStudied : WorldException(HttpStatus.CONFLICT, "ALREADY_STUDIED")
     class NotStudied : WorldException(HttpStatus.CONFLICT, "NOT_STUDIED")
     class InvalidCount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("count" to "must be between 1 and 10000"))

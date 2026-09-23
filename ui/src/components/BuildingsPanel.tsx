@@ -28,7 +28,7 @@ export function BuildingsPanel({ detail, buildings, now, busy, onUpgrade, onCanc
             <li key={o.id}>
               <span className="q-name">{o.name} → {o.targetLevel}</span>
               <span className="q-time">{i === 0 ? formatDuration(secondsUntil(o.completesAt, now)) : `after ${formatDuration(secondsUntil(o.completesAt, now))}`}</span>
-              <button className="link" disabled={busy} onClick={() => onCancel(o.id)}>Cancel</button>
+              {i === detail.buildQueue.length - 1 && <button className="link" disabled={busy} onClick={() => onCancel(o.id)}>Cancel</button>}
             </li>
           ))}
         </ul>

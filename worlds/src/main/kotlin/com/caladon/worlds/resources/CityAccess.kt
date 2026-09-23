@@ -61,7 +61,7 @@ class CityAccess(
             buildOrders = buildOrderRepository.findAllByCityIdOrderByCompletesAtAscIdAsc(cityId).toMutableList(),
             units = cityUnitRepository.findAllByIdCityId(cityId).associateBy { it.id.unit }.toMutableMap(),
             recruitOrders = recruitOrderRepository.findAllByCityIdOrderByIdAsc(cityId).toMutableList(),
-            studies = studyRepository.findAllByIdCityId(cityId).associateBy { it.id.unit }.toMutableMap(),
+            studies = studyRepository.findAllByIdCityIdOrderByCompletesAtAsc(cityId).associateBy { it.id.unit }.toMutableMap(),
             now = clock.instant(),
         )
     }
@@ -111,6 +111,7 @@ class CityAccess(
             }
         }
         state.settleTo(now)
+        for (s in state.studies.values) if (!s.applied && !s.completesAt.isAfter(now)) { s.applied = true; studyRepository.save(s) }
     }
 
     private fun recruitSeconds(u: com.caladon.worlds.rules.Unit, barracks: Int): Long =

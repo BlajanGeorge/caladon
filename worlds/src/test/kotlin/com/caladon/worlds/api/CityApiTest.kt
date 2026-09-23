@@ -171,27 +171,34 @@ class CityApiTest : ApiTestBase() {
     }
 
     @Test
-    fun `cancelling an order refunds it, drops later levels of the same building and re-times the rest`() {
+    fun `only the last build order can be cancelled, with a full refund`() {
         val (world, cityId) = joinedCity()
-        val t0 = clock.instant()
         val first = json(post("/api/v1/worlds/$world/cities/$cityId/buildings/FARM/upgrade", playerToken).andExpect { status { isOk() } })
         val farmOrder = first["buildQueue"][0]["id"].asLong()
         val second = json(post("/api/v1/worlds/$world/cities/$cityId/buildings/WOODCUTTER/upgrade", playerToken).andExpect { status { isOk() } })
+        val woodOrder = second["buildQueue"][1]["id"].asLong()
         assertThat(second["buildQueue"][1]["startedAt"].asText()).isEqualTo(second["buildQueue"][0]["completesAt"].asText())
         assertThat(second["resources"]["wood"]["stock"].asLong()).isEqualTo(500 - 59 - 63)
 
-        clock.advance(Duration.ofSeconds(30))
         mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/build-orders/$farmOrder") {
             header("Authorization", "Bearer $playerToken")
         }.andExpect {
-            status { isOk() }
-            jsonPath("$.resources.wood.stock") { value(500 - 63) }
-            jsonPath("$.resources.stone.stock") { value(500 - 77) }
-            jsonPath("$.buildQueue.length()") { value(1) }
-            jsonPath("$.buildQueue[0].building") { value("WOODCUTTER") }
-            jsonPath("$.buildQueue[0].startedAt") { value(t0.plusSeconds(30).toString()) }
-            jsonPath("$.buildQueue[0].completesAt") { value(t0.plusSeconds(30 + 95).toString()) }
+            status { isConflict() }
+            jsonPath("$.error") { value("NOT_LAST_IN_QUEUE") }
         }
+        mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/build-orders/$woodOrder") {
+            header("Authorization", "Bearer $playerToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.resources.wood.stock") { value(500 - 59) }
+            jsonPath("$.resources.stone.stock") { value(500 - 53) }
+            jsonPath("$.population") { value(240) }
+            jsonPath("$.buildQueue.length()") { value(1) }
+            jsonPath("$.buildQueue[0].building") { value("FARM") }
+        }
+        mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/build-orders/$farmOrder") {
+            header("Authorization", "Bearer $playerToken")
+        }.andExpect { status { isOk() }; jsonPath("$.buildQueue.length()") { value(0) } }
         mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/build-orders/$farmOrder") {
             header("Authorization", "Bearer $playerToken")
         }.andExpect {
@@ -291,9 +298,10 @@ class CityApiTest : ApiTestBase() {
             jsonPath("$.resources.stone.stock") { value(2500) }
             jsonPath("$.resources.iron.stock") { value(2700) }
             jsonPath("$.population") { value(240) }
-            jsonPath("$.studies[0].unit") { value("SWORDSMAN") }
-            jsonPath("$.studies[0].studied") { value(false) }
-            jsonPath("$.studies[0].completesAt") { value(t0.plusSeconds(2727).toString()) }
+            jsonPath("$.studyQueue[0].unit") { value("SWORDSMAN") }
+            jsonPath("$.studyQueue[0].position") { value(1) }
+            jsonPath("$.studyQueue[0].completesAt") { value(t0.plusSeconds(2727).toString()) }
+            jsonPath("$.studied.length()") { value(0) }
         }
         post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "SWORDSMAN")).andExpect {
             status { isConflict() }
@@ -316,7 +324,8 @@ class CityApiTest : ApiTestBase() {
         clock.advance(Duration.ofSeconds(2728))
         post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "SWORDSMAN", "count" to 2)).andExpect {
             status { isOk() }
-            jsonPath("$.studies[0].studied") { value(true) }
+            jsonPath("$.studied[0]") { value("SWORDSMAN") }
+            jsonPath("$.studyQueue.length()") { value(0) }
             jsonPath("$.recruitQueue[0].unit") { value("SWORDSMAN") }
             jsonPath("$.population") { value(238) }
         }
@@ -326,11 +335,13 @@ class CityApiTest : ApiTestBase() {
     }
 
     @Test
-    fun `cancelling a recruit order refunds the unproduced remainder, and the sweeper completes due units`() {
+    fun `cancelling a recruit order refunds the unproduced remainder, only from the tail, and the sweeper completes due units`() {
         val (world, cityId) = joinedCity()
         setLevel(cityId, Building.BARRACKS, 1)
         val orderId = json(post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "SPEARMAN", "count" to 3))
             .andExpect { status { isOk() } })["recruitQueue"][0]["id"].asLong()
+        val second = json(post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "SPEARMAN", "count" to 1))
+            .andExpect { status { isOk() } })["recruitQueue"][1]["id"].asLong()
 
         clock.advance(Duration.ofSeconds(643))
         assertThat(sweeper.sweep()).isEqualTo(1)                    // first unit completed without a read
@@ -339,12 +350,90 @@ class CityApiTest : ApiTestBase() {
         mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/recruit-orders/$orderId") {
             header("Authorization", "Bearer $playerToken")
         }.andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("NOT_LAST_IN_QUEUE") }
+        }
+        mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/recruit-orders/$second") {
+            header("Authorization", "Bearer $playerToken")
+        }.andExpect { status { isOk() }; jsonPath("$.recruitQueue.length()") { value(1) } }
+        mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/recruit-orders/$orderId") {
+            header("Authorization", "Bearer $playerToken")
+        }.andExpect {
             status { isOk() }
             jsonPath("$.units[?(@.type=='SPEARMAN')].count") { value(1) }
             jsonPath("$.recruitQueue.length()") { value(0) }
-            jsonPath("$.resources.wood.stock") { value(350 + 100 + 5) }
-            jsonPath("$.resources.iron.stock") { value(470 + 20 + 5) } // +5: 643 s of production at 30/h
+            jsonPath("$.resources.wood.stock") { value(500 - 200 + 150 + 5) }   // 4 paid, 3 refunded, +5 produced in 643 s
+            jsonPath("$.resources.iron.stock") { value(500 - 40 + 30 + 5) }
             jsonPath("$.population") { value(239) }
         }
+    }
+
+    @Test
+    fun `studies queue one after another, only the tail can be cancelled, and completion unlocks recruitment`() {
+        val (world, cityId) = joinedCity()
+        setLevel(cityId, Building.BARRACKS, 5)
+        setLevel(cityId, Building.ACADEMY, 3)
+        setLevel(cityId, Building.DEPOSIT, 10)   // cap 6420, so a 5000 stock survives settlement
+        stock(cityId, 5000)
+        val t0 = clock.instant()
+        post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "SWORDSMAN")).andExpect { status { isOk() } }
+        post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "SCOUT")).andExpect {
+            status { isOk() }
+            jsonPath("$.studyQueue.length()") { value(2) }
+            jsonPath("$.studyQueue[0].unit") { value("SWORDSMAN") }
+            jsonPath("$.studyQueue[0].completesAt") { value(t0.plusSeconds(2254).toString()) }   // 2 × 1500 × 1.1^-3
+            jsonPath("$.studyQueue[1].unit") { value("SCOUT") }
+            jsonPath("$.studyQueue[1].position") { value(2) }
+            jsonPath("$.studyQueue[1].completesAt") { value(t0.plusSeconds(2254 + 1352).toString()) } // starts after the Swordsman
+            jsonPath("$.resources.wood.stock") { value(5000 - 400 - 560) }
+        }
+        post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "SCOUT")).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("ALREADY_STUDIED") }
+        }
+        mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/study-orders/SWORDSMAN") {
+            header("Authorization", "Bearer $playerToken")
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("NOT_LAST_IN_QUEUE") }
+        }
+        mockMvc.delete("/api/v1/worlds/$world/cities/$cityId/study-orders/SCOUT") {
+            header("Authorization", "Bearer $playerToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.studyQueue.length()") { value(1) }
+            jsonPath("$.resources.wood.stock") { value(5000 - 400) }
+        }
+        post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "AXEMAN")).andExpect {
+            status { isOk() }
+            jsonPath("$.studyQueue[1].completesAt") { value(t0.plusSeconds(2254 + 1983).toString()) }   // 2 × 1320 × 1.1^-3
+        }
+
+        clock.advance(Duration.ofSeconds(2255))
+        get("/api/v1/worlds/$world/cities/$cityId", playerToken).andExpect {
+            jsonPath("$.studied[0]") { value("SWORDSMAN") }
+            jsonPath("$.studyQueue.length()") { value(1) }
+            jsonPath("$.studyQueue[0].unit") { value("AXEMAN") }
+        }
+        post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "SWORDSMAN", "count" to 1)).andExpect { status { isOk() } }
+        post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "AXEMAN", "count" to 1)).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("NOT_STUDIED") }
+        }
+    }
+
+    @Test
+    fun `the sweeper applies a due study`() {
+        val (world, cityId) = joinedCity()
+        setLevel(cityId, Building.BARRACKS, 3)
+        setLevel(cityId, Building.ACADEMY, 1)
+        setLevel(cityId, Building.DEPOSIT, 10)
+        stock(cityId, 3000)
+        post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "SWORDSMAN")).andExpect { status { isOk() } }
+        assertThat(sweeper.sweep()).isEqualTo(0)
+        clock.advance(Duration.ofSeconds(2728))
+        assertThat(sweeper.sweep()).isEqualTo(1)
+        assertThat(sweeper.sweep()).isEqualTo(0)   // applied: not selected again
+        post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "SWORDSMAN", "count" to 1)).andExpect { status { isOk() } }
     }
 }

@@ -26,10 +26,16 @@ data class CityUnitId(
 @Table(name = "city_unit")
 class CityUnit(@EmbeddedId var id: CityUnitId, @Column(nullable = false) var count: Int)
 
-/** A unit type being studied (or studied, once `completesAt` has passed) in a city's Academy. */
+/** An entry of the Academy's study queue; studied once `completesAt` has passed. */
 @Entity
 @Table(name = "city_study")
-class CityStudy(@EmbeddedId var id: CityUnitId, @Column(name = "completes_at", nullable = false) var completesAt: Instant)
+class CityStudy(
+    @EmbeddedId var id: CityUnitId,
+    @Column(name = "ordered_at", nullable = false) var orderedAt: Instant,
+    @Column(name = "completes_at", nullable = false) var completesAt: Instant,
+    /** Set once advance() has processed the completion (lets the sweeper skip it). */
+    @Column(nullable = false) var applied: Boolean = false,
+)
 
 /** One entry of a city's recruitment queue; units complete one at a time from the head order. */
 @Entity
@@ -50,7 +56,7 @@ interface CityUnitRepository : JpaRepository<CityUnit, CityUnitId> {
 }
 
 interface CityStudyRepository : JpaRepository<CityStudy, CityUnitId> {
-    fun findAllByIdCityId(cityId: Long): List<CityStudy>
+    fun findAllByIdCityIdOrderByCompletesAtAsc(cityId: Long): List<CityStudy>
 }
 
 interface CityRecruitOrderRepository : JpaRepository<CityRecruitOrder, Long> {

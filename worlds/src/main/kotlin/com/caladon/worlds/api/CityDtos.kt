@@ -43,8 +43,10 @@ data class CityDetailResponse(
     val units: List<CityUnitResponse>,
     /** The recruitment queue, first entry in progress. */
     val recruitQueue: List<RecruitOrderResponse>,
-    /** Studies ordered in this city (in progress or done). */
-    val studies: List<StudyResponse>,
+    /** Unit types studied (completed) in this city. */
+    val studied: List<Unit>,
+    /** The Academy's study queue, first entry in progress. */
+    val studyQueue: List<StudyOrderResponse>,
 )
 
 data class CityUnitResponse(val type: Unit, val name: String, val count: Int)
@@ -57,7 +59,7 @@ data class RecruitOrderResponse(
     val completesAt: Instant,
 )
 
-data class StudyResponse(val unit: Unit, val completesAt: Instant, val studied: Boolean)
+data class StudyOrderResponse(val unit: Unit, val name: String, val position: Int, val orderedAt: Instant, val completesAt: Instant)
 
 data class UnitViewResponse(
     val type: Unit,

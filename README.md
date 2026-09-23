@@ -87,5 +87,6 @@ curl -s -X DELETE $C/build-orders/1 -H "Authorization: Bearer $T"               
 curl -s $C/army -H "Authorization: Bearer $T"                                       # units, study status, what blocks recruiting
 curl -s -X POST $C/army/study -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"unit":"SWORDSMAN"}'
 curl -s -X POST $C/army/recruit -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"unit":"SPEARMAN","count":5}'
-curl -s -X DELETE $C/recruit-orders/1 -H "Authorization: Bearer $T"
+curl -s -X DELETE $C/recruit-orders/1 -H "Authorization: Bearer $T"                 # only the last order of a queue can be cancelled
+curl -s -X DELETE $C/study-orders/SWORDSMAN -H "Authorization: Bearer $T"
 ```

@@ -114,10 +114,12 @@ export interface RecruitOrder {
   completesAt: string
 }
 
-export interface Study {
+export interface StudyOrder {
   unit: UnitType
+  name: string
+  position: number
+  orderedAt: string
   completesAt: string
-  studied: boolean
 }
 
 export interface CityDetail extends OwnedCity {
@@ -129,7 +131,10 @@ export interface CityDetail extends OwnedCity {
   buildQueueSlots: number
   units: CityUnit[]
   recruitQueue: RecruitOrder[]
-  studies: Study[]
+  /** Unit types studied (completed) in this city. */
+  studied: UnitType[]
+  /** The Academy's study queue, first entry in progress. */
+  studyQueue: StudyOrder[]
 }
 
 export interface NextLevel {
@@ -197,6 +202,8 @@ export const worldsApi = {
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/army/study`, { method: 'POST', body: { unit } }),
   cancelRecruit: (worldId: number, cityId: number, orderId: number) =>
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/recruit-orders/${orderId}`, { method: 'DELETE' }),
+  cancelStudy: (worldId: number, cityId: number, unit: UnitType) =>
+    api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/study-orders/${unit}`, { method: 'DELETE' }),
   map: (worldId: number, startX: number, startY: number, endX: number, endY: number) =>
     api<MapResponse>(`/worlds/${worldId}/map?startX=${startX}&startY=${startY}&endX=${endX}&endY=${endY}`),
 }

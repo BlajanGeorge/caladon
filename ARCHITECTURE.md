@@ -831,18 +831,19 @@ A read-only companion for the UI's building panel (what the next level costs and
   building + 1; requirements (step rule, cross-building) are checked against **completed** levels; the
   build time is fixed at order time with the Town Hall level then (a Town Hall completing later does not
   shorten already-queued orders); orders run sequentially (`started_at` = predecessor's completion).
-  Cancelling refunds the order, also cancels later queued levels of the same building, and re-times the
-  chain (a new head starts now). Errors: `MAX_LEVEL`, `REQUIREMENTS_NOT_MET` (details = building →
-  level), `QUEUE_FULL`, `NOT_ENOUGH_RESOURCES`, `NOT_ENOUGH_POPULATION`, `ORDER_NOT_FOUND`.
+  Only the **last** order can be cancelled (full refund); an earlier one → `409 NOT_LAST_IN_QUEUE`.
+  Errors: `MAX_LEVEL`, `REQUIREMENTS_NOT_MET` (details = building → level), `QUEUE_FULL`,
+  `NOT_ENOUGH_RESOURCES`, `NOT_ENOUGH_POPULATION`, `ORDER_NOT_FOUND`, `NOT_LAST_IN_QUEUE`.
 - Endpoints: `GET …/buildings` (each type with `level`, `maxLevel`, `points`, `effect {value, unit}`,
   `queued`, and `next {level, cost, popCost, points, effect, buildTimeSeconds, blockedBy}` for the next
   orderable level), `POST …/buildings/{building}/upgrade`, `DELETE …/build-orders/{id}`; both mutations
   return the city detail.
 - **Timers / sweeper**: `CityAccess.advance` completes due build orders and recruit units in chronological
-  order, settling resources before each with the levels in force; `CitySweeper` (`@Scheduled`,
-  `caladon.sweeper.interval-ms`, default 60 000) advances every city with a due order, one transaction per
-  city, `SELECT … FOR UPDATE SKIP LOCKED`; disabled in tests (`caladon.sweeper.enabled=false`) and called
-  directly. `/map` never advances cities.
+  order, settling resources before each with the levels in force, then marks due studies `applied`;
+  `CitySweeper` (`@Scheduled`, `caladon.sweeper.interval-ms`, default 60 000) advances every city with a
+  due build order, recruit unit or unapplied study, one transaction per city, `SELECT … FOR UPDATE SKIP
+  LOCKED`; disabled in tests (`caladon.sweeper.enabled=false`) and called directly. `/map` never advances
+  cities.
 
 ### Decided along the way
 
@@ -924,7 +925,7 @@ coin cost per noble), reports.
 
 ```
 city_unit(city_id FK city, unit varchar(16), count int NOT NULL CHECK (count >= 0), PRIMARY KEY (city_id, unit))
-city_study(city_id FK city, unit varchar(16), completes_at timestamptz NOT NULL, PRIMARY KEY (city_id, unit))   -- studied once completes_at <= now
+city_study(city_id FK city, unit varchar(16), ordered_at, completes_at timestamptz NOT NULL, applied bool, PRIMARY KEY (city_id, unit))   -- the study queue; studied once completes_at <= now
 city_recruit_order(id, city_id FK city, unit, count, remaining, ordered_at, next_completes_at NULL)             -- FIFO per city; head carries next_completes_at
 -- troop movements come with their feature
 ```
@@ -934,16 +935,20 @@ city_recruit_order(id, city_id FK city, unit, count, remaining, ordered_at, next
 - **Built**: `rules.Unit` (the ten units' stats) and `rules.UnitRules` (recruit and study time),
   `V104` (tables above), `ArmyService`, `CityAccess.advance` completing one unit per recruit interval
   from the head order (the interval is recomputed at each completion with the Barracks level then).
-- **Studies run in parallel** (each is its own timer from order time; no Academy queue) — the design did
-  not specify a queue.
+- **Study queue** (`V105`): one study at a time, each starting when the last queued one completes,
+  study time fixed at order time with the Academy level then; a type can be queued once
+  (`ALREADY_STUDIED`). `applied` marks completions the sweeper has processed.
 - Endpoints: `GET …/army` (every type: count, stats, cost, `recruitSeconds`, `studied`,
   `studyCompletesAt`, `studyCost`, `studySeconds`, `studyBlockedBy`, `blockedBy`, `recruitable`),
   `POST …/army/recruit {unit, count}` (1–10 000), `POST …/army/study {unit}`,
-  `DELETE …/recruit-orders/{id}` (refunds the unproduced remainder; the next order starts now). Errors:
+  `DELETE …/recruit-orders/{id}` (refunds the unproduced remainder), `DELETE …/study-orders/{unit}` (full
+  refund). On both queues only the **last** entry can be cancelled (`409 NOT_LAST_IN_QUEUE`). Errors:
   `REQUIREMENTS_NOT_MET`, `NOT_STUDIED`, `ALREADY_STUDIED` (also for a unit that needs no study),
-  `NOT_ENOUGH_RESOURCES`, `NOT_ENOUGH_POPULATION`, `ORDER_NOT_FOUND`, `VALIDATION_ERROR` (count).
-- The queue response gives `nextCompletesAt` (head only) and an estimated `completesAt` per order at the
-  current Barracks level.
+  `NOT_ENOUGH_RESOURCES`, `NOT_ENOUGH_POPULATION`, `ORDER_NOT_FOUND`, `NOT_LAST_IN_QUEUE`,
+  `VALIDATION_ERROR` (count).
+- The recruit queue response gives `nextCompletesAt` (head only) and an estimated `completesAt` per order
+  at the current Barracks level; the city detail carries `studied` (types) and `studyQueue` (unit,
+  position, orderedAt, completesAt).
 
 ---
 
@@ -1124,7 +1129,8 @@ a standalone preview.
   population / time / points, Build or Upgrade button disabled with the reason — requirements,
   resources, population, queue full, max — and the build queue with a per-second countdown and
   cancel) and `ArmyPanel` (units at home with stats and cost, Study button with cost and study status,
-  recruit form with a count and a "max" helper, recruit queue with countdown and cancel). The page
+  recruit form with a count and a "max" helper, recruit and study queues with countdown). On every
+  queue only the tail item has a Cancel button. The page
   fetches detail + `/buildings` + `/army` together on the poll cadence; a mutation applies the returned
   detail and re-fetches the two views; server errors become toasts. Pure helpers in `ui/src/city/format.ts`
   (durations, requirements, affordability) are unit-tested. Resource numbers still never tick; only
