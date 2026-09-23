@@ -4,7 +4,7 @@ A Kotlin, multi-module Maven project for a browser strategy MMO (Grepolis / Trib
 players build cities across worlds, raise troops, and send them to attack or support other cities.
 
 This document records locked architecture decisions, to be handed to an implementation agent.
-It grows as we design more features. **Status: work in progress — Users & Authentication and Worlds are settled; Resources and Buildings are proposals awaiting confirmation.**
+It grows as we design more features. **Status: work in progress — Users & Authentication and Worlds are settled; Resources, Buildings and Army are decided (design only); Users, Worlds and the first Resources slice are implemented.**
 
 ---
 
@@ -428,22 +428,31 @@ city has a **population** pool that buildings and troops are paid from (see *Pop
 
 ### Production model
 
-Resources **accrue continuously** at a rate **per minute**. There is **no scheduled tick job**: the stock
+Resources **accrue continuously** at a rate **per hour** (Tribal Wars convention; 30/h at level 1). There is **no scheduled tick job**: the stock
 is stored together with the instant it was last settled, and is settled **lazily** whenever the
 city is read or a resource is spent:
 
 ```
-elapsedMin = (now - settledAt) / 1min
-stock[r]   = min(capacity, stock[r] + rate[r] * elapsedMin)     for each r
-settledAt  = now
+for each r:
+  earned    = floor(rate[r] * (now - settledAt[r]) / 1h)      -- whole units only
+  stock[r]  = min(capacity, stock[r] + earned)
+  settledAt[r] = stock[r] == capacity ? now : settledAt[r] + earned / rate[r] * 1h
 ```
 
-- `rate[r]` (per minute) is **derived, never stored**: `production[level]` of the resource
+Stocks are **integers** in the database and everywhere else. The fraction of a unit that has not been
+earned yet is not stored as a decimal: it lives in the gap between `settledAt` and `now`. Settlement
+credits only whole units and advances `settledAt` by exactly the time those units took to produce, so
+the remainder keeps accruing and nothing is lost, rounded or double-counted no matter how often a city
+is settled (rounding the stock up on every settle would, at 30/h, credit one unit per minute instead of
+one per two minutes). At capacity the clock is simply reset (production above the cap is lost).
+`settledAt` is per resource because the three rates differ.
+
+- `rate[r]` (per hour) is **derived, never stored**: `production[level]` of the resource
   building for `r` (Woodcutter / Stone Mine / Iron Mine), times the world speed.
 - `capacity` is the same for all three resources and is **derived** from the Deposit's level
   (`capacity[level]`). Production above capacity is **lost**, not queued.
-- `stock` keeps its **fractional part** (production does not round per settlement); the API and UI
-  show `floor(stock)`.
+- `stock` is a whole number; what the player sees is exactly what is stored and exactly what they can
+  spend. No display rounding, no float columns.
 - **World speed** is a per-world-set constant in config (1.0 for now), multiplying every rate.
 - Settlement and spending happen **in one transaction under a row lock** on the city's resource
   row: settle → check `stock >= cost` for every resource → deduct → save. Insufficient funds are
@@ -454,12 +463,13 @@ settledAt  = now
 | constant                | value   | note                                                 |
 |-------------------------|---------|------------------------------------------------------|
 | starting stock          | 500     | each resource, on founding a city                    |
-| production at level 1   | 30/min  | each resource, from its level-1 building             |
-| capacity at level 1     | 2000    | from the level-1 Deposit                             |
+| production at level 1   | 30/h    | each resource, from its level-1 building (Tribal Wars) |
+| capacity at level 1     | 1000    | from the level-1 Deposit (Tribal Wars)                |
 | world speed             | 1.0     |                                                      |
 
-At these values a fresh city fills its Deposit from 500 to 2000 in **50 minutes** (from empty in
-~67). This is a deliberately fast pace; the per-level tables (see *Buildings*) can slow it down.
+At these values a fresh city fills its Deposit from 500 to 1000 in **~17 hours** (from empty in ~33):
+Tribal Wars pacing at world speed 1. Faster worlds use the world-speed multiplier. The earlier gut values
+(30/min, 2000 cap) were replaced by these after the buildings research (see `docs/BUILDINGS-PROPOSAL.md`).
 
 ### Population
 
@@ -501,8 +511,8 @@ population  (stored)  -- people currently free in the city; 100 people, build a 
   bugs.
 
 **Starting values (tunable constants):** a new city starts at **Farm level 1** with `farmGain[1]`
-free — **100** people. The level-1 buildings a city is founded with cost nothing, so all 100 are
-free at founding. The gain table for higher levels is a later detail (see *Buildings*).
+free — **240** people (Tribal Wars). The level-1 buildings a city is founded with cost nothing, so all
+240 are free at founding. The gain table for higher levels is a later detail (see *Buildings*).
 
 ### Persistence
 
@@ -511,10 +521,12 @@ One row per city, in its own table (the `city` row stays the map/ownership recor
 ```
 city_resources(
   city_id     PK, FK city ON DELETE CASCADE,
-  wood        numeric(14,3) NOT NULL,
-  stone       numeric(14,3) NOT NULL,
-  iron        numeric(14,3) NOT NULL,
-  settled_at  timestamptz  NOT NULL,         -- instant the stocks above were last settled to
+  wood        bigint NOT NULL CHECK (wood >= 0),     -- whole units
+  stone       bigint NOT NULL CHECK (stone >= 0),
+  iron        bigint NOT NULL CHECK (iron >= 0),
+  wood_settled_at  timestamptz NOT NULL,     -- production clock per resource (see Production model)
+  stone_settled_at timestamptz NOT NULL,
+  iron_settled_at  timestamptz NOT NULL,
   population  integer      NOT NULL CHECK (population >= 0)   -- free people, see Population
 )
 ```
@@ -544,10 +556,10 @@ Resources are reported on the city, never as a free-standing list.
 {
   "id": 99, "name": "george's city", "x": 128, "y": 240, "points": 250,
   "resources": {
-    "wood":  { "stock": 512, "ratePerMinute": 30 },
-    "stone": { "stock": 512, "ratePerMinute": 30 },
-    "iron":  { "stock": 512, "ratePerMinute": 30 },
-    "capacity": 2000,
+    "wood":  { "stock": 512, "ratePerHour": 30 },
+    "stone": { "stock": 512, "ratePerHour": 30 },
+    "iron":  { "stock": 512, "ratePerHour": 30 },
+    "capacity": 1000,
     "serverTime": "2026-09-22T19:00:00Z"
   },
   "population": 100,
@@ -562,12 +574,15 @@ Resources are reported on the city, never as a free-standing list.
 // 403 -> { "error": "NOT_OWNER" }   404 -> { "error": "CITY_NOT_FOUND" }
 ```
 
-- `stock` is already settled to `serverTime` and floored. The client shows it **exactly as
-  returned** — no local ticking between polls (tried and rejected: numbers changing every second
-  are distracting). It **re-fetches the city detail once per minute** (resources and population in
-  the same response) and after any action that spends.
-- `population` is the remaining free population, read straight from the row; the once-per-minute
-  poll picks up changes made elsewhere (e.g. a battle).
+- `stock` is already settled to `serverTime` (an integer). The client shows it **exactly
+  as returned** — no local ticking between polls (tried and rejected: numbers changing every second
+  are distracting). It re-fetches the city detail (resources and population in the same response)
+  on a **rate-dependent cadence**: **every minute** when any resource grows by more than one unit per
+  minute (`max(ratePerHour) > 60`, i.e. the displayed number can change every minute), otherwise
+  **every 5 minutes** — at 30/h a level-1 city changes by one unit every two minutes, so polling
+  faster is wasted. Always re-fetched after any action that spends.
+- `population` is the remaining free population, read straight from the row; the poll picks up
+  changes made elsewhere (e.g. a battle).
 - `/worlds/{id}/cities/mine` stays as it is (map/ownership only); the City view fetches the detail
   endpoint for the city it shows.
 - Spending endpoints belong to the features that spend (build, recruit) and return the settled
@@ -576,14 +591,18 @@ Resources are reported on the city, never as a free-standing list.
 ### Implementation notes (resources, first slice)
 
 - **Built**: `city_resources` (migration `V101`, backfilled for existing cities at 500/500/500 and
-  100 population), the `Resource` enum, lazy settlement (`Settlement`, per minute, 3-decimal
+  100 population), the `Resource` enum, lazy settlement (`Settlement`, per minute internally, 3-decimal
   carry, capped) persisted under a `PESSIMISTIC_WRITE` lock on the row, the row created in the
   same transaction as the start city on join, and **`GET /worlds/{id}/cities/{cityId}`** (owner
   only; `403 NOT_OWNER`, `404 CITY_NOT_FOUND` for a missing city, a city of another world, a
-  missing world, or a DRAFT world for a player). `stock` is floored in the response;
-  `ratePerMinute` is a number (30.0 at world speed 1.0).
+  missing world, or a DRAFT world for a player). `stock` is currently a `numeric(14,3)` column floored in
+  the response (to become an integer column with per-resource `settled_at` and whole-unit settlement,
+  together with the pending switch below);
+  `ratePerMinute` is a number (30.0 at world speed 1.0). **Pending**: switch to the Tribal Wars
+  values (30/h, 1000 cap, 240 population) and rename the field to `ratePerHour`; the constants still hold
+  the earlier gut values until then.
 - **Not built yet**: buildings and levels — rate, capacity and starting population are the
-  level-1 constants in `ResourceConstants` (30/min, 2000, 100). No spend path exists yet, so
+  level-1 constants in `ResourceConstants` (30/min, 2000, 100 — to be switched, see above). No spend path exists yet, so
   `NOT_ENOUGH_*` errors and the `buildings` field of the city detail are still to come.
 - Tests: `SettlementTest` (pure) and `WorldApiTest` (Testcontainers) with a `@Primary` mutable
   `Clock` (`MutableClockConfig`) so settlement is exercised by advancing time — advances must stay
@@ -613,30 +632,65 @@ Resources are reported on the city, never as a free-standing list.
 4. Population is paid at **order time** (proposed) vs at **completion**. Order-time is stricter
    and prevents over-queuing; completion-time feels more forgiving but needs a rule for what
    happens when the pool is empty when a queued item finishes.
-5. Whether `numeric(14,3)` or `double precision` for the stock columns. `numeric` proposed for exact
-   deductions; the fractional part is only ever production carry-over.
+5. ~~Whether `numeric(14,3)` or `double precision` for the stock columns.~~ Decided: **integer** columns
+   with a per-resource production clock (see *Production model*).
 
 ## Buildings
 
-**Status: proposed (design only, nothing implemented). Exact per-level tables are a later detail.**
+**Status: decided (design only, nothing implemented).** All per-level numbers — costs, population, points,
+effects, build times — are **Tribal Wars 1:1** and live in `docs/BUILDINGS-PROPOSAL.md`, generated by
+`docs/buildings_tables.py`; that file is the source of the config tables. This section records the
+rules.
 
-### The five starting buildings
+### The nine buildings
 
-Every city is founded with the same **five buildings, all at level 1**. They are the machinery
-behind Resources and Population: each one has exactly one job.
+Every city is founded with the same **six buildings, all at level 1**; three more are built by the
+player. Each building has exactly one job.
 
 | code         | working name | job (what its level drives)                       | level-1 value      | points at level 1 |
 |--------------|--------------|---------------------------------------------------|--------------------|-------------------|
-| `FARM`       | Farm         | **population** — each level adds people to the pool | +100 population   | 50                |
-| `WOODCUTTER` | Woodcutter   | **wood** production rate                          | 30 wood / min      | 50                |
-| `STONE_MINE` | Stone Mine   | **stone** production rate                         | 30 stone / min     | 50                |
-| `IRON_MINE`  | Iron Mine    | **iron** production rate                          | 30 iron / min      | 50                |
-| `DEPOSIT`    | Deposit      | **capacity** — max stock of each resource         | 2000 per resource  | 50                |
+| `FARM`       | Farm         | **population** — each level adds people to the pool | +240 population   | 5                 |
+| `WOODCUTTER` | Woodcutter   | **wood** production rate                          | 30 wood / h        | 6                 |
+| `STONE_MINE` | Stone Mine   | **stone** production rate                         | 30 stone / h       | 6                 |
+| `IRON_MINE`  | Iron Mine    | **iron** production rate                          | 30 iron / h        | 6                 |
+| `DEPOSIT`    | Deposit      | **capacity** — max stock of each resource         | 1000 per resource  | 6                 |
+| `TOWN_HALL`  | Town Hall    | **build speed**, prerequisite gate, **build queue length** | 95 % build time, 2 queue slots | 10        |
 
-- The set is **fixed and global**: a Kotlin enum, not a table. More buildings (barracks, wall,
-  market…) join the enum later; the model below does not change for them.
-- A new city therefore starts with **250 points**, **100 free population**, **30/min** of each
-  resource and a **2000** cap.
+Built by the player (max level, job, what to have first):
+
+| code       | name     | max | job (what its level drives)                                                | points L1 | to build                          |
+|------------|----------|-----|----------------------------------------------------------------------------|-----------|-----------------------------------|
+| `BARRACKS` | Barracks | 25  | recruits **every** unit type; its level decides which types are available and how fast they train | 16 | Town Hall 3            |
+| `ACADEMY`  | Academy  | 20  | a unit type must be **studied** here before it can be recruited; its level decides what can be studied and how fast | 19 | Town Hall 8, Farm 6, Barracks 5 |
+| `WALL`     | Wall     | 20  | **defence bonus**, +3.7 % per level compounding (+107 % at 20)              | 8         | Town Hall 5                       |
+| `VAULT`    | Vault    | 10  | **hides resources** from plunder: 150 per resource at 1, 2 000 at 10        | 5         | Town Hall 5, Deposit 5            |
+
+Founded buildings max at **30**. Not in the game (for now): Market (returns with the trade design),
+Smithy / Stable / Workshop (folded into Barracks + Academy), Rally Point, Statue, Church, Watchtower.
+
+- The set is **fixed and global**: a Kotlin enum, not a table. A building added later is an enum value
+  plus its tables; the model below does not change.
+- A new city starts with **39 points**, **240 free population**, **30/h** of each resource, **500** of
+  each in stock and a **1000** cap.
+
+### Level requirements
+
+Checked at order time, both kinds:
+
+1. **Town Hall step rule** (every building except the Town Hall). To reach level `L` the Town Hall must
+   be at least `5 × floor((L−1)/5)`: levels 2–5 need nothing, 6–10 need Town Hall 5, 11–15 need 10,
+   16–20 need 15, 21–25 need 20, 26–30 need 25. The Town Hall always trails the tallest building by at
+   most five levels.
+2. **Cross-building conditions**, to build at all (table above) and at a few higher levels:
+
+| building | at higher levels (in addition to the step rule) |
+|----------|-------------------------------------------------|
+| Barracks | L10: Town Hall 10; L20: Town Hall 20            |
+| Academy  | L10: Barracks 10; L15: Barracks 15              |
+| Wall     | L10: Stone Mine 10; L15: Stone Mine 15          |
+| Vault    | L5: Deposit 10                                   |
+
+Failing either → `409 REQUIREMENTS_NOT_MET` with the missing `(building, level)` pairs.
 
 ### Levels
 
@@ -650,18 +704,17 @@ For each building type there are four per-level lookup tables in config (constan
 | `cost[level]`         | wood / stone / iron to reach `level` (from `level-1`)             |
 | `popCost[level]`      | population to reach `level`                                       |
 | `points[level]`       | points the building is worth **at** `level` (cumulative, not per step) |
-| `effect[level]`       | the building's job at `level`: `farmGain`, `production`, or `capacity` |
+| `effect[level]`       | the building's job at `level`: `farmGain`, `production`, `capacity`, build/recruit/study speed, defence bonus, hidden amount, queue slots |
 
-- **Level 1 is free.** The founding buildings cost no resources and no population; the tables
-  start at level 2. `points[1] = 50` and `effect[1]` are the values in the table above.
+- **Level 1 is free** for the six founding buildings (no resources, no population); their tables start
+  at level 2. Player-built buildings pay for level 1.
 - **Monotonic**: every table grows with level. The Farm's `farmGain[n]` is always larger than its
   own `popCost[n]`, so upgrading the Farm never loses population.
 - **Points** are a property of the level, so a city's points are simply
   `Σ points[level(b)]` over its buildings. The `city.points` column is kept as a **maintained
   counter** updated on every level completion (exactly like population), and the same invariant
   check applies. Points drive the map's city tier art (t1/t2/t3 thresholds are unchanged).
-- The exact numbers for every table beyond level 1 (growth curves, max levels, build times) are
-  **out of scope here** and will be set when the feature is implemented and tuned.
+- The tables themselves: `docs/BUILDINGS-PROPOSAL.md` §3 (formulas) and §4/§6 (every level).
 
 ### Level-up (the one operation)
 
@@ -670,6 +723,7 @@ upgrade(city, building):
   lock city row
   settle resources
   level = current + 1;  reject if level > maxLevel            -> 409 MAX_LEVEL
+  reject unless requirements(building, level) hold            -> 409 REQUIREMENTS_NOT_MET
   need  = cost[level], popCost[level]
   reject if any resource short or population short            -> 409 NOT_ENOUGH_RESOURCES / NOT_ENOUGH_POPULATION
   deduct resources and population                             (paid at order time, as decided in Resources)
@@ -677,10 +731,11 @@ upgrade(city, building):
              if FARM: population += farmGain[level]
 ```
 
-- **Build time / queue** is a later detail. The first implementation may complete the upgrade
-  **instantly** inside the same transaction; when build times arrive, "complete" moves to the
-  moment the timer ends, and everything before it stays exactly as above (cost already paid,
-  cancel refunds it). This is why cost is paid at order time.
+- **Build queue.** Orders wait in a per-city queue owned by the Town Hall: **2 slots** at level 1,
+  **3** from level 10, **4** from level 20. Every queued order is paid (resources and population) at
+  placement; cancelling refunds it. The first implementation may complete an upgrade **instantly**
+  inside the same transaction; when build times arrive, "complete" moves to the moment the timer
+  ends and everything before it stays exactly as above. This is why cost is paid at order time.
 - The effect of a new level (faster production, larger cap, more people) applies **from
   completion**: resources are settled *before* the level changes, so the old rate covers the time
   up to that instant and the new rate the time after.
@@ -699,11 +754,11 @@ city_building(
 )
 ```
 
-- Five rows are inserted at founding (join), all at level 1, in the same transaction as the
-  `city` and `city_resources` rows.
+- Six rows are inserted at founding (join), all at level 1, in the same transaction as the
+  `city` and `city_resources` rows; player-built buildings get their row when level 1 completes.
 - Effects, costs and points are never stored: they are table lookups on `level`. The only
   maintained counters are `city.points`, `city_resources.population` and the resource stocks.
-- Rows, not five level columns on `city`, so adding a building type later is an enum value plus
+- Rows, not level columns on `city`, so adding a building type later is an enum value plus
   a backfill, not a migration of the city table.
 
 ### API (shape, not final)
@@ -719,7 +774,7 @@ Owner only. Returns the city's settled state so the client re-syncs from the res
   "building": { "type": "FARM", "level": 2, "points": 120 },
   "points": 320,
   "population": 130,
-  "resources": { "wood": { "stock": 210, "ratePerMinute": 30 }, "...": "...", "capacity": 2000, "serverTime": "..." }
+  "resources": { "wood": { "stock": 210, "ratePerHour": 30 }, "...": "...", "capacity": 1000, "serverTime": "..." }
 }
 // 409 -> { "error": "NOT_ENOUGH_RESOURCES", "shortfall": { "wood": 90 } }
 //        { "error": "NOT_ENOUGH_POPULATION", "shortfall": 12 }
@@ -733,14 +788,86 @@ A read-only companion for the UI's building panel (what the next level costs and
      "next": { "cost": { "wood": 90, "stone": 80, "iron": 70 }, "popCost": 5, "points": 120, "effect": 220 } }, … ]`
 (`next` is absent at max level).
 
-### Open questions
+### Decided along the way
 
-1. **Names.** Working names follow the conversation: Woodcutter, Stone Mine, Iron Mine, Deposit.
-   Conventional genre names would be Timber Camp, Quarry, Iron Mine, Warehouse. Codes are what
-   the schema and API use, so renaming later is display-only.
-2. **Pace.** 30/min against a 2000 cap fills a fresh city in under an hour, which asks for
-   frequent logins early on. Fine for now; the tables can flatten it.
-3. **One upgrade at a time** per city, or a queue, once build times exist.
+- Names: Woodcutter, Stone Mine, Iron Mine, Deposit, Vault, Town Hall (not Timber Camp / Quarry /
+  Warehouse / Hiding Place / Headquarters). Codes are what the schema and API use.
+- Pace: Tribal Wars 1:1 at world speed 1; faster worlds use the world-speed multiplier.
+- Build queue: 2 / 3 / 4 slots at Town Hall 1 / 10 / 20, every order paid at placement.
+- No demolition in v1; buildings are permanent, their population is never refunded.
+- Market: out until trade is designed.
+
+---
+
+## Army (units)
+
+**Status: decided (design only, nothing implemented).** Stats are Tribal Wars' own (live game data, archer
+world, world speed 1); the tables with recruit and study times per level are in
+`docs/BUILDINGS-PROPOSAL.md` §7.
+
+### The ten units
+
+All land units, all recruited from the **Barracks**. Cost in wood / stone / iron, population per unit,
+base recruit time, attack, defence vs infantry / cavalry / archers, speed in minutes per map field, carry
+capacity when plundering.
+
+| code        | name          | role                                   | cost                     | pop | base time | atk | def inf / cav / arc | speed | carry | Barracks ≥ | study at Academy ≥ |
+|-------------|---------------|----------------------------------------|--------------------------|-----|-----------|-----|---------------------|-------|-------|------------|--------------------|
+| `SPEARMAN`  | Spearman      | cheap defence, strong vs cavalry       | 50 / 30 / 10             | 1   | 17 min    | 10  | 15 / 45 / 20        | 18    | 25    | 1          | — (no study)       |
+| `SWORDSMAN` | Swordsman     | defence vs infantry                    | 30 / 30 / 70             | 1   | 25 min    | 25  | 50 / 15 / 40        | 22    | 15    | 3          | 1                  |
+| `SCOUT`     | Scout         | espionage, does not fight              | 50 / 50 / 20             | 2   | 15 min    | 0   | 2 / 1 / 2           | 9     | 0     | 5          | 2                  |
+| `AXEMAN`    | Axeman        | cheap attack, weak defence             | 60 / 30 / 40             | 1   | 22 min    | 40  | 10 / 5 / 10         | 18    | 10    | 5          | 3                  |
+| `ARCHER`    | Archer        | defence vs archers                     | 100 / 30 / 60            | 1   | 30 min    | 15  | 50 / 40 / 5         | 18    | 10    | 8          | 5                  |
+| `LIGHT_CAV` | Light Cavalry | fast attack, big carry (raiding)       | 125 / 100 / 250          | 4   | 30 min    | 130 | 30 / 40 / 30        | 10    | 80    | 10         | 8                  |
+| `RAM`       | Ram           | breaks the Wall                        | 300 / 200 / 200          | 5   | 80 min    | 2   | 20 / 50 / 20        | 30    | 0     | 12         | 10                 |
+| `HEAVY_CAV` | Heavy Cavalry | strong attack and defence, expensive   | 200 / 150 / 600          | 6   | 60 min    | 150 | 200 / 80 / 180      | 11    | 50    | 15         | 13                 |
+| `CATAPULT`  | Catapult      | destroys buildings                     | 320 / 400 / 100          | 8   | 120 min   | 100 | 100 / 50 / 100      | 30    | 0     | 18         | 16                 |
+| `NOBLEMAN`  | Nobleman      | conquest: lowers loyalty, takes the city | 40 000 / 50 000 / 50 000 | 100 | 5 h       | 30  | 100 / 50 / 100      | 35    | 0     | 20         | 20                 |
+
+Fixed and global: a Kotlin enum with these stats as constants. Not in the game: Mounted Archer, Paladin,
+Militia.
+
+### Recruitment (Barracks)
+
+- A unit type can be recruited in a city when **both** hold: the Barracks is at or above the type's
+  *Barracks ≥* level, and the type has been **studied** in that city (Spearman needs no study).
+- Recruit time = `base × 2/3 × 1.06^(−Barracks level)`: 63 % of base at level 1, 37 % at 10, 21 % at 20,
+  16 % at 25. Above 20 the Barracks unlocks nothing new, it only gets faster.
+- **One recruitment queue per city**, separate from the build queue. An order (type, count) pays
+  resources **and population** at placement, exactly like a building order (`409 NOT_ENOUGH_RESOURCES` /
+  `NOT_ENOUGH_POPULATION` / `REQUIREMENTS_NOT_MET`); units complete one at a time; cancelling refunds
+  the unproduced remainder. Population comes back when units die (see Resources → Population).
+
+### Study (Academy)
+
+- Studying a type is a **one-time purchase per city**: resources, no population. It needs the Academy at
+  or above the type's *Academy ≥* level and takes `studyBase × 1.1^(−Academy level)`.
+- Ladder: Swordsman 1, Scout 2, Axeman 3, Archer 5, Light Cavalry 8, Ram 10, Heavy Cavalry 13, Catapult
+  16, nothing new at 17–19, **Nobleman 20**.
+- Study costs are Tribal Wars' simple-tech research costs (400 / 500 / 300 for the Swordsman up to
+  3 000 / 2 400 / 2 000 for Heavy Cavalry); the Nobleman's is 15 000 / 25 000 / 10 000. `studyBase = 2 ×
+  the unit's recruit base time` is a **placeholder** (Tribal Wars does not publish research durations).
+- Per city, not per player: a newly founded city starts with only the Spearman.
+
+### Plunder and the Vault
+
+An attacker who wins can take, per resource, at most `stock − vault(level)`, further limited by the carry
+capacity of the surviving attackers. The Vault protects 150 per resource at level 1 and 2 000 at 10 —
+early-game protection; a level-20 Deposit holds 50 000.
+
+### Later, not designed here
+
+Combat resolution (how attack and the three defence values meet, the Wall's role, rams and catapults),
+movement and arrival times, the Nobleman's conquest mechanics (loyalty, nobles per city, Tribal Wars'
+coin cost per noble), reports.
+
+### Persistence (direction)
+
+```
+city_unit(city_id FK city, unit varchar(16), count int NOT NULL CHECK (count >= 0), PRIMARY KEY (city_id, unit))
+city_study(city_id FK city, unit varchar(16), studied_at timestamptz NOT NULL, PRIMARY KEY (city_id, unit))
+-- recruit queue and troop movements come with their features
+```
 
 ---
 
@@ -801,10 +928,11 @@ group:
   `hud.wood`, `hud.stone`, `hud.iron`, `hud.population`) followed by the number. All four icons
   are **finished PNG art** already in the repo (see *Resource icons*, below). All four numbers
   are shown exactly as the server returned them and change only on refresh.
-- Hover on a resource shows a tooltip with `+<ratePerMinute>/min` and the capacity; a stock at
+- Hover on a resource shows a tooltip with `+<ratePerHour>/h` and the capacity; a stock at
   capacity is shown in a warning colour. Population has no tooltip.
 - The strip is a self-contained component fed by the same city-detail data the City view already
-  polls once per minute (see Resources); the top bar itself does not fetch. On the Map the strip
+  polls (every minute or every 5 minutes depending on the rate, see Resources); the top bar itself
+  does not fetch. On the Map the strip
   is **not shown** for now (the Map bar stays as it is); the component is shared so it can be
   switched on there later with the same data.
 - While the first fetch is in flight the strip renders its icons with `…` placeholders, so the bar
@@ -832,8 +960,8 @@ sits in the centre; transparent background):
   `ui/src/map/assets.ts`; nothing outside the registry knows the file names.
 
 _Planned (Resources section): the City view fetches `/worlds/{id}/cities/{cityId}` on entry and
-then **polls it once per minute** for resources and population; between polls the numbers do not
-change. Any spend action
+then **polls it every minute if any resource grows by more than 1/min, else every 5 minutes**; between
+polls the numbers do not change. Any spend action
 replaces the displayed values with the ones in its response. Polling stops when the view is
 left or the tab is hidden, and resumes with an immediate fetch._
 
@@ -911,8 +1039,8 @@ a standalone preview.
   second request.
 - **City view HUD (built)**: `CityPage` uses `MapTopBar` with a `strip` slot rendered just before
   the Profile icon; `ResourceStrip` shows Wood / Stone / Iron / Population from
-  `worldsApi.cityDetail`, re-fetched every 60 s, paused while `document.hidden` and re-fetched on
-  return. All numbers are shown exactly as returned (a per-second local extrapolation was built
+  `worldsApi.cityDetail`, re-fetched every 60 s (to become rate-dependent: 60 s / 300 s, see the
+  Resources API notes), paused while `document.hidden` and re-fetched on return. All numbers are shown exactly as returned (a per-second local extrapolation was built
   and removed as distracting). Icons are 128 px copies (`hud-*.png`) of the 1024 px medallions,
   drawn at 70 px, the same size as the Profile and Account icons. The Map does not
   pass a strip. Buildings/levels are not shown yet.
