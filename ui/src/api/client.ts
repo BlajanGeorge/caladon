@@ -11,7 +11,7 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
   /** false for public endpoints (register/login/refresh): no bearer, no refresh-and-retry on 401. */
   auth?: boolean

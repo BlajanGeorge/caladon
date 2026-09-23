@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import { worldsApi, type CityDetail, type CityResources, type OwnedCity } from '../api/worlds'
+import {
+  worldsApi, type BuildingType, type BuildingView, type CityDetail, type CityResources, type OwnedCity, type UnitType, type UnitView,
+} from '../api/worlds'
+import { ArmyPanel } from '../components/ArmyPanel'
+import { BuildingsPanel } from '../components/BuildingsPanel'
 import { MapTopBar } from '../components/MapTopBar'
 import { ResourceStrip } from '../components/ResourceStrip'
 import { useToast } from '../components/Toast'
+import { useNow } from '../city/useNow'
 import { useWorldName } from '../useWorldName'
 
 interface NavState {
@@ -22,7 +27,18 @@ export function pollIntervalMs(resources?: CityResources): number {
   return max > 60 ? 60_000 : 300_000
 }
 
-/** City view: the HUD top bar with the resource strip, plus the city card (buildings come later). */
+const ERRORS: Record<string, string> = {
+  NOT_ENOUGH_RESOURCES: 'Not enough resources',
+  NOT_ENOUGH_POPULATION: 'Not enough population',
+  REQUIREMENTS_NOT_MET: 'Requirements not met',
+  QUEUE_FULL: 'The build queue is full',
+  MAX_LEVEL: 'Already at max level',
+  NOT_STUDIED: 'Study this unit first',
+  ALREADY_STUDIED: 'Already studied',
+  ORDER_NOT_FOUND: 'That order is gone',
+}
+
+/** City view: the HUD top bar with the resource strip, the city card, the buildings and army panels. */
 export function CityPage() {
   const { id } = useParams()
   const worldId = Number(id)
@@ -32,6 +48,12 @@ export function CityPage() {
   const worldName = useWorldName(worldId, state.worldName)
   const [city, setCity] = useState<OwnedCity | null>(state.city ?? null)
   const [detail, setDetail] = useState<CityDetail | null>(null)
+  const [buildings, setBuildings] = useState<BuildingView[] | null>(null)
+  const [army, setArmy] = useState<UnitView[] | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const hasQueue = (detail?.buildQueue.length ?? 0) > 0 || (detail?.recruitQueue.length ?? 0) > 0 || (detail?.studies.some((s) => !s.studied) ?? false)
+  const now = useNow(hasQueue)
 
   const leaveIfGone = useCallback((err: unknown, message: string) => {
     if (err instanceof ApiError && (err.code === 'NOT_JOINED' || err.code === 'WORLD_NOT_FOUND' || err.code === 'CITY_NOT_FOUND')) {
@@ -51,7 +73,7 @@ export function CityPage() {
       .catch((err) => leaveIfGone(err, 'Could not load your city'))
   }, [city, worldId, toast, leaveIfGone])
 
-  // Resources + population: fetch on entry, then on a rate-dependent cadence; paused while the tab is hidden.
+  // Detail + panels: fetch on entry, then on a rate-dependent cadence; paused while the tab is hidden.
   useEffect(() => {
     if (!city) return
     let cancelled = false
@@ -61,15 +83,15 @@ export function CityPage() {
     const schedule = (ms: number) => { timer = window.setTimeout(tick, ms) }
     const tick = () => {
       timer = null
-      worldsApi.cityDetail(worldId, city.id)
-        .then((d) => {
+      Promise.all([worldsApi.cityDetail(worldId, city.id), worldsApi.buildings(worldId, city.id), worldsApi.army(worldId, city.id)])
+        .then(([d, b, a]) => {
           if (cancelled) return
-          setDetail(d)
+          setDetail(d); setBuildings(b); setArmy(a)
           if (running) schedule(pollIntervalMs(d.resources))
         })
         .catch((err) => {
           if (cancelled) return
-          leaveIfGone(err, 'Could not load resources')
+          leaveIfGone(err, 'Could not load the city')
           if (running) schedule(60_000)
         })
     }
@@ -92,7 +114,36 @@ export function CityPage() {
       stop()
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [city, worldId, leaveIfGone])
+  }, [city, worldId, leaveIfGone, refreshKey])
+
+  /** Runs a mutation, takes its returned detail, then refreshes the panels (their views depend on it). */
+  const act = useCallback(async (run: () => Promise<CityDetail>, done?: string) => {
+    if (!city) return
+    setBusy(true)
+    try {
+      const d = await run()
+      setDetail(d)
+      const [b, a] = await Promise.all([worldsApi.buildings(worldId, city.id), worldsApi.army(worldId, city.id)])
+      setBuildings(b); setArmy(a)
+      if (done) toast.info(done)
+    } catch (err) {
+      if (err instanceof ApiError && ERRORS[err.code]) {
+        const extra = err.details ? ' (' + Object.entries(err.details).map(([k, v]) => `${k.toLowerCase().replace('_', ' ')} ${v}`).join(', ') + ')' : ''
+        toast.error(ERRORS[err.code] + extra)
+        setRefreshKey((k) => k + 1)
+      } else {
+        leaveIfGone(err, 'The action failed')
+      }
+    } finally {
+      setBusy(false)
+    }
+  }, [city, worldId, toast, leaveIfGone])
+
+  const onUpgrade = (b: BuildingType) => act(() => worldsApi.upgrade(worldId, city!.id, b))
+  const onCancelBuild = (orderId: number) => act(() => worldsApi.cancelBuild(worldId, city!.id, orderId), 'Order cancelled and refunded')
+  const onRecruit = (u: UnitType, count: number) => act(() => worldsApi.recruit(worldId, city!.id, u, count))
+  const onStudy = (u: UnitType) => act(() => worldsApi.study(worldId, city!.id, u))
+  const onCancelRecruit = (orderId: number) => act(() => worldsApi.cancelRecruit(worldId, city!.id, orderId), 'Order cancelled and refunded')
 
   const shown = detail ?? city
 
@@ -104,14 +155,14 @@ export function CityPage() {
         city={city}
         strip={<ResourceStrip resources={detail?.resources} population={detail?.population} />}
       />
-      <main className="page">
+      <main className="city-main">
         <div className="card city-card">
           <h1>{shown ? shown.name : 'Your city'}</h1>
           {shown ? (
             <>
               <dl>
                 <dt>Coordinates</dt><dd>{shown.x}, {shown.y}</dd>
-                <dt>Points</dt><dd>{shown.points}</dd>
+                <dt>Points</dt><dd>{shown.points.toLocaleString()}</dd>
               </dl>
               <button
                 className="primary"
@@ -124,6 +175,12 @@ export function CityPage() {
             <p className="muted">Loading…</p>
           )}
         </div>
+        {detail && buildings && (
+          <BuildingsPanel detail={detail} buildings={buildings} now={now} busy={busy} onUpgrade={onUpgrade} onCancel={onCancelBuild} />
+        )}
+        {detail && army && (
+          <ArmyPanel detail={detail} units={army} now={now} busy={busy} onRecruit={onRecruit} onStudy={onStudy} onCancel={onCancelRecruit} />
+        )}
       </main>
     </div>
   )
