@@ -78,5 +78,14 @@ curl -s $W/worlds -H "Authorization: Bearer $T"
 curl -s -X POST $W/worlds/1/join -H "Authorization: Bearer $T"
 curl -s "$W/worlds/1/map?startX=205&startY=205&endX=294&endY=294" -H "Authorization: Bearer $T"
 curl -s $W/worlds/1/cities/mine -H "Authorization: Bearer $T"
-curl -s $W/worlds/1/cities/99 -H "Authorization: Bearer $T"     # owner only: settled resources + population
+curl -s $W/worlds/1/cities/99 -H "Authorization: Bearer $T"     # owner only: resources, population, buildings, queues, units
+
+# city gameplay (C = $W/worlds/1/cities/99)
+curl -s $C/buildings -H "Authorization: Bearer $T"                                 # levels + next level (cost, pop, time, blockedBy)
+curl -s -X POST $C/buildings/WOODCUTTER/upgrade -H "Authorization: Bearer $T"       # order the next level (paid now, queued)
+curl -s -X DELETE $C/build-orders/1 -H "Authorization: Bearer $T"                   # cancel + refund
+curl -s $C/army -H "Authorization: Bearer $T"                                       # units, study status, what blocks recruiting
+curl -s -X POST $C/army/study -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"unit":"SWORDSMAN"}'
+curl -s -X POST $C/army/recruit -H "Authorization: Bearer $T" -H 'Content-Type: application/json' -d '{"unit":"SPEARMAN","count":5}'
+curl -s -X DELETE $C/recruit-orders/1 -H "Authorization: Bearer $T"
 ```
