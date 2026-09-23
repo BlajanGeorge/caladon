@@ -735,9 +735,14 @@ upgrade(city, building):
 
 - **Build queue.** Orders wait in a per-city queue owned by the Town Hall: **2 slots** at level 1,
   **3** from level 10, **4** from level 20. Every queued order is paid (resources and population) at
-  placement; cancelling refunds it. The first implementation may complete an upgrade **instantly**
-  inside the same transaction; when build times arrive, "complete" moves to the moment the timer
-  ends and everything before it stays exactly as above. This is why cost is paid at order time.
+  placement. **Only the last order in the queue can be cancelled** (full refund); to cancel an earlier
+  one, cancel the ones after it first, one by one. Orders run strictly in placement order; the first
+  implementation may complete an upgrade **instantly** inside the same transaction; when build times
+  arrive, "complete" moves to the moment the timer ends and everything before it stays exactly as
+  above. This is why cost is paid at order time.
+
+  The same **queue rules apply to all three queues** (build, recruit, study): sequential, paid at
+  placement, only the tail can be cancelled.
 - The effect of a new level (faster production, larger cap, more people) applies **from
   completion**: resources are settled *before* the level changes, so the old rate covers the time
   up to that instant and the new rate the time after.
@@ -886,13 +891,16 @@ Militia.
   16 % at 25. Above 20 the Barracks unlocks nothing new, it only gets faster.
 - **One recruitment queue per city**, separate from the build queue. An order (type, count) pays
   resources **and population** at placement, exactly like a building order (`409 NOT_ENOUGH_RESOURCES` /
-  `NOT_ENOUGH_POPULATION` / `REQUIREMENTS_NOT_MET`); units complete one at a time; cancelling refunds
-  the unproduced remainder. Population comes back when units die (see Resources → Population).
+  `NOT_ENOUGH_POPULATION` / `REQUIREMENTS_NOT_MET`); units complete one at a time. Only the **last**
+  order in the queue can be cancelled; the refund is the unproduced remainder. Population comes back
+  when units die (see Resources → Population).
 
 ### Study (Academy)
 
 - Studying a type is a **one-time purchase per city**: resources, no population. It needs the Academy at
   or above the type's *Academy ≥* level and takes `studyBase × 1.1^(−Academy level)`.
+- **One study queue per city**, in the Academy: studies run one after another in placement order, like
+  build orders; only the last queued study can be cancelled (full refund). A type can be queued once.
 - Ladder: Swordsman 1, Scout 2, Axeman 3, Archer 5, Light Cavalry 8, Ram 10, Heavy Cavalry 13, Catapult
   16, nothing new at 17–19, **Nobleman 20**.
 - Study costs are Tribal Wars' simple-tech research costs (400 / 500 / 300 for the Swordsman up to
