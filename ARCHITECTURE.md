@@ -410,7 +410,7 @@ This is a client concern — `/map` itself stays a plain rectangle query._
 ### The three resources
 
 Every city has its own stock of exactly **three** resources. They are the single currency of the
-game: buildings, troops, and (later) market trades are all paid in them. Alongside them, every
+game: buildings and troops are paid in them. Alongside them, every
 city has a **population** pool that buildings and troops are paid from (see *Population*, below).
 
 | code    | name  | flavour                                        | produced by (see *Buildings*) |
@@ -420,8 +420,8 @@ city has a **population** pool that buildings and troops are paid from (see *Pop
 | `IRON`  | Iron  | smelted iron for weapons and armour            | Iron Mine                     |
 
 - The set is **fixed and global** (same three on every world), so it is a Kotlin enum, not a table.
-- Resources are **per city**, never per player: cities do not share a pool. Moving resources between
-  cities is the market/trade feature, later.
+- Resources are **per city**, never per player: cities do not share a pool and there is no trade
+  between them (no Market building).
 - **Terrain does not affect production.** This keeps the existing decision that terrain is purely
   cosmetic. A forest next to a city gives no wood bonus. (Revisit only if we deliberately decide to
   make terrain matter.)
@@ -617,7 +617,6 @@ Resources are reported on the city, never as a free-standing list.
   the population of destroyed units to their home city.
 - **Barbarian villages / farming**: returning troops add loot through the settle path; loot above
   capacity is lost.
-- **Market**: transfers between cities, subject to the receiver's capacity.
 - **Points**: resource stock does **not** count toward city points; buildings do.
 - **Hiding place / plunder protection**: not planned; add a fourth derived number later if needed.
 
@@ -665,8 +664,8 @@ Built by the player (max level, job, what to have first):
 | `WALL`     | Wall     | 20  | **defence bonus**, +3.7 % per level compounding (+107 % at 20)              | 8         | Town Hall 5                       |
 | `VAULT`    | Vault    | 10  | **hides resources** from plunder: 150 per resource at 1, 2 000 at 10        | 5         | Town Hall 5, Deposit 5            |
 
-Founded buildings max at **30**. Not in the game (for now): Market (returns with the trade design),
-Smithy / Stable / Workshop (folded into Barracks + Academy), Rally Point, Statue, Church, Watchtower.
+Founded buildings max at **30**. Not in the game: Market (no trade between cities), Smithy / Stable /
+Workshop (folded into Barracks + Academy), Rally Point, Statue, Church, Watchtower.
 
 - The set is **fixed and global**: a Kotlin enum, not a table. A building added later is an enum value
   plus its tables; the model below does not change.
@@ -795,7 +794,7 @@ A read-only companion for the UI's building panel (what the next level costs and
 - Pace: Tribal Wars 1:1 at world speed 1; faster worlds use the world-speed multiplier.
 - Build queue: 2 / 3 / 4 slots at Town Hall 1 / 10 / 20, every order paid at placement.
 - No demolition in v1; buildings are permanent, their population is never refunded.
-- Market: out until trade is designed.
+- No Market and no trade between cities.
 
 ---
 

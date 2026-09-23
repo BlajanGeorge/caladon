@@ -147,8 +147,8 @@ P('  **level** decides which types are available; the **Academy** is where a uni
 P('  can be recruited, and its level decides which types can be studied. See *Unit gating* below.')
 P("- **Academy numbers** are Tribal Wars' Smithy (cost, population, points, 20 levels, study-time bonus), since")
 P('  it takes over that role. Conquest / nobles are **not** in the Academy; they get their own building later.')
-P('- **Market is out for now.** Its per-level effect (merchant count) is easy, but trade itself — transports,')
-P('  travel time, offers between players — is not designed; it comes back with the trade feature.')
+P('- **No Market.** There is no trade between cities in Caladon; resources are earned by production and')
+P('  plunder only.')
 P('- Skipped on purpose: Smithy, Stable, Workshop (folded into Barracks + Academy), Rally Point, Statue/Paladin')
 P('  (hero system), Church/Temple (faith), Watchtower (can come later as an optional 20-level building),')
 P("  Harbour/Lighthouse (naval), Cave (silver-specific), Agora (UI, not a building), Grepolis's special buildings.")
@@ -392,7 +392,6 @@ P('2. **Study is per city** (Tribal Wars) or **per player** (Grepolis-style, onc
 P('   per city, to keep new cities from being instantly full-strength.')
 P('3. **The units themselves** (stats, costs, population, recruit times) are the next design, not covered here.')
 P('4. ~~Demolition~~ — decided: not in v1 (buildings are permanent, population never refunded).')
-P('5. **Market** returns with the trade design.')
 P('5. **Starting stock** 500 of each (kept from the earlier design; Tribal Wars is similar).')
 
 open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'BUILDINGS-PROPOSAL.md'), 'w').write('\n'.join(out) + '\n')
