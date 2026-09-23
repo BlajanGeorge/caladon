@@ -3,8 +3,6 @@ package com.caladon.worlds.service
 import com.caladon.users.domain.Role
 import com.caladon.users.repository.UserRepository
 import com.caladon.worlds.domain.City
-import com.caladon.worlds.domain.CityResources
-import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.domain.World
 import com.caladon.worlds.domain.WorldMembership
 import com.caladon.worlds.domain.WorldMembershipId
@@ -16,14 +14,10 @@ import com.caladon.worlds.map.TerrainCache
 import com.caladon.worlds.map.TerrainStore
 import com.caladon.worlds.map.Viewport
 import com.caladon.worlds.repository.CityRepository
-import com.caladon.worlds.repository.CityResourcesRepository
-import com.caladon.worlds.repository.CitySlotRepository
 import com.caladon.worlds.repository.WorldMembershipRepository
 import com.caladon.worlds.repository.WorldRepository
 import org.slf4j.LoggerFactory
-import com.caladon.worlds.resources.ResourceConstants
-import com.caladon.worlds.rules.BuildingRules
-import com.caladon.worlds.rules.Production
+import com.caladon.worlds.resources.CityAccess
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -34,8 +28,7 @@ import java.time.Clock
 class WorldService(
     private val worldRepository: WorldRepository,
     private val cityRepository: CityRepository,
-    private val cityResourcesRepository: CityResourcesRepository,
-    private val citySlotRepository: CitySlotRepository,
+    private val cityAccess: CityAccess,
     private val membershipRepository: WorldMembershipRepository,
     private val userRepository: UserRepository,
     private val terrainGenerator: TerrainGenerator,
@@ -51,14 +44,6 @@ class WorldService(
     data class WorldSummary(val world: World, val players: Long)
     data class StartCity(val id: Long, val x: Int, val y: Int, val name: String, val points: Int)
     data class JoinResult(val worldId: Long, val startCity: StartCity)
-    data class CityDetail(
-        val id: Long, val name: String, val x: Int, val y: Int, val points: Int,
-        val stocks: Map<Resource, Long>, val rates: Map<Resource, Long>, val capacity: Long,
-        val serverTime: java.time.Instant, val population: Int,
-    ) {
-        fun stock(r: Resource): Long = stocks.getValue(r)
-        fun rate(r: Resource): Long = rates.getValue(r)
-    }
     data class MapView(
         val viewport: Viewport,
         val terrain: IntArray,
@@ -140,18 +125,12 @@ class WorldService(
         val now = clock.instant()
         membershipRepository.save(WorldMembership(membershipId, joinedAt = now))
         val city = cityRepository.save(
-            City(worldId = worldId, slotId = slot.id, ownerUserId = userId, name = "${user.nickname}'s city", createdAt = now),
-        )
-        cityResourcesRepository.save(
-            CityResources(
-                cityId = requireNotNull(city.id),
-                wood = ResourceConstants.STARTING_STOCK,
-                stone = ResourceConstants.STARTING_STOCK,
-                iron = ResourceConstants.STARTING_STOCK,
-                woodSettledAt = now, stoneSettledAt = now, ironSettledAt = now,
-                population = BuildingRules.farmPop(1).toInt(),
+            City(
+                worldId = worldId, slotId = slot.id, ownerUserId = userId, name = "${user.nickname}'s city",
+                points = CityAccess.FOUNDING_POINTS, createdAt = now,
             ),
         )
+        cityAccess.found(requireNotNull(city.id), now)
         return JoinResult(worldId, StartCity(requireNotNull(city.id), slot.x, slot.y, city.name, city.points))
     }
 
@@ -162,36 +141,6 @@ class WorldService(
         if (world.state == WorldState.DRAFT) throw WorldException.NotFound()
         if (!membershipRepository.existsById(WorldMembershipId(worldId, userId))) throw WorldException.NotJoined()
         return mapQueryDao.citiesOwnedBy(worldId, userId)
-    }
-
-    /**
-     * One of the caller's cities with its resources settled to now. The settlement is persisted under a
-     * row lock so concurrent reads/spends never double-count production.
-     */
-    @Transactional
-    fun cityDetail(worldId: Long, cityId: Long, userId: Long, requesterRole: Role): CityDetail {
-        val world = worldRepository.findById(worldId).orElse(null) ?: throw WorldException.CityNotFound()
-        if (world.state == WorldState.DRAFT && requesterRole != Role.ADMINISTRATOR) throw WorldException.CityNotFound()
-        val city = cityRepository.findById(cityId).orElse(null)?.takeIf { it.worldId == worldId } ?: throw WorldException.CityNotFound()
-        if (city.ownerUserId != userId) throw WorldException.NotOwner()
-        val slot = citySlotRepository.findById(city.slotId).orElseThrow()
-
-        val res = cityResourcesRepository.findWithLockByCityId(cityId) ?: throw WorldException.CityNotFound()
-        val now = clock.instant()
-        // Level-1 buildings until the buildings feature lands.
-        val rate = BuildingRules.production(1) * ResourceConstants.WORLD_SPEED
-        val capacity = BuildingRules.capacity(1)
-        for (r in Resource.entries) {
-            val s = Production.settle(res.stock(r), rate, capacity, res.settledAt(r), now)
-            res.setStock(r, s.stock); res.setSettledAt(r, s.settledAt)
-        }
-
-        return CityDetail(
-            id = cityId, name = city.name, x = slot.x.toInt(), y = slot.y.toInt(), points = city.points,
-            stocks = Resource.entries.associateWith { res.stock(it) },
-            rates = Resource.entries.associateWith { Math.round(rate) },
-            capacity = capacity, serverTime = now, population = res.population,
-        )
     }
 
     /** Everything inside the rectangle. DRAFT worlds are visible to administrators only. */

@@ -13,5 +13,14 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class NotJoined : WorldException(HttpStatus.FORBIDDEN, "NOT_JOINED")
     class CityNotFound : WorldException(HttpStatus.NOT_FOUND, "CITY_NOT_FOUND")
     class NotOwner : WorldException(HttpStatus.FORBIDDEN, "NOT_OWNER")
+    class MaxLevel : WorldException(HttpStatus.CONFLICT, "MAX_LEVEL")
+    /** details: building code → level still needed. */
+    class RequirementsNotMet(details: Map<String, String>) : WorldException(HttpStatus.CONFLICT, "REQUIREMENTS_NOT_MET", details)
+    class QueueFull : WorldException(HttpStatus.CONFLICT, "QUEUE_FULL")
+    /** details: resource → shortfall. */
+    class NotEnoughResources(details: Map<String, String>) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_RESOURCES", details)
+    class NotEnoughPopulation(shortfall: String) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_POPULATION", mapOf("population" to shortfall))
+    class OrderNotFound : WorldException(HttpStatus.NOT_FOUND, "ORDER_NOT_FOUND")
+    class InvalidCount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("count" to "must be between 1 and 10000"))
     class InvalidViewport(details: Map<String, String>) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", details)
 }

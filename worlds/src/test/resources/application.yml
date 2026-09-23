@@ -5,6 +5,8 @@ spring:
       ddl-auto: validate
 
 caladon:
+  sweeper:
+    enabled: false   # tests call CitySweeper.sweep() directly
   jwt:
     secret: test-secret-test-secret-test-secret-test-secret
     access-token-ttl: 1h

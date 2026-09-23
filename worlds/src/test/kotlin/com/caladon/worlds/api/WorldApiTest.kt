@@ -37,64 +37,7 @@ import kotlin.math.hypot
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
 @Import(MutableClockConfig::class)
-class WorldApiTest {
-
-    companion object {
-        @Container
-        @ServiceConnection
-        @JvmStatic
-        val postgres = PostgreSQLContainer("postgres:16-alpine")
-    }
-
-    @Autowired lateinit var mockMvc: MockMvc
-    @Autowired lateinit var objectMapper: ObjectMapper
-    @Autowired lateinit var jwtService: JwtService
-    @Autowired lateinit var userRepository: UserRepository
-    @Autowired lateinit var worldRepository: WorldRepository
-    @Autowired lateinit var cityRepository: CityRepository
-    @Autowired lateinit var citySlotRepository: CitySlotRepository
-    @Autowired lateinit var barbarianVillageRepository: BarbarianVillageRepository
-    @Autowired lateinit var membershipRepository: WorldMembershipRepository
-    @Autowired lateinit var cityResourcesRepository: CityResourcesRepository
-    @Autowired lateinit var clock: MutableClock
-
-    private lateinit var adminToken: String
-    private lateinit var playerToken: String
-    private lateinit var otherPlayerToken: String
-
-    @BeforeEach
-    fun setUp() {
-        clock.reset()
-        worldRepository.deleteAll() // cascades to slots, cities, villages, memberships
-        userRepository.deleteAll()
-        adminToken = tokenFor(createUser("admin@caladon.test", "admin", Role.ADMINISTRATOR))
-        playerToken = tokenFor(createUser("george@caladon.test", "george", Role.PLAYER))
-        otherPlayerToken = tokenFor(createUser("ana@caladon.test", "ana", Role.PLAYER))
-    }
-
-    private fun createUser(email: String, nickname: String, role: Role): User = userRepository.save(
-        User(role = role, email = email, passwordHash = "x", nickname = nickname, createdAt = Instant.now()),
-    )
-
-    private fun tokenFor(user: User) = jwtService.issueAccessToken(requireNotNull(user.id), user.role).token
-
-    private fun post(path: String, token: String, body: Any? = null): ResultActionsDsl = mockMvc.post(path) {
-        header("Authorization", "Bearer $token")
-        contentType = MediaType.APPLICATION_JSON
-        body?.let { content = objectMapper.writeValueAsString(it) }
-    }
-
-    private fun get(path: String, token: String): ResultActionsDsl = mockMvc.get(path) {
-        header("Authorization", "Bearer $token")
-    }
-
-    private fun json(result: ResultActionsDsl): JsonNode = objectMapper.readTree(result.andReturn().response.contentAsString)
-
-    private fun createWorld(name: String = "Caladon I"): Long =
-        json(post("/api/v1/admin/worlds", adminToken, mapOf("name" to name)).andExpect { status { isCreated() } })["id"].asLong()
-
-    private fun createPlayableWorld(name: String = "Caladon I"): Long =
-        createWorld(name).also { post("/api/v1/admin/worlds/$it/approve", adminToken).andExpect { status { isOk() } } }
+class WorldApiTest : ApiTestBase() {
 
     // ---- administrator ----
 
@@ -194,7 +137,7 @@ class WorldApiTest {
             jsonPath("$.worldId") { value(id) }
             jsonPath("$.startCity.id") { isNumber() }
             jsonPath("$.startCity.name") { value("george's city") }
-            jsonPath("$.startCity.points") { value(0) }
+            jsonPath("$.startCity.points") { value(39) }
         })["startCity"]
         val centre = (MapConstants.SIZE - 1) / 2.0
         assertThat(hypot(first["x"].asDouble() - centre, first["y"].asDouble() - centre)).isLessThan(15.0)
@@ -246,7 +189,7 @@ class WorldApiTest {
             jsonPath("$[0].x") { value(start["x"].asInt()) }
             jsonPath("$[0].y") { value(start["y"].asInt()) }
             jsonPath("$[0].name") { value("george's city") }
-            jsonPath("$[0].points") { value(0) }
+            jsonPath("$[0].points") { value(39) }
         }
         get("/api/v1/worlds/$id/cities/mine", otherPlayerToken).andExpect { status { isForbidden() } }
     }
@@ -273,7 +216,7 @@ class WorldApiTest {
         assertThat(cities[0]["x"].asInt()).isEqualTo(cx)
         assertThat(cities[0]["y"].asInt()).isEqualTo(cy)
         assertThat(cities[0]["name"].asText()).isEqualTo("george's city")
-        assertThat(cities[0]["points"].asInt()).isEqualTo(0)
+        assertThat(cities[0]["points"].asInt()).isEqualTo(39)
         assertThat(cities[0]["owner"].asText()).isEqualTo("george")
 
         // The occupied slot is not listed as free; the city tile is GRASS; everything is inside the rectangle.
@@ -348,7 +291,7 @@ class WorldApiTest {
             jsonPath("$.name") { value("george's city") }
             jsonPath("$.x") { value(start["x"].asInt()) }
             jsonPath("$.y") { value(start["y"].asInt()) }
-            jsonPath("$.points") { value(0) }
+            jsonPath("$.points") { value(39) }
             jsonPath("$.resources.wood.stock") { value(500) }
             jsonPath("$.resources.wood.ratePerHour") { value(30) }
             jsonPath("$.resources.capacity") { value(1000) }
