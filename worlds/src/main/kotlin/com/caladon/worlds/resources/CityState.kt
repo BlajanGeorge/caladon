@@ -1,5 +1,9 @@
 package com.caladon.worlds.resources
 
+import com.caladon.worlds.army.CityRecruitOrder
+import com.caladon.worlds.army.CityStudy
+import com.caladon.worlds.army.CityUnit
+import com.caladon.worlds.army.CityUnitId
 import com.caladon.worlds.buildings.CityBuildOrder
 import com.caladon.worlds.buildings.CityBuilding
 import com.caladon.worlds.buildings.CityBuildingId
@@ -10,6 +14,7 @@ import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
 import com.caladon.worlds.rules.Cost
 import com.caladon.worlds.rules.Production
+import com.caladon.worlds.rules.Unit
 import java.time.Instant
 
 /**
@@ -21,6 +26,9 @@ class CityState(
     val resources: CityResources,
     val buildings: MutableMap<Building, CityBuilding>,
     val buildOrders: MutableList<CityBuildOrder>,
+    val units: MutableMap<Unit, CityUnit>,
+    val recruitOrders: MutableList<CityRecruitOrder>,
+    val studies: MutableMap<Unit, CityStudy>,
     var now: Instant,
 ) {
     val cityId: Long get() = resources.cityId
@@ -49,6 +57,12 @@ class CityState(
         if (row == null) buildings[b] = CityBuilding(CityBuildingId(cityId, b), level) else row.level = level
         city.points += (BuildingRules.points(b, level) - BuildingRules.points(b, level - 1)).toInt()
         if (b == Building.FARM) resources.population += BuildingRules.farmGain(level).toInt()
+    }
+
+    /** One unit of [u] completed: the count row is created or incremented. */
+    fun addUnit(u: Unit): CityUnit {
+        val row = units[u]
+        return if (row == null) CityUnit(CityUnitId(cityId, u), 1).also { units[u] = it } else row.also { it.count += 1 }
     }
 
     fun shortfall(cost: Cost): Map<Resource, Long> = buildMap {

@@ -32,6 +32,8 @@ class CitySweeper(
         val due = jdbc.queryForList(
             """
             SELECT city_id FROM city_build_order WHERE completes_at <= :now
+            UNION
+            SELECT city_id FROM city_recruit_order WHERE next_completes_at <= :now
             """,
             mapOf("now" to java.sql.Timestamp.from(now)),
             Long::class.java,

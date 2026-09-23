@@ -1,6 +1,7 @@
 package com.caladon.worlds.api
 
 import com.caladon.worlds.rules.Building
+import com.caladon.worlds.rules.Unit
 import java.time.Instant
 
 data class ResourceStockResponse(val stock: Long, val ratePerHour: Long)
@@ -38,7 +39,59 @@ data class CityDetailResponse(
     val buildQueue: List<BuildOrderResponse>,
     /** Build-queue slots at the current Town Hall level. */
     val buildQueueSlots: Int,
+    /** Units at home, every type (0 when none). */
+    val units: List<CityUnitResponse>,
+    /** The recruitment queue, first entry in progress. */
+    val recruitQueue: List<RecruitOrderResponse>,
+    /** Studies ordered in this city (in progress or done). */
+    val studies: List<StudyResponse>,
 )
+
+data class CityUnitResponse(val type: Unit, val name: String, val count: Int)
+
+data class RecruitOrderResponse(
+    val id: Long, val unit: Unit, val name: String, val count: Int, val remaining: Int,
+    /** When the next unit completes; null while waiting behind another order. */
+    val nextCompletesAt: Instant?,
+    /** Estimated completion of the whole order at the current Barracks level. */
+    val completesAt: Instant,
+)
+
+data class StudyResponse(val unit: Unit, val completesAt: Instant, val studied: Boolean)
+
+data class UnitViewResponse(
+    val type: Unit,
+    val name: String,
+    val role: String,
+    val count: Int,
+    val cost: CostResponse,
+    val population: Int,
+    val attack: Int,
+    val defence: Int,
+    val defenceCavalry: Int,
+    val defenceArcher: Int,
+    val speed: Int,
+    val carry: Int,
+    val barracksLevel: Int,
+    val academyLevel: Int?,
+    val recruitSeconds: Long,
+    /** True when no study is needed or the study is done. */
+    val studied: Boolean,
+    /** Set while a study is in progress. */
+    val studyCompletesAt: Instant?,
+    val studyCost: CostResponse?,
+    val studySeconds: Long?,
+    /** Building levels a study order would fail on. */
+    val studyBlockedBy: List<RequirementResponse>,
+    /** Building levels a recruit order would fail on (study aside). */
+    val blockedBy: List<RequirementResponse>,
+    /** True when a recruit order would be accepted right now (requirements and study; not resources). */
+    val recruitable: Boolean,
+)
+
+data class RecruitRequest(val unit: Unit, val count: Int)
+
+data class StudyRequest(val unit: Unit)
 
 data class CostResponse(val wood: Long, val stone: Long, val iron: Long)
 

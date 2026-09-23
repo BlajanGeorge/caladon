@@ -1,12 +1,16 @@
 package com.caladon.worlds.api
 
 import com.caladon.users.security.AuthenticatedUser
+import com.caladon.worlds.army.ArmyService
 import com.caladon.worlds.buildings.BuildingService
 import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.resources.CityAccess
 import com.caladon.worlds.resources.CityState
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
+import com.caladon.worlds.rules.Unit
+import com.caladon.worlds.rules.UnitRules
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -24,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException
 class CityController(
     private val cityAccess: CityAccess,
     private val buildingService: BuildingService,
+    private val armyService: ArmyService,
 ) {
     @GetMapping
     @Transactional
@@ -65,6 +70,43 @@ class CityController(
         @PathVariable orderId: Long,
     ): CityDetailResponse = toDetail(buildingService.cancel(worldId, cityId, user.id, user.role, orderId))
 
+    @GetMapping("/army")
+    fun army(@AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long): List<UnitViewResponse> {
+        val (_, views) = armyService.list(worldId, cityId, user.id, user.role)
+        return views.map { v ->
+            val u = v.unit
+            UnitViewResponse(
+                type = u, name = u.displayName, role = u.role, count = v.count,
+                cost = CostResponse(u.cost.wood, u.cost.stone, u.cost.iron), population = u.population,
+                attack = u.attack, defence = u.defence, defenceCavalry = u.defenceCavalry, defenceArcher = u.defenceArcher,
+                speed = u.speed, carry = u.carry, barracksLevel = u.barracksLevel, academyLevel = u.academyLevel,
+                recruitSeconds = v.recruitSeconds, studied = v.studied, studyCompletesAt = v.studyCompletesAt,
+                studyCost = u.studyCost?.let { CostResponse(it.wood, it.stone, it.iron) }, studySeconds = v.studySeconds,
+                studyBlockedBy = v.studyBlockedBy.map { RequirementResponse(it.building, it.level) },
+                blockedBy = v.blockedBy.map { RequirementResponse(it.building, it.level) },
+                recruitable = v.blockedBy.isEmpty() && v.studied,
+            )
+        }
+    }
+
+    @PostMapping("/army/recruit")
+    fun recruit(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @RequestBody request: RecruitRequest,
+    ): CityDetailResponse = toDetail(armyService.recruit(worldId, cityId, user.id, user.role, request.unit, request.count))
+
+    @PostMapping("/army/study")
+    fun study(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @RequestBody request: StudyRequest,
+    ): CityDetailResponse = toDetail(armyService.study(worldId, cityId, user.id, user.role, request.unit))
+
+    @DeleteMapping("/recruit-orders/{orderId}")
+    fun cancelRecruit(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @PathVariable orderId: Long,
+    ): CityDetailResponse = toDetail(armyService.cancel(worldId, cityId, user.id, user.role, orderId))
+
     private fun toDetail(state: CityState): CityDetailResponse {
         val (x, y) = cityAccess.coordinates(state)
         fun stock(r: Resource) = ResourceStockResponse(state.resources.stock(r), Math.round(state.rate(r)))
@@ -83,6 +125,22 @@ class CityController(
                 BuildOrderResponse(requireNotNull(it.id), it.building, it.building.displayName, it.targetLevel, it.startedAt, it.completesAt)
             },
             buildQueueSlots = BuildingRules.queueSlots(state.level(Building.TOWN_HALL)),
+            units = Unit.entries.map { CityUnitResponse(it, it.displayName, state.units[it]?.count ?: 0) },
+            recruitQueue = recruitQueue(state),
+            studies = state.studies.values.sortedBy { it.completesAt }.map { StudyResponse(it.id.unit, it.completesAt, !it.completesAt.isAfter(state.now)) },
         )
+    }
+
+    /** Estimated completion of every recruit order at the current Barracks level, chained from the head. */
+    private fun recruitQueue(state: CityState): List<RecruitOrderResponse> {
+        val barracks = state.level(Building.BARRACKS)
+        var t = state.now
+        return state.recruitOrders.map { o ->
+            val per = Math.round(UnitRules.recruitSeconds(o.unit, barracks) / com.caladon.worlds.resources.ResourceConstants.WORLD_SPEED)
+            val first = o.nextCompletesAt ?: t.plusSeconds(per)
+            val end = first.plusSeconds(per * (o.remaining - 1).coerceAtLeast(0))
+            t = end
+            RecruitOrderResponse(requireNotNull(o.id), o.unit, o.unit.displayName, o.count, o.remaining, o.nextCompletesAt, end)
+        }
     }
 }

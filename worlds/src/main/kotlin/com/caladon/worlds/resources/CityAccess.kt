@@ -1,6 +1,9 @@
 package com.caladon.worlds.resources
 
 import com.caladon.users.domain.Role
+import com.caladon.worlds.army.CityRecruitOrderRepository
+import com.caladon.worlds.army.CityStudyRepository
+import com.caladon.worlds.army.CityUnitRepository
 import com.caladon.worlds.buildings.CityBuildOrderRepository
 import com.caladon.worlds.buildings.CityBuildingRepository
 import com.caladon.worlds.domain.CityResources
@@ -12,6 +15,7 @@ import com.caladon.worlds.repository.CitySlotRepository
 import com.caladon.worlds.repository.WorldRepository
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
+import com.caladon.worlds.rules.UnitRules
 import com.caladon.worlds.service.WorldException
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -31,6 +35,9 @@ class CityAccess(
     private val cityResourcesRepository: CityResourcesRepository,
     private val cityBuildingRepository: CityBuildingRepository,
     private val buildOrderRepository: CityBuildOrderRepository,
+    private val cityUnitRepository: CityUnitRepository,
+    private val recruitOrderRepository: CityRecruitOrderRepository,
+    private val studyRepository: CityStudyRepository,
     private val clock: Clock,
 ) {
     fun open(worldId: Long, cityId: Long, userId: Long, role: Role): CityState {
@@ -40,44 +47,74 @@ class CityAccess(
         if (city.ownerUserId != userId) throw WorldException.NotOwner()
 
         val res = cityResourcesRepository.findWithLockByCityId(cityId) ?: throw WorldException.CityNotFound()
-        val state = CityState(
+        val state = load(city, res)
+        advance(state)
+        return state
+    }
+
+    private fun load(city: com.caladon.worlds.domain.City, res: CityResources): CityState {
+        val cityId = res.cityId
+        return CityState(
             city = city,
             resources = res,
             buildings = cityBuildingRepository.findAllByIdCityId(cityId).associateBy { it.id.building }.toMutableMap(),
             buildOrders = buildOrderRepository.findAllByCityIdOrderByCompletesAtAscIdAsc(cityId).toMutableList(),
+            units = cityUnitRepository.findAllByIdCityId(cityId).associateBy { it.id.unit }.toMutableMap(),
+            recruitOrders = recruitOrderRepository.findAllByCityIdOrderByIdAsc(cityId).toMutableList(),
+            studies = studyRepository.findAllByIdCityId(cityId).associateBy { it.id.unit }.toMutableMap(),
             now = clock.instant(),
         )
-        advance(state)
-        return state
     }
 
     /** For the sweeper: the caller already holds the city row lock; loads the city and advances it. */
     fun advanceCity(cityId: Long) {
         val city = cityRepository.findById(cityId).orElse(null) ?: return
         val res = cityResourcesRepository.findById(cityId).orElse(null) ?: return
-        val state = CityState(
-            city = city,
-            resources = res,
-            buildings = cityBuildingRepository.findAllByIdCityId(cityId).associateBy { it.id.building }.toMutableMap(),
-            buildOrders = buildOrderRepository.findAllByCityIdOrderByCompletesAtAscIdAsc(cityId).toMutableList(),
-            now = clock.instant(),
-        )
-        advance(state)
+        advance(load(city, res))
     }
 
-    /** Completes every due order in time order (settling before each), then settles to `now`. */
+    /**
+     * Completes every due build order and recruit unit in chronological order (settling resources with the
+     * levels in force before each), then settles to `now`. Studies need no step: they are "studied" once
+     * their `completesAt` has passed.
+     */
     fun advance(state: CityState) {
         val now = state.now
         while (true) {
-            val order = state.buildOrders.firstOrNull()?.takeIf { !it.completesAt.isAfter(now) } ?: break
-            state.settleTo(order.completesAt)
-            state.completeLevel(order.building, order.targetLevel)
-            cityBuildingRepository.save(state.buildings.getValue(order.building))
-            state.buildOrders.removeAt(0)
-            buildOrderRepository.delete(order)
+            val build = state.buildOrders.firstOrNull()?.takeIf { !it.completesAt.isAfter(now) }
+            val recruit = state.recruitOrders.firstOrNull()?.takeIf { it.nextCompletesAt?.isAfter(now) == false }
+            val buildAt = build?.completesAt
+            val recruitAt = recruit?.nextCompletesAt
+            when {
+                build == null && recruit == null -> break
+                recruit == null || (buildAt != null && !buildAt.isAfter(recruitAt)) -> {
+                    state.settleTo(buildAt!!)
+                    state.completeLevel(build!!.building, build.targetLevel)
+                    cityBuildingRepository.save(state.buildings.getValue(build.building))
+                    state.buildOrders.removeAt(0)
+                    buildOrderRepository.delete(build)
+                }
+                else -> {
+                    val at = recruitAt!!
+                    state.settleTo(at)
+                    cityUnitRepository.save(state.addUnit(recruit.unit))
+                    recruit.remaining -= 1
+                    val barracks = state.level(Building.BARRACKS)
+                    if (recruit.remaining > 0) {
+                        recruit.nextCompletesAt = at.plusSeconds(recruitSeconds(recruit.unit, barracks))
+                    } else {
+                        state.recruitOrders.removeAt(0)
+                        recruitOrderRepository.delete(recruit)
+                        state.recruitOrders.firstOrNull()?.let { it.nextCompletesAt = at.plusSeconds(recruitSeconds(it.unit, barracks)) }
+                    }
+                }
+            }
         }
         state.settleTo(now)
     }
+
+    private fun recruitSeconds(u: com.caladon.worlds.rules.Unit, barracks: Int): Long =
+        Math.round(UnitRules.recruitSeconds(u, barracks) / ResourceConstants.WORLD_SPEED)
 
     fun coordinates(state: CityState): Pair<Int, Int> {
         val slot = citySlotRepository.findById(state.city.slotId).orElseThrow()
