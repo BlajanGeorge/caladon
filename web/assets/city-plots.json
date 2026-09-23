@@ -1,0 +1,119 @@
+{
+  "image": "sprites/city-ground.png",
+  "width": 2048,
+  "height": 1152,
+  "note": "Building plots on the city ground. anchor = bottom-centre of the plot (where a building sprite's ground anchor goes); box = the bare-dirt area a sprite should fit in. Coordinates are in the generated image's own 2048x1152 frame; the image keeps its soft transparent border and is drawn over the tiled grass background, so nothing is cropped. Nine plots: every building except the Wall has one.",
+  "plots": {
+    "TOWN_HALL": {
+      "anchor": [
+        1015,
+        640
+      ],
+      "box": [
+        843,
+        432,
+        1186,
+        640
+      ]
+    },
+    "FARM": {
+      "anchor": [
+        823,
+        395
+      ],
+      "box": [
+        732,
+        285,
+        917,
+        395
+      ]
+    },
+    "WOODCUTTER": {
+      "anchor": [
+        1223,
+        392
+      ],
+      "box": [
+        1143,
+        282,
+        1306,
+        392
+      ]
+    },
+    "DEPOSIT": {
+      "anchor": [
+        590,
+        544
+      ],
+      "box": [
+        494,
+        431,
+        685,
+        544
+      ]
+    },
+    "BARRACKS": {
+      "anchor": [
+        1443,
+        551
+      ],
+      "box": [
+        1349,
+        438,
+        1534,
+        551
+      ]
+    },
+    "STONE_MINE": {
+      "anchor": [
+        616,
+        726
+      ],
+      "box": [
+        520,
+        611,
+        709,
+        726
+      ]
+    },
+    "IRON_MINE": {
+      "anchor": [
+        1418,
+        726
+      ],
+      "box": [
+        1336,
+        618,
+        1503,
+        726
+      ]
+    },
+    "ACADEMY": {
+      "anchor": [
+        869,
+        855
+      ],
+      "box": [
+        770,
+        661,
+        972,
+        855
+      ]
+    },
+    "VAULT": {
+      "anchor": [
+        1155,
+        859
+      ],
+      "box": [
+        1047,
+        663,
+        1251,
+        859
+      ]
+    }
+  },
+  "wall": {
+    "note": "No plot: drawn as fence/palisade/stone segments along the rim, behind buildings, in three visual tiers."
+  }
+}

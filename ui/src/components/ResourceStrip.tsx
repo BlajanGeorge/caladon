@@ -18,6 +18,8 @@ interface Props {
   /** Last server response; undefined while loading (icons render with placeholders). */
   resources?: CityResources
   population?: number
+  /** Show the resource's name next to its medallion (the city panel does, the map HUD does not). */
+  withNames?: boolean
 }
 
 /**
@@ -25,7 +27,7 @@ interface Props {
  * server returned it; the values only change when the owner re-fetches (once a minute, or after
  * an action). No local ticking.
  */
-export function ResourceStrip({ resources, population }: Props) {
+export function ResourceStrip({ resources, population, withNames = false }: Props) {
   return (
     <div className="mtb-resources" aria-label="Resources">
       {RESOURCE_KEYS.map((key) => {
@@ -37,12 +39,14 @@ export function ResourceStrip({ resources, population }: Props) {
         return (
           <span key={key} className={'mtb-res' + (full ? ' full' : '')} title={title}>
             <img src={ICONS[key].src} alt={ICONS[key].label} />
+            {withNames && <span className="mtb-res-name">{ICONS[key].label}</span>}
             <span className="mtb-res-value">{value === null ? '…' : value.toLocaleString()}</span>
           </span>
         )
       })}
       <span className="mtb-res" title="Population">
         <img src={ICONS.population.src} alt="Population" />
+        {withNames && <span className="mtb-res-name">Population</span>}
         <span className="mtb-res-value">{population === undefined ? '…' : population.toLocaleString()}</span>
       </span>
     </div>

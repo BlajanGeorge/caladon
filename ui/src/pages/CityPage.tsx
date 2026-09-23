@@ -6,8 +6,8 @@ import {
 } from '../api/worlds'
 import { ArmyPanel } from '../components/ArmyPanel'
 import { BuildingsPanel } from '../components/BuildingsPanel'
+import { CityScene } from '../components/CityScene'
 import { MapTopBar } from '../components/MapTopBar'
-import { ResourceStrip } from '../components/ResourceStrip'
 import { useToast } from '../components/Toast'
 import { useNow } from '../city/useNow'
 import { useWorldName } from '../useWorldName'
@@ -26,6 +26,9 @@ export function pollIntervalMs(resources?: CityResources): number {
   const max = Math.max(resources.wood.ratePerHour, resources.stone.ratePerHour, resources.iron.ratePerHour)
   return max > 60 ? 60_000 : 300_000
 }
+
+/** Only the city picture is shown for now; flip to bring back the city card and the panels. */
+const SHOW_PANELS: boolean = false
 
 const ERRORS: Record<string, string> = {
   NOT_ENOUGH_RESOURCES: 'Not enough resources',
@@ -151,37 +154,39 @@ export function CityPage() {
 
   return (
     <div className="city-shell">
-      <MapTopBar
-        worldName={worldName}
-        worldId={worldId}
-        city={city}
-        strip={<ResourceStrip resources={detail?.resources} population={detail?.population} />}
-      />
-      <main className="city-main">
-        <div className="card city-card">
-          <h1>{shown ? shown.name : 'Your city'}</h1>
-          {shown ? (
-            <>
-              <dl>
-                <dt>Coordinates</dt><dd>{shown.x}, {shown.y}</dd>
-                <dt>Points</dt><dd>{shown.points.toLocaleString()}</dd>
-              </dl>
-              <button
-                className="primary"
-                onClick={() => navigate(`/worlds/${worldId}/map`, { state: { worldName, city } })}
-              >
-                Map
-              </button>
-            </>
-          ) : (
-            <p className="muted">Loading…</p>
-          )}
-        </div>
-        {detail && buildings && (
-          <BuildingsPanel detail={detail} buildings={buildings} now={now} busy={busy} onUpgrade={onUpgrade} onCancel={onCancelBuild} />
-        )}
-        {detail && army && (
-          <ArmyPanel detail={detail} units={army} now={now} busy={busy} onRecruit={onRecruit} onStudy={onStudy} onCancel={onCancelRecruit} onCancelStudy={onCancelStudy} />
+      <MapTopBar worldName={worldName} worldId={worldId} city={city} />
+      <main className="city-body">
+        <CityScene buildings={buildings} city={city} detail={detail} units={army} />
+        {/* City card, buildings and army panels are hidden for now: only the picture is shown.
+            The data still loads so the information panel and the scene labels work. */}
+        {SHOW_PANELS && (
+          <>
+            <div className="card city-card">
+              <h1>{shown ? shown.name : 'Your city'}</h1>
+              {shown ? (
+                <>
+                  <dl>
+                    <dt>Coordinates</dt><dd>{shown.x}, {shown.y}</dd>
+                    <dt>Points</dt><dd>{shown.points.toLocaleString()}</dd>
+                  </dl>
+                  <button
+                    className="primary"
+                    onClick={() => navigate(`/worlds/${worldId}/map`, { state: { worldName, city } })}
+                  >
+                    Map
+                  </button>
+                </>
+              ) : (
+                <p className="muted">Loading…</p>
+              )}
+            </div>
+            {detail && buildings && (
+              <BuildingsPanel detail={detail} buildings={buildings} now={now} busy={busy} onUpgrade={onUpgrade} onCancel={onCancelBuild} />
+            )}
+            {detail && army && (
+              <ArmyPanel detail={detail} units={army} now={now} busy={busy} onRecruit={onRecruit} onStudy={onStudy} onCancel={onCancelRecruit} onCancelStudy={onCancelStudy} />
+            )}
+          </>
         )}
       </main>
     </div>
