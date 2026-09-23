@@ -177,12 +177,16 @@ export async function loadSprites(ctx: CanvasRenderingContext2D): Promise<Sprite
   return { grass, byKey: Object.fromEntries(entries) as Record<AssetKey, Sprite[]> }
 }
 
-/** Points thresholds per tier: t1 0–2000, t2 2001–5000, t3 5001–8000, t4 8001–12000, t5 12001+. */
+/**
+ * Points thresholds per tier. A fully built city is 9,876 points (see docs/BUILDINGS-PROPOSAL.md);
+ * everything at level 10 ≈ 450, at 15 ≈ 1,100, at 20 ≈ 2,650, at 25 ≈ 5,300.
+ * t1 < 300 (village) · t2 300–999 (town) · t3 1,000–2,499 (city) · t4 2,500–5,999 (large city) · t5 ≥ 6,000 (capital).
+ */
 export function cityTierKey(points: number): AssetKey {
-  if (points > 12000) return 'entity.city.t5'
-  if (points > 8000) return 'entity.city.t4'
-  if (points > 5000) return 'entity.city.t3'
-  if (points > 2000) return 'entity.city.t2'
+  if (points >= 6000) return 'entity.city.t5'
+  if (points >= 2500) return 'entity.city.t4'
+  if (points >= 1000) return 'entity.city.t3'
+  if (points >= 300) return 'entity.city.t2'
   return 'entity.city.t1'
 }
 

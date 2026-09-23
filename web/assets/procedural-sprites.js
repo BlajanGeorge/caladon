@@ -176,7 +176,7 @@
   };
 
   // city tier from points (placeholder thresholds; tunable)
-  function cityTierKey(points) { return points >= 5000 ? "entity.city.t3" : points >= 1000 ? "entity.city.t2" : "entity.city.t1"; }
+  function cityTierKey(points) { return points >= 2500 ? "entity.city.t3" : points >= 300 ? "entity.city.t2" : "entity.city.t1"; }
 
   const api = { registry, grassPattern, tree, forest, mountain, lake, slot, village, barbarians, cityTierKey };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

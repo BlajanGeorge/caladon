@@ -149,8 +149,9 @@ Why these knobs:
   math is a unit conversion).
 - **Points ×1.2 with Tribal Wars P1 values.** A maxed mine is worth 1,187 points, a maxed Farm
   989, a fully built city (every building at max) 9,876. The existing map
-  tier thresholds (t1 < 1 000, t2 < 5 000, t3 ≥ 5 000) work as they are; with five tier sprites available,
-  proposal: t1 < 1 000, t2 < 3 000, t3 < 6 000, t4 < 9 000, t5 ≥ 9 000.
+  tier thresholds are set from these totals: t1 < 300 (village), t2 < 1 000 (town), t3 < 2 500 (city),
+  t4 < 6 000 (large city), t5 ≥ 6 000 (capital) — everything at level 10 ≈ 450, 15 ≈ 1 100, 20 ≈ 2 650,
+  25 ≈ 5 300.
 - **Population.** Farm 240 at level 1, 24,000 at 30; all buildings maxed use 3,002, leaving
   20,998 for troops. Founding buildings cost no population, so a new city has all 240 free
   (Tribal Wars: 233).

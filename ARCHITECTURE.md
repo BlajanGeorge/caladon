@@ -712,7 +712,9 @@ For each building type there are four per-level lookup tables in config (constan
 - **Points** are a property of the level, so a city's points are simply
   `Σ points[level(b)]` over its buildings. The `city.points` column is kept as a **maintained
   counter** updated on every level completion (exactly like population), and the same invariant
-  check applies. Points drive the map's city tier art (t1/t2/t3 thresholds are unchanged).
+  check applies. Points drive the map's city tier art: **t1 < 300, t2 < 1 000, t3 < 2 500, t4 < 6 000,
+  t5 ≥ 6 000** (a fully built city is 9 876; everything at level 10 ≈ 450, 15 ≈ 1 100, 20 ≈ 2 650,
+  25 ≈ 5 300).
 - The tables themselves: `docs/BUILDINGS-PROPOSAL.md` §3 (formulas) and §4/§6 (every level).
 
 ### Level-up (the one operation)
@@ -1003,7 +1005,7 @@ order by tile `y`, then `x`).
 | entity | asset key | notes |
 |--------|-----------|-------|
 | free city slot | `entity.slot` | marker for a foundable, unoccupied spot |
-| player city | `entity.city.t1` / `.t2` / `.t3` | tier chosen from `points` — placeholder thresholds: t1 `< 1000`, t2 `1000–4999`, t3 `≥ 5000` (tunable) |
+| player city | `entity.city.t1` … `.t5` | tier chosen from `points`: t1 `< 300`, t2 `< 1000`, t3 `< 2500`, t4 `< 6000`, t5 `≥ 6000` (see Buildings) |
 | barbarian village | `entity.barbarian` | farmable, never occupied/conquered |
 
 **Per-frame draw order:** grass ground → then FOREST/LAKE/MOUNTAIN object sprites and all entities in
