@@ -742,6 +742,29 @@ upgrade(city, building):
   up to that instant and the new rate the time after.
 - A Deposit upgrade never destroys stock; a stock above the *old* cap cannot exist anyway.
 
+### Timers: how completions happen
+
+Build orders, recruit orders and studies are **rows with a `completes_at`**; nothing fires at that instant.
+They are applied by `advance(city, now)`, which runs **under the city row lock** before any read or
+mutation of that city: take every due order in chronological order, settle resources up to its
+completion instant with the old rates, apply its effect (level, points, farm gain, new production rate or
+capacity, units, study), then settle to `now`. The result is the same no matter when it runs, so there is
+no scheduler to drift, duplicate or fall over.
+
+Two rules keep the stored state from going stale for cities nobody is looking at:
+
+- **A city may stay un-advanced for at most `ADVANCE_LAG` (60 s).** A sweeper runs every 60 s and advances
+  every city that has an order with `completes_at <= now` (union over the three order tables), in small
+  batches with `SELECT … FOR UPDATE SKIP LOCKED`, so a completed level's points, rate or units are
+  never more than about a minute late in the database — and that is what the map shows.
+- **The map viewport does not advance cities.** `/map` reads `city.points` as stored; the sweeper's lag
+  is the only staleness. (Advancing every city in a viewport on each map request was considered and
+  rejected: it puts write load on the hottest read path.)
+
+Resources need no sweeping: their stock is settled on read from the clocks, at no cost. Movements between
+cities (attacks, support), when they exist, need real scheduling — a per-world event table processed in
+strict chronological order — and will call the same `advance` on the cities involved.
+
 ### Persistence
 
 One row per (city, building), created with the city:
