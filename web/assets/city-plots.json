@@ -2,118 +2,121 @@
   "image": "sprites/city-ground.png",
   "width": 2048,
   "height": 1152,
-  "note": "Building plots on the city ground. anchor = bottom-centre of the plot (where a building sprite's ground anchor goes); box = the bare-dirt area a sprite should fit in. Coordinates are in the generated image's own 2048x1152 frame; the image keeps its soft transparent border and is drawn over the tiled grass background, so nothing is cropped. Nine plots: every building except the Wall has one.",
+  "note": "Building plots on the city ground. anchor = bottom-centre of the plot; box = the bare-dirt area. Measured from the generated image, which keeps its soft transparent border; GROUND_INSETS holds how deep that border reaches so the view can position by the painting.",
+  "insets": {
+    "left": 36,
+    "top": 77,
+    "right": 42,
+    "bottom": 64
+  },
   "plots": {
     "TOWN_HALL": {
       "anchor": [
-        1015,
+        1017,
         640
       ],
       "box": [
-        843,
-        432,
-        1186,
+        857,
+        434,
+        1181,
         640
       ]
     },
     "FARM": {
       "anchor": [
-        823,
-        395
+        826,
+        398
       ],
       "box": [
-        732,
-        285,
-        917,
-        395
+        744,
+        279,
+        914,
+        398
       ]
     },
     "WOODCUTTER": {
       "anchor": [
-        1223,
-        392
+        1224,
+        397
       ],
       "box": [
-        1143,
-        282,
-        1306,
-        392
+        1134,
+        278,
+        1307,
+        397
       ]
     },
     "DEPOSIT": {
       "anchor": [
-        590,
-        544
+        587,
+        534
       ],
       "box": [
-        494,
-        431,
-        685,
-        544
+        498,
+        434,
+        682,
+        534
       ]
     },
     "BARRACKS": {
       "anchor": [
-        1443,
-        551
+        1446,
+        547
       ],
       "box": [
-        1349,
+        1347,
         438,
-        1534,
-        551
+        1537,
+        547
       ]
     },
     "STONE_MINE": {
       "anchor": [
-        616,
-        726
+        615,
+        724
       ],
       "box": [
-        520,
-        611,
-        709,
-        726
+        529,
+        608,
+        725,
+        724
       ]
     },
     "IRON_MINE": {
       "anchor": [
-        1418,
-        726
+        1422,
+        722
       ],
       "box": [
-        1336,
-        618,
-        1503,
-        726
+        1318,
+        614,
+        1510,
+        722
       ]
     },
     "ACADEMY": {
       "anchor": [
-        869,
-        855
+        861,
+        853
       ],
       "box": [
-        770,
-        661,
-        972,
-        855
+        777,
+        731,
+        954,
+        853
       ]
     },
     "VAULT": {
       "anchor": [
-        1155,
+        1162,
         859
       ],
       "box": [
-        1047,
-        663,
+        1069,
+        741,
         1251,
         859
       ]
     }
-  },
-  "wall": {
-    "note": "No plot: drawn as fence/palisade/stone segments along the rim, behind buildings, in three visual tiers."
   }
 }

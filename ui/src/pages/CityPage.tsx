@@ -154,7 +154,7 @@ export function CityPage() {
 
   return (
     <div className="city-shell">
-      <MapTopBar worldName={worldName} worldId={worldId} city={city} />
+      <MapTopBar worldName={worldName} worldId={worldId} city={city} showWorldButton />
       <main className="city-body">
         <CityScene buildings={buildings} city={city} detail={detail} units={army} />
         {/* City card, buildings and army panels are hidden for now: only the picture is shown.

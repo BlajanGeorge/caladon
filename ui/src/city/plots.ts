@@ -12,7 +12,7 @@ export const GROUND_SIZE = { width: 2048, height: 1152 }
  * at its deepest on each side (measured), so positioning by them leaves no transparent sliver
  * showing at the screen corner.
  */
-export const GROUND_INSETS = { left: 40, top: 80, right: 44, bottom: 69 }
+export const GROUND_INSETS = { left: 36, top: 77, right: 42, bottom: 64 }
 export const GROUND_PAINTED = {
   width: GROUND_SIZE.width - GROUND_INSETS.left - GROUND_INSETS.right,
   height: GROUND_SIZE.height - GROUND_INSETS.top - GROUND_INSETS.bottom,
@@ -24,15 +24,15 @@ export interface Plot {
 }
 
 export const PLOTS: Record<Exclude<BuildingType, 'WALL'>, Plot> = {
-  TOWN_HALL: { anchor: [1015, 640], box: [843, 432, 1186, 640] },
-  DEPOSIT: { anchor: [590, 544], box: [494, 431, 685, 544] },
-  VAULT: { anchor: [1155, 859], box: [1047, 663, 1251, 859] },
-  BARRACKS: { anchor: [1443, 551], box: [1349, 438, 1534, 551] },
-  ACADEMY: { anchor: [869, 855], box: [770, 661, 972, 855] },
-  FARM: { anchor: [823, 395], box: [732, 285, 917, 395] },
-  WOODCUTTER: { anchor: [1223, 392], box: [1143, 282, 1306, 392] },
-  STONE_MINE: { anchor: [616, 726], box: [520, 611, 709, 726] },
-  IRON_MINE: { anchor: [1418, 726], box: [1336, 618, 1503, 726] },
+  TOWN_HALL: { anchor: [1017, 640], box: [857, 434, 1181, 640] },
+  DEPOSIT: { anchor: [587, 534], box: [498, 434, 682, 534] },
+  VAULT: { anchor: [1162, 859], box: [1069, 741, 1251, 859] },
+  BARRACKS: { anchor: [1446, 547], box: [1347, 438, 1537, 547] },
+  ACADEMY: { anchor: [861, 853], box: [777, 731, 954, 853] },
+  FARM: { anchor: [826, 398], box: [744, 279, 914, 398] },
+  WOODCUTTER: { anchor: [1224, 397], box: [1134, 278, 1307, 397] },
+  STONE_MINE: { anchor: [615, 724], box: [529, 608, 725, 724] },
+  IRON_MINE: { anchor: [1422, 722], box: [1318, 614, 1510, 722] },
 }
 
 /** Anchor as CSS percentages of the image box. */

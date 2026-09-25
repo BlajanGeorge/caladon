@@ -4,6 +4,7 @@ import { authApi } from '../api/auth'
 import type { OwnedCity } from '../api/worlds'
 import profileUrl from '@assets/sprites/profile.png'
 import accountUrl from '@assets/sprites/account.png'
+import worldUrl from '@assets/sprites/hud-world.png'
 
 interface Props {
   worldName?: string
@@ -11,9 +12,11 @@ interface Props {
   city?: OwnedCity | null
   /** Rendered in the right-hand group, just before the Profile icon (the City view's resource strip). */
   strip?: ReactNode
+  /** Show the World map button (the City view does; the Map itself does not). */
+  showWorldButton?: boolean
 }
 
-export function MapTopBar({ worldName, strip }: Props) {
+export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = false }: Props) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const rightRef = useRef<HTMLDivElement>(null)
@@ -43,6 +46,17 @@ export function MapTopBar({ worldName, strip }: Props) {
 
       <div className="mtb-right" ref={rightRef}>
         {strip}
+        {showWorldButton && (
+          <button
+            type="button"
+            className="mtb-icon-btn"
+            title="World map"
+            aria-label="World map"
+            onClick={() => navigate(`/worlds/${worldId}/map`, { state: { city } })}
+          >
+            <img src={worldUrl} alt="" />
+          </button>
+        )}
         <button type="button" className="mtb-icon-btn" title="Profile" aria-label="Profile" onClick={() => navigate('/profile')}>
           <img src={profileUrl} alt="" />
         </button>

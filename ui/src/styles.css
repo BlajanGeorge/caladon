@@ -8,6 +8,13 @@
   --accent-dark: #2f5e2d;
   --danger: #b23a2e;
   --shadow: 0 6px 20px rgba(32, 48, 26, 0.12);
+  /* One look for every overlay drawn on the map or the city picture. */
+  --overlay-bg: rgba(20, 22, 26, .7);
+  --overlay-border: 1px solid rgba(122, 102, 54, .55);
+  --overlay-radius: 8px;
+  --overlay-shadow: 0 4px 14px rgba(0, 0, 0, .45);
+  --overlay-text: #f0e6c8;
+  --overlay-muted: #9c937c;
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
@@ -76,11 +83,11 @@ input { font: inherit; cursor: text; }
 }
 .map-topbar .mtb-avatar:hover { border-color: #f4d98a; }
 .map-topbar .mtb-caret { font-size: 11px; opacity: .8; }
+/* Same dark slate as the city view's plot labels and the map tooltip. */
 .map-topbar .mtb-menu {
   position: absolute; top: calc(100% + 8px); right: 0; z-index: 10; min-width: 180px;
-  background: url('@assets/sprites/stone-dark.png') center / cover, #1a1d22;
-  border: 2px solid #7a6636; border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(0,0,0,.55), inset 0 0 0 1px rgba(0,0,0,.4);
+  background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: var(--overlay-shadow);
   padding: 6px; display: flex; flex-direction: column;
 }
 .map-topbar .mtb-menu button {
@@ -89,14 +96,11 @@ input { font: inherit; cursor: text; }
 }
 .map-topbar .mtb-menu button span {
   font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 13px;
-  letter-spacing: .12em; text-transform: uppercase;
-  background: url('@assets/sprites/stone-text.png'); background-size: 180px auto;
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
-  text-shadow: 0 1px 0 rgba(255,255,255,.1), 0 -1px 1px rgba(0,0,0,.5);
+  letter-spacing: .12em; text-transform: uppercase; color: #f0e6c8;
 }
 .map-topbar .mtb-menu button:hover { background: rgba(199,154,68,.18); }
 .map-topbar .mtb-menu button.danger:hover { background: rgba(178,58,46,.24); }
+.map-topbar .mtb-menu button.danger:hover span { color: #ffd9d2; }
 
 /* Resource strip (City view): wood / stone / iron / population, left of the Profile icon. */
 .map-topbar .mtb-resources, .city-panel .mtb-resources { display: flex; align-items: center; gap: 18px; margin-right: 22px; }
@@ -153,12 +157,12 @@ input { font: inherit; cursor: text; }
 .map-body { position: relative; flex: 1; min-height: 0; background: #a08748; overflow: hidden; }
 .map-body canvas { display: block; width: 100%; height: 100%; cursor: url('@assets/sprites/cursor-point.png') 1 0, grab; }
 .map-body canvas.dragging { cursor: url('@assets/sprites/cursor-grab.png') 19 19, grabbing; }
+/* Same dark slate as the city labels, the map tooltip and the account menu. */
 .map-controls {
   position: absolute; z-index: 2; top: 14px; left: 14px;
   display: flex; gap: 8px; align-items: center; padding: 8px;
-  background: url('@assets/sprites/stone-dark.png') center / cover, #1a1d22;
-  border: 2px solid #7a6636; border-radius: 10px;
-  box-shadow: 0 4px 14px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.4);
+  background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: var(--overlay-shadow);
 }
 .map-controls .map-ctl-btn {
   padding: 0; border: none; background: transparent; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; line-height: 0;
@@ -168,35 +172,37 @@ input { font: inherit; cursor: text; }
 .map-controls .map-ctl-btn:hover img { filter: brightness(1.12); }
 .map-controls .map-ctl-btn:active { transform: translateY(1px); }
 .map-controls input {
-  width: 92px; padding: 8px 10px; border-radius: 8px; font-size: 13px;
-  background: rgba(20,22,26,.85); border: 1px solid #6b5a34; color: #e7ddc4;
+  width: 92px; padding: 8px 10px; border-radius: 6px; font-size: 13px;
+  background: rgba(10, 11, 13, .6); border: var(--overlay-border); color: var(--overlay-text);
 }
-.map-controls input::placeholder { color: #8a8574; }
+.map-controls input::placeholder { color: #8d8674; }
 .map-controls input:focus { outline: none; border-color: #c79a44; }
 .map-status { position: absolute; bottom: 12px; left: 12px; font-size: 12px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
-.map-tooltip { position: absolute; pointer-events: none; background: rgba(36,57,31,.92); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; transform: translate(38px, 10px); }
+/* Same look as the city view's plot labels: dark slate, cream text. */
+.map-tooltip {
+  position: absolute; pointer-events: none; transform: translate(38px, 10px);
+  padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  color: var(--overlay-text); background: var(--overlay-bg);
+}
 .map-panel {
-  position: absolute; top: 16px; right: 16px;
-  width: 270px; height: 214px;
-  background: url('@assets/sprites/panel.png') center / 100% 100% no-repeat;
-  padding: 46px 30px 28px;
-  color: #e7ddc4;
-  filter: drop-shadow(0 6px 18px rgba(0,0,0,.5));
+  position: absolute; top: 16px; right: 16px; width: 270px;
+  background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: var(--overlay-shadow); padding: 14px 16px 16px; color: var(--overlay-text);
 }
 .map-panel h3 {
-  margin: 0 0 10px;
+  margin: 0 0 10px; padding-right: 22px;
   font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 16px; letter-spacing: .05em;
-  color: #f1e7c9; text-shadow: 0 1px 2px rgba(0,0,0,.75);
+  color: var(--overlay-text); text-shadow: 0 1px 2px rgba(0,0,0,.75);
 }
 .map-panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; font-size: 13px; }
-.map-panel dt { color: #a99f86; }
-.map-panel dd { margin: 0; font-weight: 600; color: #e7ddc4; }
-/* transparent hit-target over the frame's built-in X */
+.map-panel dt { color: var(--overlay-muted); }
+.map-panel dd { margin: 0; font-weight: 600; color: var(--overlay-text); }
 .map-panel .close {
-  position: absolute; top: 8px; right: 8px; width: 36px; height: 36px;
-  padding: 0; border: none; background: transparent; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; font-size: 0;
+  position: absolute; top: 6px; right: 8px; width: 26px; height: 26px;
+  padding: 0; border: none; background: transparent; font-size: 16px; line-height: 1;
+  color: var(--overlay-muted); cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }
-.map-panel .close { position: absolute; top: 6px; right: 8px; border: 0; background: transparent; font-size: 16px; color: var(--muted); }
+.map-panel .close:hover { color: var(--overlay-text); }
 .map-loading { position: absolute; inset: 0; pointer-events: none; display: grid; place-items: center; color: #fff; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 
 /* ---- City view: buildings and army panels ---- */
@@ -213,24 +219,25 @@ input { font: inherit; cursor: text; }
 .city-scene-box img { display: block; width: 100%; height: 100%; }
 /* Side panel: city name, resources and troops, to the right of the picture. */
 .city-panel {
-  /* Pulled a few px past the top, bottom and right edges: the frame sprite's outermost pixels are
-     semi-transparent, and letting them fall outside the (clipped) scene keeps a dark seam from showing. */
-  position: absolute; right: -5px; top: -5px; bottom: -5px; z-index: 1;
-  display: flex; flex-direction: column; gap: 14px;
-  /* The UI kit's parchment panel, whole (9-slice with `fill`, so its parchment centre stretches too).
-     The slice is larger than the border width, so the frame renders scaled down with its corners intact. */
-  border-style: solid; border-width: 28px;
-  border-image: url('@assets/sprites/ui-frame.png') 64 fill stretch;
-  color: #2c2216; overflow-y: auto;
+  /* Only as tall as its content: name, resources and troops. */
+  position: absolute; right: 14px; top: 14px; z-index: 1;
+  display: flex; flex-direction: column; gap: 10px;
+  /* Same thin gold edge as every other overlay, over the kit's parchment (the panel keeps its own
+     background, only the frame is dropped). */
+  border: var(--overlay-border); border-radius: 14px;
+  background: url('@assets/sprites/panel-parchment.png') center / cover, #b59c72;
+  padding: 16px 18px 20px;
+  box-shadow: 0 8px 22px rgba(0,0,0,.55);
+  color: #2c2216; max-height: calc(100% - 28px); overflow-y: auto; scrollbar-gutter: stable;
 }
-.cp-head { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid rgba(90,70,40,.45); }
+.cp-head { display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid rgba(90,70,40,.45); }
 .city-panel > * { flex-shrink: 0; }
 .cp-name {
-  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 20px; letter-spacing: .05em;
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 17px; letter-spacing: .05em;
   color: #2c2216; text-shadow: 0 1px 0 rgba(255,245,210,.5);
 }
 .cp-meta { font-size: 12px; color: #6b5a3c; }
-.cp-section { display: flex; flex-direction: column; gap: 8px; }
+.cp-section { display: flex; flex-direction: column; gap: 4px; }
 .cp-section h2 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 12px; font-weight: 700;
   letter-spacing: .24em; text-transform: uppercase; color: #6b5a3c;
@@ -241,18 +248,40 @@ input { font: inherit; cursor: text; }
 .cp-unit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .cp-unit-list li { display: flex; align-items: center; gap: 10px; font-size: 13px; }
 /* Placeholder square until the unit art exists. */
-.cp-unit-icon { flex: 0 0 38px; width: 38px; height: 38px; display: block; }
+.cp-unit-icon { flex: 0 0 32px; width: 32px; height: 32px; display: block; }
 /* A unit the city has none of is listed the same; only its count says 0. */
 .cp-unit-name { flex: 1; min-width: 0; color: #3a2e1e; }
 .cp-unit-count { font-variant-numeric: tabular-nums; font-weight: 700; color: #2c2216; }
+/* Scrollbar in the panel's own tones: a sunken track and a gold-brown grip, matching the thin edge. */
+.city-panel { padding-right: 8px; }
+.city-panel::-webkit-scrollbar { width: 10px; }
+.city-panel::-webkit-scrollbar-track {
+  background: rgba(70, 54, 28, .14); border-radius: 6px; margin: 4px 0;
+}
+.city-panel::-webkit-scrollbar-thumb {
+  background: rgba(122, 102, 54, .75); border-radius: 6px;
+  border: 1px solid rgba(60, 46, 22, .45);
+}
+.city-panel::-webkit-scrollbar-thumb:hover { background: rgba(140, 116, 62, .9); }
+.city-panel::-webkit-scrollbar-button { display: none; }
+@supports not selector(::-webkit-scrollbar) {
+  .city-panel { scrollbar-width: thin; scrollbar-color: rgba(122,102,54,.75) rgba(70,54,28,.14); }
+}
+
 /* The resource strip stacks in the panel instead of running along a bar. */
 .city-panel .mtb-resources { flex-direction: column; align-items: stretch; gap: 2px; margin: 0; }
 .city-panel .mtb-res { gap: 10px; }
-.city-panel .mtb-res img { height: 38px; width: 38px; }
+.city-panel .mtb-res img { height: 32px; width: 32px; }
 /* The name sits between the medallion and the number, like the troop rows. */
 .city-panel .mtb-res-name { flex: 1; min-width: 0; font-size: 13px; color: #3a2e1e; }
 .city-panel .mtb-res-value { text-align: right; font-size: 15px; min-width: 0; color: #2c2216; text-shadow: 0 1px 0 rgba(255,245,210,.5); }
 .city-panel .mtb-res.full .mtb-res-value { color: #9a5b12; }
+/* A building sprite stands on its plot: anchored bottom-centre, width set from the plot's box. */
+.city-scene .plot-sprite {
+  position: absolute; transform: translate(-50%, -100%);
+  height: auto; pointer-events: auto; user-select: none;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+}
 .city-scene .plot-label {
   position: absolute; transform: translate(-50%, -100%);
   padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: capitalize;

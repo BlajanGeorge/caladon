@@ -3,15 +3,26 @@ import type { BuildingView, CityDetail, OwnedCity, UnitView } from '../api/world
 import { ResourceStrip } from './ResourceStrip'
 import { GROUND_INSETS, GROUND_PAINTED, GROUND_SIZE, PLOTS, anchorPercent } from '../city/plots'
 import { UNIT_ICONS, UNIT_ORDER } from '../city/unitIcons'
+import { buildingArt } from '../city/buildingSprites'
 import groundUrl from '@assets/sprites/city-ground.png'
 
-/** Width of the side panel that holds resources and troops. */
-const PANEL_W = 270
 /**
- * The picture is wider than the area it sits in (about 2:1 against roughly 1.7:1), so it is scaled to
- * *cover* that area and centred: the grass margin the generator left is what gets cropped, and there is
- * never a black band, whatever the window size.
+ * Every building is drawn at the same width, in the ground image's own pixels, so a farm is not half
+ * the size of the town hall just because its plot is smaller. (The plots differ: 343 px for the town
+ * hall, 163 px for the woodcutter.)
  */
+const SPRITE_WIDTH = 195
+/**
+ * Where the sprite's base sits inside the plot, as a fraction of the plot box's height: 1 would put it
+ * on the box's bottom edge, which reads as standing below the circle. A bit above centre looks planted
+ * in it.
+ */
+const SPRITE_BASE = 0.74
+/** Nudge across the plot, as a fraction of its width: positive moves the building right. */
+const SPRITE_SHIFT = 0.06
+/** Width of the side panel that holds resources and troops, and its inset from the screen edge. */
+const PANEL_W = 270
+const PANEL_INSET = 14
 
 interface Props {
   buildings: BuildingView[] | null
@@ -22,7 +33,7 @@ interface Props {
 }
 
 /**
- * The city view: the picture fills the area left of the side panel, which holds the city's name, its resources and its troops. Plot labels (later:
+ * The city view: the picture fills the whole view with the side panel floating over it, which holds the city's name, its resources and its troops. Plot labels (later:
  * building sprites) live inside the picture box, so their percentage anchors stay on the plots.
  */
 export function CityScene({ buildings, city, detail, units }: Props) {
@@ -33,14 +44,19 @@ export function CityScene({ buildings, city, detail, units }: Props) {
     const el = ref.current
     if (!el) return
     const update = () => {
-      // Cover the free area with the painted part, then shift the file's transparent border out of view.
-      const cw = Math.max(0, el.clientWidth - PANEL_W)
+      // The picture covers the whole view, panel included, so no background shows anywhere; it is
+      // centred on the part left free by the panel, so the town itself stays in the open.
+      const cw = el.clientWidth
       const ch = el.clientHeight
+      const free = Math.max(0, cw - PANEL_W - PANEL_INSET * 2)
       const scale = Math.max(cw / GROUND_PAINTED.width, ch / GROUND_PAINTED.height)
+      const paintedW = GROUND_PAINTED.width * scale
+      // Centre on the free part, but never far enough to uncover an edge of the view.
+      const paintedLeft = Math.min(0, Math.max(cw - paintedW, (free - paintedW) / 2))
       setBox({
         width: Math.round(GROUND_SIZE.width * scale),
         height: Math.round(GROUND_SIZE.height * scale),
-        left: Math.round((cw - GROUND_PAINTED.width * scale) / 2 - GROUND_INSETS.left * scale),
+        left: Math.round(paintedLeft - GROUND_INSETS.left * scale),
         top: Math.round((ch - GROUND_PAINTED.height * scale) / 2 - GROUND_INSETS.top * scale),
       })
     }
@@ -50,7 +66,7 @@ export function CityScene({ buildings, city, detail, units }: Props) {
     return () => ro.disconnect()
   }, [])
 
-  const levelOf = (type: string) => buildings?.find((b) => b.type === type)?.level
+  const viewOf = (type: string) => buildings?.find((b) => b.type === type)
   const shown = detail ?? city
   const countOf = (type: string) => units?.find((u) => u.type === type)?.count ?? 0
   const nameOf = (type: string) => units?.find((u) => u.type === type)?.name
@@ -59,11 +75,30 @@ export function CityScene({ buildings, city, detail, units }: Props) {
     <div className="city-scene" ref={ref}>
       <div className="city-scene-box" style={{ width: box.width, height: box.height, left: box.left, top: box.top }}>
         <img src={groundUrl} alt="" draggable={false} />
+        {/* Only the wall's near section with the gate, across the front of the city, over everything. */}
         {(Object.keys(PLOTS) as (keyof typeof PLOTS)[]).map((type) => {
-          const level = levelOf(type)
+          const view = viewOf(type)
+          const level = view?.level
+          const plot = PLOTS[type]
+          const art = view ? buildingArt(type, view.level, view.maxLevel) : undefined
           const name = type.toLowerCase().replace('_', ' ')
-          return (
-            <span key={type} className={'plot-label' + (level === 0 ? ' empty' : '')} style={anchorPercent(PLOTS[type])}>
+          // A building with art is drawn on its plot; the rest keep the text label for now.
+          return art ? (
+            <img
+              key={type}
+              className="plot-sprite"
+              src={art.src}
+              alt=""
+              title={`${name} ${level}`}
+              style={{
+                // Centre of the plot, nudged across it, then corrected for where the art's footprint sits.
+                left: `${(100 * ((plot.box[0] + plot.box[2]) / 2 + (plot.box[2] - plot.box[0]) * (SPRITE_SHIFT + (art.slide ?? 0)) + (0.5 - art.footprint) * SPRITE_WIDTH * (art.scale ?? 1))) / GROUND_SIZE.width}%`,
+                top: `${(100 * (plot.box[1] + (plot.box[3] - plot.box[1]) * (SPRITE_BASE + (art.drop ?? 0)))) / GROUND_SIZE.height}%`,
+                width: `${(100 * SPRITE_WIDTH * (art.scale ?? 1)) / GROUND_SIZE.width}%`,
+              }}
+            />
+          ) : (
+            <span key={type} className={'plot-label' + (level === 0 ? ' empty' : '')} style={anchorPercent(plot)}>
               {name}{level !== undefined ? ` ${level}` : ''}
             </span>
           )
