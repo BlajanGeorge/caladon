@@ -266,12 +266,18 @@ input { font: inherit; cursor: text; }
 /* Tooltip for the three troop counts: fixed, so the panel's own scrolling never clips it, and drawn to
    the left of the number since the panel sits at the right edge of the screen. */
 .cp-tip {
-  position: fixed; z-index: 30; transform: translate(-100%, -4px); margin-left: -10px;
-  max-width: 260px; padding: 6px 10px; border-radius: 8px;
-  font-size: 12px; line-height: 1.35; color: #f0e6c8;
-  background: rgba(20, 22, 26, .88); border: var(--overlay-border);
+  position: fixed; z-index: 30; transform: translate(-100%, -6px); margin-left: -10px;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 7px 11px; border-radius: 8px; white-space: nowrap;
+  font-size: 12px; line-height: 1.3; color: #f0e6c8;
+  background: rgba(20, 22, 26, .9); border: var(--overlay-border);
   box-shadow: 0 4px 14px rgba(0,0,0,.5); pointer-events: none;
 }
+/* The bullets carry the same order as the numbers, in tones that read on the dark tip. */
+.cp-tip b { display: inline-block; width: 10px; font-size: 15px; line-height: 1; }
+.cp-tip .at-home { color: #f0e6c8; }
+.cp-tip .hosted { color: #8fd18a; }
+.cp-tip .away { color: #e8b063; }
 /* Scrollbar in the panel's own tones: a sunken track and a gold-brown grip, matching the thin edge. */
 .city-panel { padding-right: 8px; }
 .city-panel::-webkit-scrollbar { width: 10px; }
