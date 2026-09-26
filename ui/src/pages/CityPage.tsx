@@ -156,7 +156,7 @@ export function CityPage() {
     <div className="city-shell">
       <MapTopBar worldName={worldName} worldId={worldId} city={city} showWorldButton />
       <main className="city-body">
-        <CityScene buildings={buildings} city={city} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} />
+        <CityScene buildings={buildings} city={city} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} onUpgrade={onUpgrade} onCancelBuild={onCancelBuild} />
         {/* City card, buildings and army panels are hidden for now: only the picture is shown.
             The data still loads so the information panel and the scene labels work. */}
         {SHOW_PANELS && (

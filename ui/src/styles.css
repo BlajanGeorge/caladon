@@ -429,6 +429,20 @@ input { font: inherit; cursor: text; }
 .study-list li.open .study-state { color: var(--overlay-text); }
 .study-list li.blocked .study-state { color: #d59b7a; }
 .study-list li.free .study-state { color: var(--overlay-muted); }
+/* The Town Hall's building list: no icons, so the name, the four cost figures and the action each keep a
+   column of a fixed width, in the list and in the queue alike, so every row lines up. */
+.builds .study-list li, .builds .recruit-queue li { gap: 14px; }
+/* min-width:0 so a long "Level 24 of 30 · 2 ordered" cannot widen the column and knock the row out of
+   line; it is ellipsised instead. */
+.builds .study-name { flex: 0 0 230px; min-width: 0; overflow: hidden; }
+.builds .study-name em { overflow: hidden; text-overflow: ellipsis; }
+/* Wide enough for six-figure costs at the top levels, so the column never stretches on one row. */
+.builds .study-cost { flex: 0 0 320px; }
+.builds .study-cost span { min-width: 72px; }
+.builds .study-action { flex: 1; min-width: 0; }
+.builds .study-list li.max .study-name, .builds .study-list li.max em { color: var(--overlay-muted); }
+.builds .recruit-queue .rq-name { flex: 0 0 194px; min-width: 0; overflow: hidden; }
+
 .b-info-close {
   position: absolute; top: 8px; right: 10px; width: 24px; height: 24px;
   padding: 0; border: none; background: transparent; font-size: 17px; line-height: 1;

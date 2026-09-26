@@ -82,6 +82,11 @@ class CityApiTest : ApiTestBase() {
             jsonPath("$.buildQueue[0].building") { value("WOODCUTTER") }
             jsonPath("$.buildQueue[0].targetLevel") { value(2) }
             jsonPath("$.buildQueue[0].completesAt") { value(clock.instant().plusSeconds(95).toString()) }
+            // The order carries what it was paid, which is what cancelling gives back in full.
+            jsonPath("$.buildQueue[0].cost.wood") { value(63) }
+            jsonPath("$.buildQueue[0].cost.stone") { value(77) }
+            jsonPath("$.buildQueue[0].cost.iron") { value(50) }
+            jsonPath("$.buildQueue[0].popCost") { value(1) }
             jsonPath("$.buildings[?(@.type=='WOODCUTTER')].level") { value(1) }
             jsonPath("$.resources.wood.ratePerHour") { value(30) }
         }

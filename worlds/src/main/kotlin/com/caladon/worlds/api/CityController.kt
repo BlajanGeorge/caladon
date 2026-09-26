@@ -131,7 +131,11 @@ class CityController(
                 CityBuildingResponse(b, b.displayName, level, BuildingRules.points(b, level))
             },
             buildQueue = state.buildOrders.map {
-                BuildOrderResponse(requireNotNull(it.id), it.building, it.building.displayName, it.targetLevel, it.startedAt, it.completesAt)
+                val cost = BuildingRules.cost(it.building, it.targetLevel)
+                BuildOrderResponse(
+                    requireNotNull(it.id), it.building, it.building.displayName, it.targetLevel, it.startedAt, it.completesAt,
+                    CostResponse(cost.wood, cost.stone, cost.iron), BuildingRules.popCost(it.building, it.targetLevel),
+                )
             },
             buildQueueSlots = BuildingRules.queueSlots(state.level(Building.TOWN_HALL)),
             units = unitCounts(state),

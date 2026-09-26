@@ -96,6 +96,9 @@ export interface BuildOrder {
   targetLevel: number
   startedAt: string
   completesAt: string
+  /** What the level cost, which is also what cancelling gives back in full. */
+  cost: Cost
+  popCost: number
 }
 
 export interface CityUnit {

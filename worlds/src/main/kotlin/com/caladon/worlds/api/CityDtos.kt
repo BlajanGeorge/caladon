@@ -21,6 +21,8 @@ data class CityBuildingResponse(val type: Building, val name: String, val level:
 data class BuildOrderResponse(
     val id: Long, val building: Building, val name: String, val targetLevel: Int,
     val startedAt: Instant, val completesAt: Instant,
+    /** What this level was paid for, and what a cancellation gives back in full. */
+    val cost: CostResponse, val popCost: Long,
 )
 
 /** The owner's view of a city, settled and advanced to `serverTime`. Every mutation returns it. */

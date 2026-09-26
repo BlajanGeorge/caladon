@@ -842,7 +842,16 @@ A read-only companion for the UI's building panel (what the next level costs and
 - Endpoints: `GET …/buildings` (each type with `level`, `maxLevel`, `points`, `effect {value, unit}`,
   `queued`, and `next {level, cost, popCost, points, effect, buildTimeSeconds, blockedBy}` for the next
   orderable level), `POST …/buildings/{building}/upgrade`, `DELETE …/build-orders/{id}`; both mutations
-  return the city detail.
+  return the city detail. Each entry of the city detail's `buildQueue` also carries the `cost` and
+  `popCost` of the level it is for, which is exactly what cancelling it gives back, so the window can
+  show the refund without knowing the formulas.
+- **The Town Hall's window** (`BuildingsWindow`) is where building happens: every building with its level,
+  what its next level costs in the three resources and in people, how long it takes, and a play button.
+  The button is disabled with the reason on hover when the resources, the population, the queue slots or
+  the requirements are short, and replaced by the missing requirement or "Highest level" where there is
+  nothing to order. Underneath, "Being built" numbers the queue, counts each order down, and lets the
+  **last** one be cancelled behind a confirmation, exactly as the Academy and the Barracks do, except the
+  refund is full.
 - **Timers / sweeper**: `CityAccess.advance` completes due build orders and recruit units in chronological
   order, settling resources before each with the levels in force, then marks due studies `applied`;
   `CitySweeper` (`@Scheduled`, `caladon.sweeper.interval-ms`, default 60 000) advances every city with a
