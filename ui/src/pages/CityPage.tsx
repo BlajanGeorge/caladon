@@ -8,7 +8,6 @@ import { ArmyPanel } from '../components/ArmyPanel'
 import { BuildingsPanel } from '../components/BuildingsPanel'
 import { CityScene } from '../components/CityScene'
 import { MapTopBar } from '../components/MapTopBar'
-import { useToast } from '../components/Toast'
 import { useNow } from '../city/useNow'
 import { useWorldName } from '../useWorldName'
 
@@ -30,24 +29,20 @@ export function pollIntervalMs(resources?: CityResources): number {
 /** Only the city picture is shown for now; flip to bring back the city card and the panels. */
 const SHOW_PANELS: boolean = false
 
-const ERRORS: Record<string, string> = {
-  NOT_ENOUGH_RESOURCES: 'Not enough resources',
-  NOT_ENOUGH_POPULATION: 'Not enough population',
-  REQUIREMENTS_NOT_MET: 'Requirements not met',
-  QUEUE_FULL: 'The build queue is full',
-  MAX_LEVEL: 'Already at max level',
-  NOT_STUDIED: 'Study this unit first',
-  ALREADY_STUDIED: 'Already studied',
-  ORDER_NOT_FOUND: 'That order is gone',
-  NOT_LAST_IN_QUEUE: 'Only the last order in a queue can be cancelled',
-}
+/**
+ * Refusals the windows already show before you can click: the button is disabled with the reason on
+ * hover, so a rejected order only refreshes the city instead of announcing anything.
+ */
+const EXPECTED = new Set([
+  'NOT_ENOUGH_RESOURCES', 'NOT_ENOUGH_POPULATION', 'REQUIREMENTS_NOT_MET', 'QUEUE_FULL', 'MAX_LEVEL',
+  'NOT_STUDIED', 'ALREADY_STUDIED', 'ORDER_NOT_FOUND', 'NOT_LAST_IN_QUEUE',
+])
 
 /** City view: the HUD top bar with the resource strip, the city card, the buildings and army panels. */
 export function CityPage() {
   const { id } = useParams()
   const worldId = Number(id)
   const navigate = useNavigate()
-  const toast = useToast()
   const state = (useLocation().state ?? {}) as NavState
   const worldName = useWorldName(worldId, state.worldName)
   const [city, setCity] = useState<OwnedCity | null>(state.city ?? null)
@@ -59,23 +54,23 @@ export function CityPage() {
   const hasQueue = (detail?.buildQueue.length ?? 0) > 0 || (detail?.recruitQueue.length ?? 0) > 0 || (detail?.studyQueue.length ?? 0) > 0
   const now = useNow(hasQueue)
 
-  const leaveIfGone = useCallback((err: unknown, message: string) => {
+  // The city view says nothing on the side: a city that is gone sends the player back to the lobby, and
+  // anything else is simply retried on the next poll.
+  const leaveIfGone = useCallback((err: unknown) => {
     if (err instanceof ApiError && (err.code === 'NOT_JOINED' || err.code === 'WORLD_NOT_FOUND' || err.code === 'CITY_NOT_FOUND')) {
       navigate('/lobby', { replace: true })
-    } else if (!(err instanceof ApiError && err.code === 'SESSION_EXPIRED')) {
-      toast.error(message)
     }
-  }, [navigate, toast])
+  }, [navigate])
 
   useEffect(() => {
     if (city) return
     worldsApi.myCities(worldId)
       .then((cities) => {
-        if (cities.length === 0) toast.error('You have no city in this world')
+        if (cities.length === 0) navigate('/lobby', { replace: true })
         else setCity(cities[0])
       })
-      .catch((err) => leaveIfGone(err, 'Could not load your city'))
-  }, [city, worldId, toast, leaveIfGone])
+      .catch(leaveIfGone)
+  }, [city, worldId, navigate, leaveIfGone])
 
   // Detail + panels: fetch on entry, then on a rate-dependent cadence; paused while the tab is hidden.
   useEffect(() => {
@@ -95,7 +90,7 @@ export function CityPage() {
         })
         .catch((err) => {
           if (cancelled) return
-          leaveIfGone(err, 'Could not load the city')
+          leaveIfGone(err)
           if (running) schedule(60_000)
         })
     }
@@ -121,7 +116,7 @@ export function CityPage() {
   }, [city, worldId, leaveIfGone, refreshKey])
 
   /** Runs a mutation, takes its returned detail, then refreshes the panels (their views depend on it). */
-  const act = useCallback(async (run: () => Promise<CityDetail>, done?: string) => {
+  const act = useCallback(async (run: () => Promise<CityDetail>) => {
     if (!city) return
     setBusy(true)
     try {
@@ -129,22 +124,20 @@ export function CityPage() {
       setDetail(d)
       const [b, a] = await Promise.all([worldsApi.buildings(worldId, city.id), worldsApi.army(worldId, city.id)])
       setBuildings(b); setArmy(a)
-      if (done) toast.info(done)
     } catch (err) {
-      if (err instanceof ApiError && ERRORS[err.code]) {
-        const extra = err.details ? ' (' + Object.entries(err.details).map(([k, v]) => `${k.toLowerCase().replace('_', ' ')} ${v}`).join(', ') + ')' : ''
-        toast.error(ERRORS[err.code] + extra)
+      if (err instanceof ApiError && EXPECTED.has(err.code)) {
+        // The view was out of date; pull the city again so the buttons match what the server allows.
         setRefreshKey((k) => k + 1)
       } else {
-        leaveIfGone(err, 'The action failed')
+        leaveIfGone(err)
       }
     } finally {
       setBusy(false)
     }
-  }, [city, worldId, toast, leaveIfGone])
+  }, [city, worldId, leaveIfGone])
 
   const onUpgrade = (b: BuildingType) => act(() => worldsApi.upgrade(worldId, city!.id, b))
-  const onCancelBuild = (orderId: number) => act(() => worldsApi.cancelBuild(worldId, city!.id, orderId), 'Order cancelled and refunded')
+  const onCancelBuild = (orderId: number) => act(() => worldsApi.cancelBuild(worldId, city!.id, orderId))
   const onRecruit = (u: UnitType, count: number) => act(() => worldsApi.recruit(worldId, city!.id, u, count))
   const onStudy = (u: UnitType) => act(() => worldsApi.study(worldId, city!.id, u))
   const onCancelRecruit = (orderId: number) => act(() => worldsApi.cancelRecruit(worldId, city!.id, orderId))

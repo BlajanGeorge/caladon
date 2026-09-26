@@ -1169,7 +1169,10 @@ a standalone preview.
   recruit form with a count and a "max" helper, recruit and study queues with countdown). On every
   queue only the tail item has a Cancel button. The page
   fetches detail + `/buildings` + `/army` together on the poll cadence; a mutation applies the returned
-  detail and re-fetches the two views; server errors become toasts. Pure helpers in `ui/src/city/format.ts`
+  detail and re-fetches the two views. **The city view raises no notifications**: every refusal is already
+  visible before the click (the button is disabled with the reason on hover), so a rejected order only
+  re-fetches the city, and a city that is gone sends the player back to the lobby. Toasts remain on
+  login, register, the lobby and the map. Pure helpers in `ui/src/city/format.ts`
   (durations, requirements, affordability) are unit-tested. Resource numbers still never tick; only
   queue countdowns do.
 - Admin panel: not built (deferred in the spec).
