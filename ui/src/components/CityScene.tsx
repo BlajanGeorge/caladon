@@ -24,7 +24,7 @@ const SPRITE_BASE = 0.74
 /** Nudge across the plot, as a fraction of its width: positive moves the building right. */
 const SPRITE_SHIFT = 0.06
 /** Width of the side panel that holds resources and troops, and its inset from the screen edge. */
-const PANEL_W = 270
+const PANEL_W = 352
 const PANEL_INSET = 14
 
 interface Props {
@@ -82,7 +82,8 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
 
   const viewOf = (type: string) => buildings?.find((b) => b.type === type)
   const shown = detail ?? city
-  const countOf = (type: string) => units?.find((u) => u.type === type)?.count ?? 0
+  // The panel shows three counts per unit: at home, sheltering here, away supporting someone else.
+  const cityUnit = (type: string) => detail?.units.find((u) => u.type === type)
   const nameOf = (type: string) => units?.find((u) => u.type === type)?.name
 
   return (
@@ -193,13 +194,23 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           {/* Every unit type is always listed, with 0 when the city has none of it. */}
           <ul className="cp-unit-list">
             {UNIT_ORDER.map((type) => {
-              const count = countOf(type)
+              const u = cityUnit(type)
               const label = nameOf(type) ?? type.toLowerCase().replace('_', ' ')
               return (
                 <li key={type}>
                   <img className="cp-unit-icon" src={UNIT_ICONS[type]} alt="" title={label} />
                   <span className="cp-unit-name">{label}</span>
-                  <span className="cp-unit-count">{units === null ? '…' : count.toLocaleString()}</span>
+                  {u === undefined ? (
+                    <span className="cp-unit-count">…</span>
+                  ) : (
+                    <span className="cp-unit-count" title={`${label}: at home / supporting here / sent away`}>
+                      <b className="at-home" title={`${u.home.toLocaleString()} at home, in this city`}>{u.home.toLocaleString()}</b>
+                      <i>/</i>
+                      <b className="hosted" title={`${u.supporting.toLocaleString()} from other cities, supporting this one`}>{u.supporting.toLocaleString()}</b>
+                      <i>/</i>
+                      <b className="away" title={`${u.sentAway.toLocaleString()} of this city's own, away supporting elsewhere`}>{u.sentAway.toLocaleString()}</b>
+                    </span>
+                  )}
                 </li>
               )
             })}

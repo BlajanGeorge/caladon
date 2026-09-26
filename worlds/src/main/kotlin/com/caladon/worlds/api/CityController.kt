@@ -2,6 +2,7 @@ package com.caladon.worlds.api
 
 import com.caladon.users.security.AuthenticatedUser
 import com.caladon.worlds.army.ArmyService
+import com.caladon.worlds.army.CitySupportRepository
 import com.caladon.worlds.buildings.BuildingService
 import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.resources.CityAccess
@@ -29,6 +30,7 @@ class CityController(
     private val cityAccess: CityAccess,
     private val buildingService: BuildingService,
     private val armyService: ArmyService,
+    private val citySupportRepository: CitySupportRepository,
 ) {
     @GetMapping
     @Transactional
@@ -132,7 +134,7 @@ class CityController(
                 BuildOrderResponse(requireNotNull(it.id), it.building, it.building.displayName, it.targetLevel, it.startedAt, it.completesAt)
             },
             buildQueueSlots = BuildingRules.queueSlots(state.level(Building.TOWN_HALL)),
-            units = Unit.entries.map { CityUnitResponse(it, it.displayName, state.units[it]?.count ?: 0) },
+            units = unitCounts(state),
             recruitQueue = recruitQueue(state),
             recruitQueueSlots = BuildingRules.recruitSlots(state.level(Building.BARRACKS)),
             studied = Unit.entries.filter { it.needsStudy && state.isStudied(it) },
@@ -142,6 +144,20 @@ class CityController(
     }
 
     /** Estimated completion of every recruit order at the current Barracks level, chained from the head. */
+    /** Own troops at home, foreign troops sheltering here, and this city's troops away as support. */
+    private fun unitCounts(state: CityState): List<CityUnitResponse> {
+        val hosted = citySupportRepository.findAllByIdHostCityId(state.cityId)
+            .filter { it.id.ownerCityId != state.city.id }
+            .groupBy { it.id.unit }.mapValues { (_, v) -> v.sumOf { it.count } }
+        val away = citySupportRepository.findAllByIdOwnerCityId(state.cityId)
+            .filter { it.id.hostCityId != state.city.id }
+            .groupBy { it.id.unit }.mapValues { (_, v) -> v.sumOf { it.count } }
+        return Unit.entries.map {
+            val home = state.units[it]?.count ?: 0
+            CityUnitResponse(it, it.displayName, home, home, hosted[it] ?: 0, away[it] ?: 0)
+        }
+    }
+
     private fun recruitQueue(state: CityState): List<RecruitOrderResponse> {
         val barracks = state.level(Building.BARRACKS)
         var t = state.now

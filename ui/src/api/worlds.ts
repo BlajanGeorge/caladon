@@ -101,7 +101,14 @@ export interface BuildOrder {
 export interface CityUnit {
   type: UnitType
   name: string
+  /** Kept for the panels that only care about the garrison; same as `home`. */
   count: number
+  /** The city's own troops standing here. */
+  home: number
+  /** Other cities' troops sheltering here. */
+  supporting: number
+  /** This city's troops standing in someone else's city. */
+  sentAway: number
 }
 
 export interface RecruitOrder {

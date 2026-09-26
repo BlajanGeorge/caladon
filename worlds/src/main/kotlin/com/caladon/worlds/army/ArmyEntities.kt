@@ -26,6 +26,18 @@ data class CityUnitId(
 @Table(name = "city_unit")
 class CityUnit(@EmbeddedId var id: CityUnitId, @Column(nullable = false) var count: Int)
 
+/** One city's troops stationed in another: the owner keeps them, the host shelters them. */
+@Embeddable
+data class CitySupportId(
+    @Column(name = "host_city_id") var hostCityId: Long = 0,
+    @Column(name = "owner_city_id") var ownerCityId: Long = 0,
+    @Enumerated(EnumType.STRING) @Column(length = 16) var unit: Unit = Unit.SPEARMAN,
+) : java.io.Serializable
+
+@Entity
+@Table(name = "city_support")
+class CitySupport(@EmbeddedId var id: CitySupportId, @Column(nullable = false) var count: Int)
+
 /** An entry of the Academy's study queue; studied once `completesAt` has passed. */
 @Entity
 @Table(name = "city_study")
@@ -53,6 +65,14 @@ class CityRecruitOrder(
 
 interface CityUnitRepository : JpaRepository<CityUnit, CityUnitId> {
     fun findAllByIdCityId(cityId: Long): List<CityUnit>
+}
+
+interface CitySupportRepository : JpaRepository<CitySupport, CitySupportId> {
+    /** Foreign troops standing in this city. */
+    fun findAllByIdHostCityId(hostCityId: Long): List<CitySupport>
+
+    /** This city's troops standing somewhere else. */
+    fun findAllByIdOwnerCityId(ownerCityId: Long): List<CitySupport>
 }
 
 interface CityStudyRepository : JpaRepository<CityStudy, CityUnitId> {

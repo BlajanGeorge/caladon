@@ -53,7 +53,19 @@ data class CityDetailResponse(
     val studyQueueSlots: Int,
 )
 
-data class CityUnitResponse(val type: Unit, val name: String, val count: Int)
+/**
+ * A unit type's three counts, kept apart in the database: [home] are the city's own troops standing
+ * here, [supporting] are other cities' troops sheltering here, [sentAway] are this city's troops
+ * standing in someone else's city.
+ */
+data class CityUnitResponse(
+    val type: Unit,
+    val name: String,
+    val count: Int,
+    val home: Int,
+    val supporting: Int,
+    val sentAway: Int,
+)
 
 data class RecruitOrderResponse(
     val id: Long, val unit: Unit, val name: String, val count: Int, val remaining: Int,

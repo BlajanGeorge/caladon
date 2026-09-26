@@ -251,12 +251,18 @@ input { font: inherit; cursor: text; }
 .cp-unit-name { text-transform: capitalize; }
 .cp-empty { margin: 0; font-size: 13px; color: #6b5a3c; }
 .cp-unit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.cp-unit-list li { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.cp-unit-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 /* Placeholder square until the unit art exists. */
 .cp-unit-icon { flex: 0 0 32px; width: 32px; height: 32px; display: block; }
 /* A unit the city has none of is listed the same; only its count says 0. */
 .cp-unit-name { flex: 1; min-width: 0; color: #3a2e1e; }
-.cp-unit-count { font-variant-numeric: tabular-nums; font-weight: 700; color: #2c2216; }
+/* Three counts per unit: at home, sheltering here, away supporting — each its own tone. */
+.cp-unit-count { flex: 0 0 auto; padding-left: 4px; display: inline-flex; align-items: baseline; gap: 1px; font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 700; color: #2c2216; }
+.cp-unit-count b { font-weight: 700; }
+.cp-unit-count i { font-style: normal; font-weight: 400; color: rgba(60,45,20,.45); }
+.cp-unit-count .at-home { color: #2c2216; }
+.cp-unit-count .hosted { color: #3f6b3a; }
+.cp-unit-count .away { color: #8a5a2a; }
 /* Scrollbar in the panel's own tones: a sunken track and a gold-brown grip, matching the thin edge. */
 .city-panel { padding-right: 8px; }
 .city-panel::-webkit-scrollbar { width: 10px; }

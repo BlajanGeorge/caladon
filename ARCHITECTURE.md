@@ -933,8 +933,21 @@ coin cost per noble), reports.
 city_unit(city_id FK city, unit varchar(16), count int NOT NULL CHECK (count >= 0), PRIMARY KEY (city_id, unit))
 city_study(city_id FK city, unit varchar(16), ordered_at, completes_at timestamptz NOT NULL, applied bool, PRIMARY KEY (city_id, unit))   -- the study queue; studied once completes_at <= now
 city_recruit_order(id, city_id FK city, unit, count, remaining, ordered_at, next_completes_at NULL)             -- FIFO per city; head carries next_completes_at
+city_support(host_city_id FK city, owner_city_id FK city, unit varchar(16), count int NOT NULL CHECK (count >= 0), PRIMARY KEY (host_city_id, owner_city_id, unit))  -- V106; one city's troops standing in another
 -- troop movements come with their feature
 ```
+
+**Three counts per unit type.** A city's troops are held in three separate places, never derived from one
+another, so the panel can show them apart:
+
+- **at home** — `city_unit.count` for this city; the troops that defend it and can be sent out.
+- **supporting here** — `city_support` rows whose `host_city_id` is this city: someone else's troops
+  sheltering in it. They defend the host but stay the owner's property, and cost the owner's population.
+- **sent away** — `city_support` rows whose `owner_city_id` is this city: its own troops standing
+  elsewhere. Still this city's, still paid for out of its population.
+
+Nothing moves troops yet, so the last two are 0 in play; the movement feature will write `city_support`
+on arrival and delete the row when the troops come home or die.
 
 ### Implementation notes (army)
 
@@ -952,6 +965,9 @@ city_recruit_order(id, city_id FK city, unit, count, remaining, ordered_at, next
   `REQUIREMENTS_NOT_MET`, `NOT_STUDIED`, `ALREADY_STUDIED` (also for a unit that needs no study),
   `NOT_ENOUGH_RESOURCES`, `NOT_ENOUGH_POPULATION`, `ORDER_NOT_FOUND`, `NOT_LAST_IN_QUEUE`,
   `VALIDATION_ERROR` (count).
+- `GET …/cities/{id}` lists every unit type with `home`, `supporting` and `sentAway` (and `count`, kept
+  as an alias of `home` for the older panels). The City view prints them as `home / supporting / away`
+  in three tones, each figure with its own tooltip.
 - The recruit queue response gives `nextCompletesAt` (head only) and an estimated `completesAt` per order
   at the current Barracks level; the city detail carries `studied` (types) and `studyQueue` (unit,
   position, orderedAt, completesAt).
