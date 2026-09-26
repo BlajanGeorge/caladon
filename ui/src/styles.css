@@ -263,6 +263,15 @@ input { font: inherit; cursor: text; }
 .cp-unit-count .at-home { color: #2c2216; }
 .cp-unit-count .hosted { color: #3f6b3a; }
 .cp-unit-count .away { color: #8a5a2a; }
+/* Tooltip for the three troop counts: fixed, so the panel's own scrolling never clips it, and drawn to
+   the left of the number since the panel sits at the right edge of the screen. */
+.cp-tip {
+  position: fixed; z-index: 30; transform: translate(-100%, -4px); margin-left: -10px;
+  max-width: 260px; padding: 6px 10px; border-radius: 8px;
+  font-size: 12px; line-height: 1.35; color: #f0e6c8;
+  background: rgba(20, 22, 26, .88); border: var(--overlay-border);
+  box-shadow: 0 4px 14px rgba(0,0,0,.5); pointer-events: none;
+}
 /* Scrollbar in the panel's own tones: a sunken track and a gold-brown grip, matching the thin edge. */
 .city-panel { padding-right: 8px; }
 .city-panel::-webkit-scrollbar { width: 10px; }

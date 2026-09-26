@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type { BuildingView, CityDetail, OwnedCity, UnitType, UnitView } from '../api/worlds'
 import { ResourceStrip } from './ResourceStrip'
 import { GROUND_INSETS, GROUND_PAINTED, GROUND_SIZE, PLOTS, anchorPercent } from '../city/plots'
@@ -79,6 +79,15 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  // Tooltip for the three troop counts. Native `title` is slow and easy to miss, and the panel scrolls,
+  // so the tip is drawn ourselves at a fixed position beside the number.
+  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
+  const showTip = (e: ReactMouseEvent<HTMLElement>, text: string) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    setTip({ text, x: r.left, y: r.top })
+  }
+  const hideTip = () => setTip(null)
 
   const viewOf = (type: string) => buildings?.find((b) => b.type === type)
   const shown = detail ?? city
@@ -203,12 +212,12 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
                   {u === undefined ? (
                     <span className="cp-unit-count">…</span>
                   ) : (
-                    <span className="cp-unit-count" title={`${label}: at home / supporting here / sent away`}>
-                      <b className="at-home" title={`${u.home.toLocaleString()} at home, in this city`}>{u.home.toLocaleString()}</b>
+                    <span className="cp-unit-count">
+                      <b className="at-home" onMouseEnter={(e) => showTip(e, `${u.home.toLocaleString()} ${label} at home, defending this city`)} onMouseLeave={hideTip}>{u.home.toLocaleString()}</b>
                       <i>/</i>
-                      <b className="hosted" title={`${u.supporting.toLocaleString()} from other cities, supporting this one`}>{u.supporting.toLocaleString()}</b>
+                      <b className="hosted" onMouseEnter={(e) => showTip(e, `${u.supporting.toLocaleString()} ${label} from other cities, supporting this one`)} onMouseLeave={hideTip}>{u.supporting.toLocaleString()}</b>
                       <i>/</i>
-                      <b className="away" title={`${u.sentAway.toLocaleString()} of this city's own, away supporting elsewhere`}>{u.sentAway.toLocaleString()}</b>
+                      <b className="away" onMouseEnter={(e) => showTip(e, `${u.sentAway.toLocaleString()} ${label} of this city, away supporting somewhere else`)} onMouseLeave={hideTip}>{u.sentAway.toLocaleString()}</b>
                     </span>
                   )}
                 </li>
@@ -217,6 +226,11 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           </ul>
         </section>
       </aside>
+
+      {/* Anchored to the number's top-left corner and drawn to its left, clear of the panel's edge. */}
+      {tip && (
+        <div className="cp-tip" style={{ left: tip.x, top: tip.y }} role="tooltip">{tip.text}</div>
+      )}
     </div>
   )
 }
