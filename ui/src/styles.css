@@ -276,10 +276,23 @@ input { font: inherit; cursor: text; }
 .city-panel .mtb-res-name { flex: 1; min-width: 0; font-size: 13px; color: #3a2e1e; }
 .city-panel .mtb-res-value { text-align: right; font-size: 15px; min-width: 0; color: #2c2216; text-shadow: 0 1px 0 rgba(255,245,210,.5); }
 .city-panel .mtb-res.full .mtb-res-value { color: #9a5b12; }
+/* Hover label over a plot: the building's name and level, in the shared overlay look. */
+.city-scene .plot-tip {
+  position: absolute; transform: translate(-50%, -115%); z-index: 4; pointer-events: none;
+  display: flex; align-items: baseline; gap: 8px; white-space: nowrap;
+  padding: 6px 12px; border-radius: var(--overlay-radius);
+  background: var(--overlay-bg); border: var(--overlay-border); box-shadow: var(--overlay-shadow);
+}
+.city-scene .plot-tip b {
+  font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .04em;
+  text-transform: capitalize; color: var(--overlay-text);
+}
+.city-scene .plot-tip em { font-style: normal; font-size: 13px; color: var(--overlay-muted); }
+
 /* A building sprite stands on its plot: anchored bottom-centre, width set from the plot's box. */
 .city-scene .plot-sprite {
   position: absolute; transform: translate(-50%, -100%);
-  height: auto; pointer-events: auto; user-select: none;
+  height: auto; pointer-events: auto; user-select: none; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
   filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
 }
 .city-scene .plot-label {

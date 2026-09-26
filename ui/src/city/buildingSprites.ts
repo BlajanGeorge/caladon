@@ -88,7 +88,7 @@ const SPRITES: Partial<Record<BuildingType, [BuildingArt, BuildingArt, BuildingA
   ACADEMY: [
     { src: academy1, footprint: 0.52, scale: 0.62 },
     { src: academy2, footprint: 0.5344, scale: 0.68 },
-    { src: academy3, footprint: 0.3754, scale: 0.72 },
+    { src: academy3, footprint: 0.3754, scale: 0.86 },
   ],
   VAULT: [
     { src: vault1, footprint: 0.4855, scale: 0.6, slide: 0.1, drop: 0.12 },

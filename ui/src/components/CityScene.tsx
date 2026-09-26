@@ -39,6 +39,7 @@ interface Props {
 export function CityScene({ buildings, city, detail, units }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
+  const [hover, setHover] = useState<string | null>(null)
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -89,7 +90,8 @@ export function CityScene({ buildings, city, detail, units }: Props) {
               className="plot-sprite"
               src={art.src}
               alt=""
-              title={`${name} ${level}`}
+              onMouseEnter={() => setHover(type)}
+              onMouseLeave={() => setHover((h) => (h === type ? null : h))}
               style={{
                 // Centre of the plot, nudged across it, then corrected for where the art's footprint sits.
                 left: `${(100 * ((plot.box[0] + plot.box[2]) / 2 + (plot.box[2] - plot.box[0]) * (SPRITE_SHIFT + (art.slide ?? 0)) + (0.5 - art.footprint) * SPRITE_WIDTH * (art.scale ?? 1))) / GROUND_SIZE.width}%`,
@@ -98,11 +100,32 @@ export function CityScene({ buildings, city, detail, units }: Props) {
               }}
             />
           ) : (
-            <span key={type} className={'plot-label' + (level === 0 ? ' empty' : '')} style={anchorPercent(plot)}>
+            <span
+              key={type}
+              className={'plot-label' + (level === 0 ? ' empty' : '')}
+              style={anchorPercent(plot)}
+              onMouseEnter={() => setHover(type)}
+              onMouseLeave={() => setHover((h) => (h === type ? null : h))}
+            >
               {name}{level !== undefined ? ` ${level}` : ''}
             </span>
           )
         })}
+
+        {/* Hover label: the building's name and level, above its plot. */}
+        {hover && (() => {
+          const view = viewOf(hover)
+          const plot = PLOTS[hover as keyof typeof PLOTS]
+          const label = hover.toLowerCase().replace('_', ' ')
+          return (
+            <span className="plot-tip" style={{
+              left: `${(100 * (plot.box[0] + plot.box[2]) / 2) / GROUND_SIZE.width}%`,
+              top: `${(100 * plot.box[1]) / GROUND_SIZE.height}%`,
+            }}>
+              <b>{label}</b>{view ? <em>level {view.level}</em> : null}
+            </span>
+          )
+        })()}
       </div>
 
       <aside className="city-panel" style={{ width: PANEL_W }} aria-label="City information">
