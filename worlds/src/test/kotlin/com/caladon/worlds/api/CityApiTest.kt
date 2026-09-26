@@ -82,7 +82,7 @@ class CityApiTest : ApiTestBase() {
             jsonPath("$.buildQueue[0].building") { value("WOODCUTTER") }
             jsonPath("$.buildQueue[0].targetLevel") { value(2) }
             jsonPath("$.buildQueue[0].completesAt") { value(clock.instant().plusSeconds(95).toString()) }
-            // The order carries what it was paid, which is what cancelling gives back in full.
+            // The order carries what it was paid; cancelling gives back half of it.
             jsonPath("$.buildQueue[0].cost.wood") { value(63) }
             jsonPath("$.buildQueue[0].cost.stone") { value(77) }
             jsonPath("$.buildQueue[0].cost.iron") { value(50) }
@@ -176,7 +176,7 @@ class CityApiTest : ApiTestBase() {
     }
 
     @Test
-    fun `only the last build order can be cancelled, with a full refund`() {
+    fun `only the last build order can be cancelled, giving back half the resources and all the population`() {
         val (world, cityId) = joinedCity()
         val first = json(post("/api/v1/worlds/$world/cities/$cityId/buildings/FARM/upgrade", playerToken).andExpect { status { isOk() } })
         val farmOrder = first["buildQueue"][0]["id"].asLong()
@@ -195,8 +195,9 @@ class CityApiTest : ApiTestBase() {
             header("Authorization", "Bearer $playerToken")
         }.andExpect {
             status { isOk() }
-            jsonPath("$.resources.wood.stock") { value(500 - 59) }
-            jsonPath("$.resources.stone.stock") { value(500 - 53) }
+            // Half of the Woodcutter level's 63 wood and 77 stone, floored; its 1 population in full.
+            jsonPath("$.resources.wood.stock") { value(500 - 59 - 63 + 31) }
+            jsonPath("$.resources.stone.stock") { value(500 - 53 - 77 + 38) }
             jsonPath("$.population") { value(240) }
             jsonPath("$.buildQueue.length()") { value(1) }
             jsonPath("$.buildQueue[0].building") { value("FARM") }

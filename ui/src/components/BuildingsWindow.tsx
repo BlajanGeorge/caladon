@@ -39,7 +39,7 @@ function stateOf(b: BuildingView, detail: CityDetail | null): State {
 /**
  * The Town Hall's own window: every building with its level, what the next one costs and how long it
  * takes, and the build queue underneath. Ordering and cancelling work exactly as in the Academy and the
- * Barracks, except a cancelled build is refunded in full.
+ * Barracks: half of a cancelled build's resources come back, and all of its population.
  */
 export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgrade, onCancel, onClose }: Props) {
   const queue = detail?.buildQueue ?? []
@@ -112,15 +112,20 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
           <h4>Being built</h4>
           <ul>
             {queue.map((o, i) => {
-              // A cancelled build comes back in full, and the order carries what it was paid for.
+              // Half of what it cost, floored, the same rule the server applies when it refunds.
+              const back = {
+                wood: Math.floor(o.cost.wood / 2),
+                stone: Math.floor(o.cost.stone / 2),
+                iron: Math.floor(o.cost.iron / 2),
+              }
               return (
                 <li key={o.id} className={i === 0 ? 'first' : undefined}>
                   <span className="rq-pos">{i + 1}</span>
                   <span className="rq-name">{o.name} <em>level {o.targetLevel}</em></span>
                   <span className="study-cost">
-                    <span><img src={woodUrl} alt="Wood" />{o.cost.wood.toLocaleString()}</span>
-                    <span><img src={stoneUrl} alt="Stone" />{o.cost.stone.toLocaleString()}</span>
-                    <span><img src={ironUrl} alt="Iron" />{o.cost.iron.toLocaleString()}</span>
+                    <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>
+                    <span><img src={stoneUrl} alt="Stone" />{back.stone.toLocaleString()}</span>
+                    <span><img src={ironUrl} alt="Iron" />{back.iron.toLocaleString()}</span>
                     <span><img src={peopleUrl} alt="Population" />{o.popCost.toLocaleString()}</span>
                   </span>
                   <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
@@ -129,7 +134,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
                       type="button"
                       className="study-go cancel"
                       disabled={busy}
-                      title="Cancel this build; everything it cost comes back"
+                      title="Cancel this build; half of what it cost comes back"
                       onClick={() => setConfirming(o.id)}
                     >
                       ×
@@ -151,7 +156,16 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
           <div className="confirm">
             <div className="confirm-box" role="alertdialog" aria-label="Cancel this build?">
               <h4>Cancel this build?</h4>
-              <p>{order.name} level {order.targetLevel} is dropped from the queue and everything it cost comes back.</p>
+              <p>
+                {order.name} level {order.targetLevel} is dropped from the queue. Half of what it cost comes
+                back, and all of its population.
+              </p>
+              <span className="study-cost">
+                <span><img src={woodUrl} alt="Wood" />{Math.floor(order.cost.wood / 2).toLocaleString()}</span>
+                <span><img src={stoneUrl} alt="Stone" />{Math.floor(order.cost.stone / 2).toLocaleString()}</span>
+                <span><img src={ironUrl} alt="Iron" />{Math.floor(order.cost.iron / 2).toLocaleString()}</span>
+                <span><img src={peopleUrl} alt="Population" />{order.popCost.toLocaleString()}</span>
+              </span>
               <div className="confirm-buttons">
                 <button type="button" className="confirm-no" onClick={() => setConfirming(null)}>Keep building</button>
                 <button

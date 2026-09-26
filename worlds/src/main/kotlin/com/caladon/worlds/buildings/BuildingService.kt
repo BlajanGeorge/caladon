@@ -87,13 +87,20 @@ class BuildingService(
         return state
     }
 
-    /** Cancels the last order of the queue and refunds it in full; earlier orders → `409 NOT_LAST_IN_QUEUE`. */
+    /**
+     * Cancels the last order of the queue; earlier orders → `409 NOT_LAST_IN_QUEUE`. Half of the resources
+     * come back, rounded down, as with a study, but all of the population does: the level was never built,
+     * and population is a pool that nothing else can replenish.
+     */
     @Transactional
     fun cancel(worldId: Long, cityId: Long, userId: Long, role: Role, orderId: Long): CityState {
         val state = cityAccess.open(worldId, cityId, userId, role)
         val order = state.buildOrders.firstOrNull { it.id == orderId } ?: throw WorldException.OrderNotFound()
         if (state.buildOrders.last() != order) throw WorldException.NotLastInQueue()
-        state.refund(BuildingRules.cost(order.building, order.targetLevel), BuildingRules.popCost(order.building, order.targetLevel))
+        state.refund(
+            BuildingRules.cost(order.building, order.targetLevel).half(),
+            BuildingRules.popCost(order.building, order.targetLevel),
+        )
         state.buildOrders.remove(order)
         buildOrderRepository.delete(order)
         return state

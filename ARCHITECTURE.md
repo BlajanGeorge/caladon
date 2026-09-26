@@ -736,9 +736,9 @@ upgrade(city, building):
 - **Build queue.** Orders wait in a per-city queue owned by the Town Hall: **2 slots** at level 1,
   **3** from level 10, **4** from level 20. Every queued order is paid (resources and population) at
   placement. **Only the last order in the queue can be cancelled**; to cancel an earlier one, cancel
-  the ones after it first, one by one. A cancelled build order is refunded in full. A cancelled
-  **study** gives back half of what it cost (rounded down) — studying is a decision, not a parking
-  space. A cancelled **recruit** order counts only what it had not yet trained: half those resources
+  the ones after it first, one by one. Cancelling gives back **half** the resources, rounded down —
+  ordering is a decision, not a parking space — and **all** the population, for a build or a
+  **study** alike. A cancelled **recruit** order counts only what it had not yet trained: half those resources
   back, but **all** of their population, since those troops were never raised. Orders run strictly in placement order; the first
   implementation may complete an upgrade **instantly** inside the same transaction; when build times
   arrive, "complete" moves to the moment the timer ends and everything before it stays exactly as
@@ -836,22 +836,24 @@ A read-only companion for the UI's building panel (what the next level costs and
   building + 1; requirements (step rule, cross-building) are checked against **completed** levels; the
   build time is fixed at order time with the Town Hall level then (a Town Hall completing later does not
   shorten already-queued orders); orders run sequentially (`started_at` = predecessor's completion).
-  Only the **last** order can be cancelled (full refund); an earlier one → `409 NOT_LAST_IN_QUEUE`.
+  Only the **last** order can be cancelled; an earlier one → `409 NOT_LAST_IN_QUEUE`. A cancellation gives
+  back **half** the resources, floored, as a study does, and **all** the population: the level was never
+  built, and nothing but the Farm can replenish the pool.
   Errors: `MAX_LEVEL`, `REQUIREMENTS_NOT_MET` (details = building → level), `QUEUE_FULL`,
   `NOT_ENOUGH_RESOURCES`, `NOT_ENOUGH_POPULATION`, `ORDER_NOT_FOUND`, `NOT_LAST_IN_QUEUE`.
 - Endpoints: `GET …/buildings` (each type with `level`, `maxLevel`, `points`, `effect {value, unit}`,
   `queued`, and `next {level, cost, popCost, points, effect, buildTimeSeconds, blockedBy}` for the next
   orderable level), `POST …/buildings/{building}/upgrade`, `DELETE …/build-orders/{id}`; both mutations
   return the city detail. Each entry of the city detail's `buildQueue` also carries the `cost` and
-  `popCost` of the level it is for, which is exactly what cancelling it gives back, so the window can
-  show the refund without knowing the formulas.
+  `popCost` of the level it is for, so the window can show half of it as the refund without knowing the
+  formulas.
 - **The Town Hall's window** (`BuildingsWindow`) is where building happens: every building with its level,
   what its next level costs in the three resources and in people, how long it takes, and a play button.
   The button is disabled with the reason on hover when the resources, the population, the queue slots or
   the requirements are short, and replaced by the missing requirement or "Highest level" where there is
   nothing to order. Underneath, "Being built" numbers the queue, counts each order down, and lets the
-  **last** one be cancelled behind a confirmation, exactly as the Academy and the Barracks do, except the
-  refund is full.
+  **last** one be cancelled behind a confirmation, exactly as the Academy and the Barracks do; the figures
+  beside each order are the half that would come back.
 - **Timers / sweeper**: `CityAccess.advance` completes due build orders and recruit units in chronological
   order, settling resources before each with the levels in force, then marks due studies `applied`;
   `CitySweeper` (`@Scheduled`, `caladon.sweeper.interval-ms`, default 60 000) advances every city with a
@@ -916,7 +918,8 @@ Militia.
 - Studying a type is a **one-time purchase per city**: resources, no population. It needs the Academy at
   or above the type's *Academy ≥* level and takes `studyBase × 1.1^(−Academy level)`.
 - **One study queue per city**, in the Academy: studies run one after another in placement order, like
-  build orders; only the last queued study can be cancelled (full refund). A type can be queued once.
+  build orders; only the last queued study can be cancelled, for half of what it cost. A type can be
+  queued once.
 - Ladder: Swordsman 1, Scout 2, Axeman 3, Archer 5, Light Cavalry 8, Ram 10, Heavy Cavalry 13, Catapult
   16, nothing new at 17–19, **Nobleman 20**.
 - Study costs are Tribal Wars' simple-tech research costs (400 / 500 / 300 for the Swordsman up to
