@@ -133,7 +133,7 @@ input { font: inherit; cursor: text; }
 .form-error { color: var(--danger); margin-bottom: 12px; }
 .primary { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 600; }
 .primary:hover { background: var(--accent-dark); }
-.primary:disabled { opacity: .5; cursor: not-allowed; }
+.primary:disabled { opacity: .5; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 .secondary { background: #fff; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; }
 .secondary:hover { background: #f0efe6; }
 .muted { color: var(--muted); }
@@ -149,8 +149,13 @@ input { font: inherit; cursor: text; }
 .city-card dd { margin: 0; font-weight: 600; }
 
 .toasts { position: fixed; top: 64px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
-.toast { background: #24391f; color: #e9efe0; padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow); max-width: 320px; }
-.toast.error { background: var(--danger); }
+/* Same dark slate as the overlays, so a notice does not shout. */
+.toast {
+  background: rgba(20, 22, 26, .94); color: var(--overlay-text);
+  border: var(--overlay-border); border-radius: var(--overlay-radius);
+  padding: 10px 14px; box-shadow: 0 8px 22px rgba(0,0,0,.5); max-width: 320px; font-size: 14px;
+}
+.toast.error { border-color: rgba(178, 58, 46, .7); color: #ffd9d2; }
 
 /* ---- map ---- */
 .map-shell { display: flex; flex-direction: column; height: 100%; }
@@ -276,6 +281,140 @@ input { font: inherit; cursor: text; }
 .city-panel .mtb-res-name { flex: 1; min-width: 0; font-size: 13px; color: #3a2e1e; }
 .city-panel .mtb-res-value { text-align: right; font-size: 15px; min-width: 0; color: #2c2216; text-shadow: 0 1px 0 rgba(255,245,210,.5); }
 .city-panel .mtb-res.full .mtb-res-value { color: #9a5b12; }
+/* Building window: what one building is, what it gives now and what the next level adds. */
+.b-info {
+  position: absolute; left: 22px; top: 22px; z-index: 5; width: 290px;
+  padding: 16px 18px 18px;
+  background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: var(--overlay-shadow); color: var(--overlay-text);
+}
+.b-info h3 {
+  margin: 0 22px 2px 0;
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 18px; letter-spacing: .04em;
+}
+.b-info h4 {
+  margin: 0 0 4px;
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 12px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--overlay-muted);
+}
+.b-info-level { margin: 0 0 10px; font-size: 12px; color: var(--overlay-muted); }
+.b-info-desc { margin: 0 0 12px; font-size: 13px; line-height: 1.45; color: #d8cfb4; }
+.b-info dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font-size: 13px; }
+.b-info dt { color: var(--overlay-muted); }
+.b-info dd { margin: 0; font-weight: 600; }
+.b-info-next { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(122,102,54,.4); }
+.b-info-gain { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: #9ed08a; }
+.b-info-blocked { margin: 8px 0 0; font-size: 12px; color: #d59b7a; }
+.b-info-max { margin: 14px 0 0; font-size: 13px; color: var(--overlay-muted); }
+.b-info-action {
+  margin-top: 14px; width: 100%; padding: 9px 12px;
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 12px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--overlay-text);
+  background: rgba(122,102,54,.28); border: var(--overlay-border); border-radius: 8px;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.b-info-action:hover { background: rgba(160,132,68,.4); }
+
+/* The Academy's studies window: one row per unit type. */
+.b-info.studies { width: 880px; max-height: calc(100% - 44px); overflow-y: auto; }
+.study-cost { display: flex; gap: 10px; white-space: nowrap; }
+.study-cost span { display: inline-flex; align-items: center; gap: 4px; min-width: 62px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.study-cost img { width: 20px; height: 20px; display: block; }
+.study-action { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 210px; text-align: right; white-space: nowrap; }
+.study-action b { font-size: 12px; font-weight: 700; }
+.study-action b.ok { color: #9ed08a; }
+.study-action b.plain { color: var(--overlay-muted); font-weight: 600; }
+/* The countdown for a study in the queue: the reader's own clock, from the server's instant. */
+.study-action .study-left {
+  font-style: normal; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--overlay-text);
+}
+.study-action b.no { color: #d59b7a; font-weight: 600; white-space: nowrap; }
+.study-go {
+  width: 30px; height: 26px; padding: 0; font-size: 12px; line-height: 1;
+  color: var(--overlay-text); background: rgba(122,102,54,.3);
+  border: var(--overlay-border); border-radius: 6px;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.study-go:hover:not(:disabled) { background: rgba(160,132,68,.45); }
+.study-go.cancel { background: rgba(140,58,46,.32); font-size: 15px; }
+/* Holds the button's place on rows that have none, so every row lines up; nothing is drawn or hovered. */
+.study-go.placeholder { display: inline-block; visibility: hidden; }
+.study-go.cancel:hover:not(:disabled) { background: rgba(178,58,46,.5); }
+/* A disabled button keeps the gauntlet: the browser's own arrow would replace it otherwise. */
+.study-go:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
+/* How many to train, beside the play button. */
+.recruit-count {
+  width: 58px; padding: 4px 6px; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums;
+  color: var(--overlay-text); background: rgba(10,11,13,.6);
+  border: var(--overlay-border); border-radius: 6px;
+}
+.recruit-count::placeholder { color: #6f6959; }
+.recruit-count:focus { outline: none; border-color: #c79a44; }
+/* A question asked over the window it belongs to, instead of a notice after the fact. */
+.confirm { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; background: rgba(8,9,11,.6); border-radius: var(--overlay-radius); }
+.confirm-box {
+  width: 340px; padding: 18px 20px; text-align: left;
+  background: rgba(20,22,26,.98); border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: 0 10px 28px rgba(0,0,0,.6);
+}
+.confirm-box h4 {
+  margin: 0 0 8px; font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .04em;
+  text-transform: none; color: var(--overlay-text);
+}
+.confirm-box p { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: #d8cfb4; }
+.confirm-buttons { display: flex; gap: 8px; margin-top: 14px; }
+.confirm-buttons button {
+  flex: 1; padding: 8px 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  border-radius: 8px; border: var(--overlay-border);
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.confirm-no { background: rgba(122,102,54,.2); color: var(--overlay-text); }
+.confirm-no:hover { background: rgba(160,132,68,.35); }
+.confirm-yes { background: rgba(140,58,46,.45); color: #ffd9d2; border-color: rgba(178,58,46,.7); }
+.confirm-yes:hover:not(:disabled) { background: rgba(178,58,46,.65); }
+.confirm-yes:disabled { opacity: .5; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
+
+/* The running total for the count being typed, on its own line under the unit's row. */
+.recruit-total {
+  flex: 1 0 100%; display: flex; align-items: center; gap: 12px;
+  margin: 2px 0 6px 46px; padding-bottom: 6px; font-size: 12px; color: var(--overlay-muted);
+  border-bottom: 1px solid rgba(122,102,54,.22);
+}
+.recruit-total em { font-style: normal; font-variant-numeric: tabular-nums; }
+
+/* What the Barracks is already training, under the unit list. */
+.recruit-queue { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(122,102,54,.4); }
+.recruit-queue ul { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.recruit-queue li { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+/* Where an order sits in the queue: the first is being trained, only the last can be cancelled. */
+.recruit-queue .rq-pos {
+  min-width: 22px; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--overlay-muted);
+}
+.recruit-queue li.first .rq-pos { color: #9ed08a; }
+.recruit-queue img { width: 28px; height: 28px; display: block; }
+.recruit-queue .rq-name { flex: 1; min-width: 130px; color: var(--overlay-text); }
+.recruit-queue .rq-name em { font-style: normal; color: var(--overlay-muted); }
+.recruit-queue b { min-width: 72px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
+.study-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.study-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+.study-list .study-icon { width: 34px; height: 34px; display: block; }
+.study-name { flex: 1; min-width: 150px; display: flex; flex-direction: column; color: var(--overlay-text); }
+.study-name em { font-style: normal; font-size: 11px; color: var(--overlay-muted); white-space: nowrap; }
+.study-state { display: flex; flex-direction: column; align-items: flex-end; text-align: right; white-space: nowrap; }
+.study-state em { font-style: normal; font-size: 11px; color: var(--overlay-muted); }
+.study-list li.done .study-state { color: #9ed08a; }
+.study-list li.open .study-state { color: var(--overlay-text); }
+.study-list li.blocked .study-state { color: #d59b7a; }
+.study-list li.free .study-state { color: var(--overlay-muted); }
+.b-info-close {
+  position: absolute; top: 8px; right: 10px; width: 24px; height: 24px;
+  padding: 0; border: none; background: transparent; font-size: 17px; line-height: 1;
+  color: var(--overlay-muted); cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.b-info-close:hover { color: var(--overlay-text); }
+
 /* Hover label over a plot: the building's name and level, in the shared overlay look. */
 .city-scene .plot-tip {
   position: absolute; transform: translate(-50%, -115%); z-index: 4; pointer-events: none;

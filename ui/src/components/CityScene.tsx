@@ -1,9 +1,12 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { BuildingView, CityDetail, OwnedCity, UnitView } from '../api/worlds'
+import type { BuildingView, CityDetail, OwnedCity, UnitType, UnitView } from '../api/worlds'
 import { ResourceStrip } from './ResourceStrip'
 import { GROUND_INSETS, GROUND_PAINTED, GROUND_SIZE, PLOTS, anchorPercent } from '../city/plots'
 import { UNIT_ICONS, UNIT_ORDER } from '../city/unitIcons'
 import { buildingArt } from '../city/buildingSprites'
+import { BuildingInfo } from './BuildingInfo'
+import { StudiesWindow } from './StudiesWindow'
+import { RecruitWindow } from './RecruitWindow'
 import groundUrl from '@assets/sprites/city-ground.png'
 
 /**
@@ -30,16 +33,26 @@ interface Props {
   city: OwnedCity | null
   detail: CityDetail | null
   units: UnitView[] | null
+  busy: boolean
+  onStudy: (unit: UnitType) => void
+  onRecruit: (unit: UnitType, count: number) => void
+  onCancelStudy: (unit: UnitType) => void
+  onCancelRecruit: (orderId: number) => void
 }
 
 /**
  * The city view: the picture fills the whole view with the side panel floating over it, which holds the city's name, its resources and its troops. Plot labels (later:
  * building sprites) live inside the picture box, so their percentage anchors stay on the plots.
  */
-export function CityScene({ buildings, city, detail, units }: Props) {
+export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
   const [hover, setHover] = useState<string | null>(null)
+  // One window at a time: a building's own, or the Academy's studies.
+  const [window_, setWindow] = useState<{ kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | null>(null)
+  const open = window_?.kind === 'building' ? window_.type : null
+  const studies = window_?.kind === 'studies'
+  const recruiting = window_?.kind === 'recruit'
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -92,6 +105,7 @@ export function CityScene({ buildings, city, detail, units }: Props) {
               alt=""
               onMouseEnter={() => setHover(type)}
               onMouseLeave={() => setHover((h) => (h === type ? null : h))}
+              onClick={() => setWindow({ kind: 'building', type })}
               style={{
                 // Centre of the plot, nudged across it, then corrected for where the art's footprint sits.
                 left: `${(100 * ((plot.box[0] + plot.box[2]) / 2 + (plot.box[2] - plot.box[0]) * (SPRITE_SHIFT + (art.slide ?? 0)) + (0.5 - art.footprint) * SPRITE_WIDTH * (art.scale ?? 1))) / GROUND_SIZE.width}%`,
@@ -106,6 +120,7 @@ export function CityScene({ buildings, city, detail, units }: Props) {
               style={anchorPercent(plot)}
               onMouseEnter={() => setHover(type)}
               onMouseLeave={() => setHover((h) => (h === type ? null : h))}
+              onClick={() => setWindow({ kind: 'building', type })}
             >
               {name}{level !== undefined ? ` ${level}` : ''}
             </span>
@@ -127,6 +142,40 @@ export function CityScene({ buildings, city, detail, units }: Props) {
           )
         })()}
       </div>
+
+      {open && viewOf(open) && (
+        <BuildingInfo
+          view={viewOf(open)!}
+          onClose={() => setWindow(null)}
+          action={
+            open === 'ACADEMY' && units ? { label: 'Studies', onClick: () => setWindow({ kind: 'studies' }) }
+              : open === 'BARRACKS' && units ? { label: 'Train troops', onClick: () => setWindow({ kind: 'recruit' }) }
+              : undefined
+          }
+        />
+      )}
+      {recruiting && units && (
+        <RecruitWindow
+          units={units}
+          barracksLevel={viewOf('BARRACKS')?.level ?? 0}
+          detail={detail}
+          busy={busy}
+          onRecruit={onRecruit}
+          onCancel={onCancelRecruit}
+          onClose={() => setWindow(null)}
+        />
+      )}
+      {studies && units && (
+        <StudiesWindow
+          units={units}
+          academyLevel={viewOf('ACADEMY')?.level ?? 0}
+          detail={detail}
+          busy={busy}
+          onStudy={onStudy}
+          onCancel={onCancelStudy}
+          onClose={() => setWindow(null)}
+        />
+      )}
 
       <aside className="city-panel" style={{ width: PANEL_W }} aria-label="City information">
         <div className="cp-head">

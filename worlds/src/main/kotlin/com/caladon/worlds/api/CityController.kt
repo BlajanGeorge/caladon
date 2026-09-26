@@ -41,6 +41,7 @@ class CityController(
         return views.map { v ->
             BuildingViewResponse(
                 type = v.building, name = v.building.displayName, level = v.level, maxLevel = v.building.maxLevel,
+                description = v.building.description, effectLabel = v.building.effectLabel,
                 founded = v.building.founded, points = v.points, effect = EffectResponse(v.effect.value, v.effect.unit),
                 queued = v.queued,
                 next = v.next?.let { n ->
@@ -133,8 +134,10 @@ class CityController(
             buildQueueSlots = BuildingRules.queueSlots(state.level(Building.TOWN_HALL)),
             units = Unit.entries.map { CityUnitResponse(it, it.displayName, state.units[it]?.count ?: 0) },
             recruitQueue = recruitQueue(state),
+            recruitQueueSlots = BuildingRules.recruitSlots(state.level(Building.BARRACKS)),
             studied = Unit.entries.filter { it.needsStudy && state.isStudied(it) },
             studyQueue = state.studyQueue().mapIndexed { i, s -> StudyOrderResponse(s.id.unit, s.id.unit.displayName, i + 1, s.orderedAt, s.completesAt) },
+            studyQueueSlots = BuildingRules.studySlots(state.level(Building.ACADEMY)),
         )
     }
 

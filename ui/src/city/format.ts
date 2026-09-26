@@ -1,12 +1,12 @@
 import type { Cost, Requirement } from '../api/worlds'
 
-/** "1h05m", "12m34s", "45s". */
+/** "1h05m12s", "12m34s", "45s" — a countdown reads better with its seconds. */
 export function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.round(seconds))
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   const sec = s % 60
-  if (h > 0) return `${h}h${String(m).padStart(2, '0')}m`
+  if (h > 0) return `${h}h${String(m).padStart(2, '0')}m${String(sec).padStart(2, '0')}s`
   if (m > 0) return `${m}m${String(sec).padStart(2, '0')}s`
   return `${sec}s`
 }
@@ -21,9 +21,9 @@ export const BUILDING_NAMES: Record<string, string> = {
   TOWN_HALL: 'Town Hall', BARRACKS: 'Barracks', ACADEMY: 'Academy', WALL: 'Wall', VAULT: 'Vault',
 }
 
-/** "Town Hall 3, Farm 6". */
+/** "Town Hall level 3, Farm level 6". */
 export function formatRequirements(reqs: Requirement[]): string {
-  return reqs.map((r) => `${BUILDING_NAMES[r.building] ?? r.building} ${r.level}`).join(', ')
+  return reqs.map((r) => `${BUILDING_NAMES[r.building] ?? r.building} level ${r.level}`).join(', ')
 }
 
 export interface Affordability {

@@ -5,7 +5,8 @@ describe('formatDuration', () => {
   it('renders hours, minutes and seconds like the design tables', () => {
     expect(formatDuration(95)).toBe('1m35s')
     expect(formatDuration(642)).toBe('10m42s')
-    expect(formatDuration(4800)).toBe('1h20m')
+    expect(formatDuration(4800)).toBe('1h20m00s')
+    expect(formatDuration(3725)).toBe('1h02m05s')
     expect(formatDuration(0)).toBe('0s')
     expect(formatDuration(-5)).toBe('0s')
   })
@@ -36,6 +37,6 @@ describe('affordability', () => {
 
 describe('formatRequirements', () => {
   it('uses display names', () => {
-    expect(formatRequirements([{ building: 'TOWN_HALL', level: 3 }, { building: 'FARM', level: 6 }])).toBe('Town Hall 3, Farm 6')
+    expect(formatRequirements([{ building: 'TOWN_HALL', level: 3 }, { building: 'FARM', level: 6 }])).toBe('Town Hall level 3, Farm level 6')
   })
 })

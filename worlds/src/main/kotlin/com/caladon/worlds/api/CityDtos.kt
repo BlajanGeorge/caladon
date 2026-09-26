@@ -43,10 +43,14 @@ data class CityDetailResponse(
     val units: List<CityUnitResponse>,
     /** The recruitment queue, first entry in progress. */
     val recruitQueue: List<RecruitOrderResponse>,
+    /** Recruit-queue slots at the current Barracks level. */
+    val recruitQueueSlots: Int,
     /** Unit types studied (completed) in this city. */
     val studied: List<Unit>,
     /** The Academy's study queue, first entry in progress. */
     val studyQueue: List<StudyOrderResponse>,
+    /** Study-queue slots at the current Academy level. */
+    val studyQueueSlots: Int,
 )
 
 data class CityUnitResponse(val type: Unit, val name: String, val count: Int)
@@ -115,6 +119,10 @@ data class NextLevelResponse(
 data class BuildingViewResponse(
     val type: Building,
     val name: String,
+    /** One line on what the building is for. */
+    val description: String,
+    /** What its effect is called, e.g. "Population". */
+    val effectLabel: String,
     val level: Int,
     val maxLevel: Int,
     val founded: Boolean,

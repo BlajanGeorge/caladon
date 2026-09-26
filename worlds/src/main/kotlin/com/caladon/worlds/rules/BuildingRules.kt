@@ -58,6 +58,14 @@ object BuildingRules {
     /** Build-queue slots at Town Hall [level]: 2, 3 from 10, 4 from 20. */
     fun queueSlots(townHallLevel: Int): Int = 2 + (if (townHallLevel >= 10) 1 else 0) + (if (townHallLevel >= 20) 1 else 0)
 
+    /** Studies that may wait in the Academy at once: 1, 2 from level 10, 3 from level 20. */
+    fun studySlots(academyLevel: Int): Int =
+        if (academyLevel < 1) 0 else 1 + (if (academyLevel >= 10) 1 else 0) + (if (academyLevel >= 20) 1 else 0)
+
+    /** Recruit orders that may wait in the Barracks at once: 2, 3 from level 10, 4 from level 20. */
+    fun recruitSlots(barracksLevel: Int): Int =
+        if (barracksLevel < 1) 0 else 2 + (if (barracksLevel >= 10) 1 else 0) + (if (barracksLevel >= 20) 1 else 0)
+
     /** Town Hall step rule: the Town Hall level needed to reach [level] of any other building. */
     fun townHallNeeded(level: Int): Int = 5 * ((level - 1) / 5)
 

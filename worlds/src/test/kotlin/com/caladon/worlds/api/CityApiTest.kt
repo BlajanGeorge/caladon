@@ -335,7 +335,7 @@ class CityApiTest : ApiTestBase() {
     }
 
     @Test
-    fun `cancelling a recruit order refunds the unproduced remainder, only from the tail, and the sweeper completes due units`() {
+    fun `cancelling a recruit order gives back half the untrained resources and all their population, only from the tail`() {
         val (world, cityId) = joinedCity()
         setLevel(cityId, Building.BARRACKS, 1)
         val orderId = json(post("/api/v1/worlds/$world/cities/$cityId/army/recruit", playerToken, mapOf("unit" to "SPEARMAN", "count" to 3))
@@ -362,8 +362,9 @@ class CityApiTest : ApiTestBase() {
             status { isOk() }
             jsonPath("$.units[?(@.type=='SPEARMAN')].count") { value(1) }
             jsonPath("$.recruitQueue.length()") { value(0) }
-            jsonPath("$.resources.wood.stock") { value(500 - 200 + 150 + 5) }   // 4 paid, 3 refunded, +5 produced in 643 s
-            jsonPath("$.resources.iron.stock") { value(500 - 40 + 30 + 5) }
+            // 4 paid, 3 untrained refunded at half, +5 produced in 643 s
+            jsonPath("$.resources.wood.stock") { value(500 - 200 + 75 + 5) }
+            jsonPath("$.resources.iron.stock") { value(500 - 40 + 15 + 5) }
             jsonPath("$.population") { value(239) }
         }
     }
@@ -372,7 +373,7 @@ class CityApiTest : ApiTestBase() {
     fun `studies queue one after another, only the tail can be cancelled, and completion unlocks recruitment`() {
         val (world, cityId) = joinedCity()
         setLevel(cityId, Building.BARRACKS, 5)
-        setLevel(cityId, Building.ACADEMY, 3)
+        setLevel(cityId, Building.ACADEMY, 10)   // 2 study slots, so two studies may wait
         setLevel(cityId, Building.DEPOSIT, 10)   // cap 6420, so a 5000 stock survives settlement
         stock(cityId, 5000)
         val t0 = clock.instant()
@@ -381,10 +382,10 @@ class CityApiTest : ApiTestBase() {
             status { isOk() }
             jsonPath("$.studyQueue.length()") { value(2) }
             jsonPath("$.studyQueue[0].unit") { value("SWORDSMAN") }
-            jsonPath("$.studyQueue[0].completesAt") { value(t0.plusSeconds(2254).toString()) }   // 2 × 1500 × 1.1^-3
+            jsonPath("$.studyQueue[0].completesAt") { value(t0.plusSeconds(1157).toString()) }   // 2 × 1500 × 1.1^-10
             jsonPath("$.studyQueue[1].unit") { value("SCOUT") }
             jsonPath("$.studyQueue[1].position") { value(2) }
-            jsonPath("$.studyQueue[1].completesAt") { value(t0.plusSeconds(2254 + 1352).toString()) } // starts after the Swordsman
+            jsonPath("$.studyQueue[1].completesAt") { value(t0.plusSeconds(1157 + 694).toString()) } // starts after the Swordsman
             jsonPath("$.resources.wood.stock") { value(5000 - 400 - 560) }
         }
         post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "SCOUT")).andExpect {
@@ -402,14 +403,14 @@ class CityApiTest : ApiTestBase() {
         }.andExpect {
             status { isOk() }
             jsonPath("$.studyQueue.length()") { value(1) }
-            jsonPath("$.resources.wood.stock") { value(5000 - 400) }
+            jsonPath("$.resources.wood.stock") { value(5000 - 400 - 560 + 280) }   // half the Scout's cost back
         }
         post("/api/v1/worlds/$world/cities/$cityId/army/study", playerToken, mapOf("unit" to "AXEMAN")).andExpect {
             status { isOk() }
-            jsonPath("$.studyQueue[1].completesAt") { value(t0.plusSeconds(2254 + 1983).toString()) }   // 2 × 1320 × 1.1^-3
+            jsonPath("$.studyQueue[1].completesAt") { value(t0.plusSeconds(1157 + 1018).toString()) }   // 2 × 1320 × 1.1^-10
         }
 
-        clock.advance(Duration.ofSeconds(2255))
+        clock.advance(Duration.ofSeconds(1158))
         get("/api/v1/worlds/$world/cities/$cityId", playerToken).andExpect {
             jsonPath("$.studied[0]") { value("SWORDSMAN") }
             jsonPath("$.studyQueue.length()") { value(1) }

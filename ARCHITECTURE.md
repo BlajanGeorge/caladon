@@ -735,14 +735,19 @@ upgrade(city, building):
 
 - **Build queue.** Orders wait in a per-city queue owned by the Town Hall: **2 slots** at level 1,
   **3** from level 10, **4** from level 20. Every queued order is paid (resources and population) at
-  placement. **Only the last order in the queue can be cancelled** (full refund); to cancel an earlier
-  one, cancel the ones after it first, one by one. Orders run strictly in placement order; the first
+  placement. **Only the last order in the queue can be cancelled**; to cancel an earlier one, cancel
+  the ones after it first, one by one. A cancelled build order is refunded in full. A cancelled
+  **study** gives back half of what it cost (rounded down) — studying is a decision, not a parking
+  space. A cancelled **recruit** order counts only what it had not yet trained: half those resources
+  back, but **all** of their population, since those troops were never raised. Orders run strictly in placement order; the first
   implementation may complete an upgrade **instantly** inside the same transaction; when build times
   arrive, "complete" moves to the moment the timer ends and everything before it stays exactly as
   above. This is why cost is paid at order time.
 
   The same **queue rules apply to all three queues** (build, recruit, study): sequential, paid at
-  placement, only the tail can be cancelled.
+  placement, only the tail can be cancelled. Each has its own length, set by the building it belongs
+  to: **build 2 / 3 / 4** slots at Town Hall 1 / 10 / 20, **recruit 2 / 3 / 4** at Barracks 1 / 10 / 20,
+  **study 1 / 2 / 3** at Academy 1 / 10 / 20. A full queue rejects the order with `409 QUEUE_FULL`.
 - The effect of a new level (faster production, larger cap, more people) applies **from
   completion**: resources are settled *before* the level changes, so the old rate covers the time
   up to that instant and the new rate the time after.
@@ -893,7 +898,8 @@ Militia.
 - **One recruitment queue per city**, separate from the build queue. An order (type, count) pays
   resources **and population** at placement, exactly like a building order (`409 NOT_ENOUGH_RESOURCES` /
   `NOT_ENOUGH_POPULATION` / `REQUIREMENTS_NOT_MET`); units complete one at a time. Only the **last**
-  order in the queue can be cancelled; the refund is the unproduced remainder. Population comes back
+  order in the queue can be cancelled; the refund covers only the unproduced remainder — half its
+  resources and all its population. Population comes back
   when units die (see Resources → Population).
 
 ### Study (Academy)

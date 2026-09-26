@@ -131,10 +131,14 @@ export interface CityDetail extends OwnedCity {
   buildQueueSlots: number
   units: CityUnit[]
   recruitQueue: RecruitOrder[]
+  /** Recruit-queue slots at the current Barracks level. */
+  recruitQueueSlots: number
   /** Unit types studied (completed) in this city. */
   studied: UnitType[]
   /** The Academy's study queue, first entry in progress. */
   studyQueue: StudyOrder[]
+  /** Study-queue slots at the current Academy level. */
+  studyQueueSlots: number
 }
 
 export interface NextLevel {
@@ -150,6 +154,10 @@ export interface NextLevel {
 export interface BuildingView {
   type: BuildingType
   name: string
+  /** One line on what the building is for, from the server. */
+  description: string
+  /** What its effect is called, e.g. "Population", from the server. */
+  effectLabel: string
   level: number
   maxLevel: number
   founded: boolean

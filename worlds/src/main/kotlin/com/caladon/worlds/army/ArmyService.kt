@@ -5,6 +5,7 @@ import com.caladon.worlds.resources.CityAccess
 import com.caladon.worlds.resources.CityState
 import com.caladon.worlds.resources.ResourceConstants
 import com.caladon.worlds.rules.Building
+import com.caladon.worlds.rules.BuildingRules
 import com.caladon.worlds.rules.Requirement
 import com.caladon.worlds.rules.Unit
 import com.caladon.worlds.rules.UnitRules
@@ -63,6 +64,7 @@ class ArmyService(
         val barracks = state.level(Building.BARRACKS)
         if (barracks < unit.barracksLevel) throw WorldException.RequirementsNotMet(mapOf(Building.BARRACKS.name to unit.barracksLevel.toString()))
         if (!state.isStudied(unit)) throw WorldException.NotStudied()
+        if (state.recruitOrders.size >= BuildingRules.recruitSlots(barracks)) throw WorldException.QueueFull()
         val cost = unit.cost * count.toLong()
         val pop = unit.population.toLong() * count
         val short = state.shortfall(cost)
@@ -88,6 +90,7 @@ class ArmyService(
         if (state.studies.containsKey(unit)) throw WorldException.AlreadyStudied()
         val academy = state.level(Building.ACADEMY)
         if (academy < needed) throw WorldException.RequirementsNotMet(mapOf(Building.ACADEMY.name to needed.toString()))
+        if (state.studyQueue().size >= BuildingRules.studySlots(academy)) throw WorldException.QueueFull()
         val cost = requireNotNull(unit.studyCost)
         val short = state.shortfall(cost)
         if (short.isNotEmpty()) throw WorldException.NotEnoughResources(short.entries.associate { it.key.name.lowercase() to it.value.toString() })
@@ -100,26 +103,29 @@ class ArmyService(
         return state
     }
 
-    /** Cancels the last queued study and refunds it in full; earlier ones → `409 NOT_LAST_IN_QUEUE`. */
+    /** Cancels the last queued study and refunds half of what it cost; earlier ones → `409 NOT_LAST_IN_QUEUE`. */
     @Transactional
     fun cancelStudy(worldId: Long, cityId: Long, userId: Long, role: Role, unit: Unit): CityState {
         val state = cityAccess.open(worldId, cityId, userId, role)
         val queue = state.studyQueue()
         val study = queue.firstOrNull { it.id.unit == unit } ?: throw WorldException.OrderNotFound()
         if (queue.last() != study) throw WorldException.NotLastInQueue()
-        state.refund(requireNotNull(unit.studyCost), 0)
+        state.refund(requireNotNull(unit.studyCost).half(), 0)
         state.studies.remove(unit)
         studyRepository.delete(study)
         return state
     }
 
-    /** Cancels the last recruit order and refunds its unproduced remainder; earlier ones → `409 NOT_LAST_IN_QUEUE`. */
+    /**
+     * Cancels the last recruit order: half the resources of what it had not yet trained come back, and all
+     * of that part's population. Earlier orders → `409 NOT_LAST_IN_QUEUE`.
+     */
     @Transactional
     fun cancel(worldId: Long, cityId: Long, userId: Long, role: Role, orderId: Long): CityState {
         val state = cityAccess.open(worldId, cityId, userId, role)
         val order = state.recruitOrders.firstOrNull { it.id == orderId } ?: throw WorldException.OrderNotFound()
         if (state.recruitOrders.last() != order) throw WorldException.NotLastInQueue()
-        state.refund(order.unit.cost * order.remaining.toLong(), order.unit.population.toLong() * order.remaining)
+        state.refund((order.unit.cost * order.remaining.toLong()).half(), order.unit.population.toLong() * order.remaining)
         state.recruitOrders.remove(order)
         recruitOrderRepository.delete(order)
         return state

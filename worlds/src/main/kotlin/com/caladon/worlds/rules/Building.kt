@@ -4,6 +4,9 @@ package com.caladon.worlds.rules
 data class Cost(val wood: Long, val stone: Long, val iron: Long) {
     operator fun times(n: Long) = Cost(wood * n, stone * n, iron * n)
     operator fun plus(o: Cost) = Cost(wood + o.wood, stone + o.stone, iron + o.iron)
+
+    /** Half of it, rounded down: what a cancelled study gives back. */
+    fun half() = Cost(wood / 2, stone / 2, iron / 2)
     companion object { val ZERO = Cost(0, 0, 0) }
 }
 
@@ -59,6 +62,40 @@ enum class Building(
         listOf(Requirement(TOWN_HALL, 5), Requirement(DEPOSIT, 5)),
         mapOf(5 to listOf(Requirement(DEPOSIT, 10))),
     );
+
+    /** One line on what the building is for, shown in the city. */
+    val description: String
+        get() = when (this) {
+            FARM -> "Feeds the city. Every level raises the population that buildings and troops are paid from; " +
+                "it is the only source of people."
+            WOODCUTTER -> "Fells and saws timber. Every level raises how much wood the city produces."
+            STONE_MINE -> "Cuts and dresses stone. Every level raises how much stone the city produces."
+            IRON_MINE -> "Digs and smelts iron ore. Every level raises how much iron the city produces."
+            DEPOSIT -> "Stores what the city produces. Every level raises how much of each resource can be held; " +
+                "anything produced above that is lost."
+            VAULT -> "Hides resources underground. Every level raises how much of each resource an attacker " +
+                "cannot take."
+            TOWN_HALL -> "The seat of the city. Its level speeds up construction, lengthens the build queue and " +
+                "gates how far the other buildings may be raised."
+            BARRACKS -> "Trains and houses troops. Its level decides which units the city can recruit and how " +
+                "quickly they are trained."
+            ACADEMY -> "Where a unit type is studied before it can be recruited. Its level decides what may be " +
+                "studied and how fast."
+            WALL -> "Rings the city. Every level raises how well the defenders fight."
+        }
+
+    /** What the level's effect is called, e.g. "Population" for the Farm. */
+    val effectLabel: String
+        get() = when (this) {
+            FARM -> "Population"
+            WOODCUTTER, STONE_MINE, IRON_MINE -> "Production"
+            DEPOSIT -> "Capacity"
+            VAULT -> "Protected"
+            WALL -> "Defence"
+            TOWN_HALL -> "Build speed"
+            BARRACKS -> "Recruit speed"
+            ACADEMY -> "Study speed"
+        }
 
     companion object {
         val FOUNDED: List<Building> = entries.filter { it.founded }

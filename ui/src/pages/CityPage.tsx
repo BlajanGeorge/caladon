@@ -147,8 +147,8 @@ export function CityPage() {
   const onCancelBuild = (orderId: number) => act(() => worldsApi.cancelBuild(worldId, city!.id, orderId), 'Order cancelled and refunded')
   const onRecruit = (u: UnitType, count: number) => act(() => worldsApi.recruit(worldId, city!.id, u, count))
   const onStudy = (u: UnitType) => act(() => worldsApi.study(worldId, city!.id, u))
-  const onCancelRecruit = (orderId: number) => act(() => worldsApi.cancelRecruit(worldId, city!.id, orderId), 'Order cancelled and refunded')
-  const onCancelStudy = (u: UnitType) => act(() => worldsApi.cancelStudy(worldId, city!.id, u), 'Study cancelled and refunded')
+  const onCancelRecruit = (orderId: number) => act(() => worldsApi.cancelRecruit(worldId, city!.id, orderId))
+  const onCancelStudy = (u: UnitType) => act(() => worldsApi.cancelStudy(worldId, city!.id, u))
 
   const shown = detail ?? city
 
@@ -156,7 +156,7 @@ export function CityPage() {
     <div className="city-shell">
       <MapTopBar worldName={worldName} worldId={worldId} city={city} showWorldButton />
       <main className="city-body">
-        <CityScene buildings={buildings} city={city} detail={detail} units={army} />
+        <CityScene buildings={buildings} city={city} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} />
         {/* City card, buildings and army panels are hidden for now: only the picture is shown.
             The data still loads so the information panel and the scene labels work. */}
         {SHOW_PANELS && (
