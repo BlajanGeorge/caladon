@@ -213,11 +213,11 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
                     <span className="cp-unit-count">…</span>
                   ) : (
                     <span className="cp-unit-count">
-                      <b className="at-home" onMouseEnter={(e) => showTip(e, `${u.home.toLocaleString()} ${label} at home, defending this city`)} onMouseLeave={hideTip}>{u.home.toLocaleString()}</b>
+                      <b className="at-home" onMouseEnter={(e) => showTip(e, 'Own, in this city')} onMouseLeave={hideTip}>{u.home.toLocaleString()}</b>
                       <i>/</i>
-                      <b className="hosted" onMouseEnter={(e) => showTip(e, `${u.supporting.toLocaleString()} ${label} from other cities, supporting this one`)} onMouseLeave={hideTip}>{u.supporting.toLocaleString()}</b>
+                      <b className="hosted" onMouseEnter={(e) => showTip(e, 'In this city, supporting from another city')} onMouseLeave={hideTip}>{u.supporting.toLocaleString()}</b>
                       <i>/</i>
-                      <b className="away" onMouseEnter={(e) => showTip(e, `${u.sentAway.toLocaleString()} ${label} of this city, away supporting somewhere else`)} onMouseLeave={hideTip}>{u.sentAway.toLocaleString()}</b>
+                      <b className="away" onMouseEnter={(e) => showTip(e, 'Away, supporting another city')} onMouseLeave={hideTip}>{u.sentAway.toLocaleString()}</b>
                     </span>
                   )}
                 </li>

@@ -967,7 +967,8 @@ on arrival and delete the row when the troops come home or die.
   `VALIDATION_ERROR` (count).
 - `GET …/cities/{id}` lists every unit type with `home`, `supporting` and `sentAway` (and `count`, kept
   as an alias of `home` for the older panels). The City view prints them as `home / supporting / away`
-  in three tones; hovering a figure shows a tooltip naming the unit and saying which of the three it is
+  in three tones; hovering a figure shows a short tooltip saying which of the three it is ("Own, in this
+  city", "In this city, supporting from another city", "Away, supporting another city")
   (drawn by the view at a fixed position, not the browser's own `title`, so the scrolling panel never
   clips it).
 - The recruit queue response gives `nextCompletesAt` (head only) and an estimated `completesAt` per order
