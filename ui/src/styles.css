@@ -337,6 +337,12 @@ input { font: inherit; cursor: text; }
 }
 .cq-list img { width: 20px; height: 20px; display: block; flex: 0 0 20px; }
 .cq-list .cq-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* What the errand is, beside its mark: the same three tones, so a row reads without the tooltip. */
+.cq-what { flex: 0 0 auto; font-weight: 700; white-space: nowrap; }
+.cq-what.attack { color: #8c2f24; }
+.cq-what.support { color: #3f6b3a; }
+.cq-what.espionage { color: #3a5a7a; }
+.cq-list li.back .cq-what { font-weight: 600; opacity: .75; }
 .cq-list .cq-name em { font-style: normal; color: #6b5a3c; margin-left: 8px; }
 /* The entry actually being worked on, as against the ones waiting behind it. */
 .cq-list li.running { font-weight: 700; color: #2c2216; }
@@ -389,7 +395,7 @@ input { font: inherit; cursor: text; }
 }
 .cq-mark.attack { color: #8c2f24; }
 .cq-mark.support { color: #3f6b3a; }
-.cq-mark.scout { color: #3a5a7a; }
+.cq-mark.espionage { color: #3a5a7a; }
 /* Troops on their way home are done with their errand: lighter than the ones still going out. */
 .cq-list li.back { color: #6b5a3c; }
 /* An attack heading here, and the count of what is coming. */

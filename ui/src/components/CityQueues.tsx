@@ -23,11 +23,15 @@ type Confirm = {
   | { kind: 'recall'; id: number }
 )
 
-/** How each kind of movement is marked in the bar, and what it is called. */
-const KIND: Record<Movement['kind'], { mark: string; out: string; back: string }> = {
-  ATTACK: { mark: '⚔', out: 'Attacking', back: 'Returning from the attack' },
-  SUPPORT: { mark: '✚', out: 'Going to support', back: 'Support coming home' },
-  SCOUT: { mark: '◎', out: 'Scouting', back: 'Scouts coming home' },
+/**
+ * How each errand is marked in the bar and what each leg of it is called. The marks are text until the
+ * three medallions are drawn (docs/TODO.md). `ESPIONAGE` is listed ready for the feature; the server
+ * cannot send one yet.
+ */
+const KIND: Record<Movement['kind'], { mark: string; out: string; back: string; label: string }> = {
+  ATTACK: { mark: '⚔', out: 'Attack', back: 'From attack', label: 'attack' },
+  SUPPORT: { mark: '✚', out: 'Support', back: 'From support', label: 'support' },
+  ESPIONAGE: { mark: '◎', out: 'Spying', back: 'From spying', label: 'spying' },
 }
 
 interface Props {
@@ -198,6 +202,9 @@ export function CityQueues({
             {outgoing.map((m) => (
               <li key={m.id} className={m.direction === 'HOMEWARD' ? 'back' : 'running'}>
                 <span className={`cq-mark ${m.kind.toLowerCase()}`} aria-hidden="true">{KIND[m.kind].mark}</span>
+                <span className={`cq-what ${m.kind.toLowerCase()}`}>
+                  {m.direction === 'OUTWARD' ? KIND[m.kind].out : KIND[m.kind].back}
+                </span>
                 <span className="cq-name" title={`${m.direction === 'OUTWARD' ? KIND[m.kind].out : KIND[m.kind].back}: ${m.otherCityName} (${m.x}|${m.y})`}>
                   {m.direction === 'OUTWARD' ? '→' : '←'} {m.otherCityName}
                 </span>
@@ -231,8 +238,9 @@ export function CityQueues({
             {incoming.map((m) => (
               <li key={m.id} className={m.kind === 'ATTACK' ? 'alarm' : undefined}>
                 <span className={`cq-mark ${m.kind.toLowerCase()}`} aria-hidden="true">{KIND[m.kind].mark}</span>
-                <span className="cq-name" title={`${KIND[m.kind].out} from ${m.otherCityName} (${m.x}|${m.y})`}>
-                  {m.otherCityName}
+                <span className={`cq-what ${m.kind.toLowerCase()}`}>{KIND[m.kind].out}</span>
+                <span className="cq-name" title={`${KIND[m.kind].label} from ${m.otherCityName} (${m.x}|${m.y})`}>
+                  ← {m.otherCityName}
                 </span>
                 <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
                 <span className="cq-cancel placeholder" aria-hidden="true" />

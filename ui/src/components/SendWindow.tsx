@@ -11,10 +11,10 @@ interface Props {
   onClose: () => void
 }
 
+/** Spying is not an errand troops go on; it is paid for from the Cave, and is not here. */
 const KINDS: { kind: MovementKind; label: string; hint: string }[] = [
   { kind: 'ATTACK', label: 'Attack', hint: 'They fight what stands there and bring back what they can carry.' },
   { kind: 'SUPPORT', label: 'Support', hint: 'They stay and defend that city until you call them home.' },
-  { kind: 'SCOUT', label: 'Scout', hint: 'Scouts only. They look and come straight back.' },
 ]
 
 /** "128|240" or "128 240" or "128,240" — whichever the player types. */
@@ -37,14 +37,11 @@ export function SendWindow({ units, detail, busy, onSend, onClose }: Props) {
 
   const field = parseTarget(target)
   const chosen = UNIT_ORDER.filter((t) => want(t) > 0)
-  const scoutsOnly = chosen.length > 0 && chosen.every((t) => t === 'SCOUT')
   // The rules the server enforces, said before the click rather than after it.
   const refusal =
     chosen.length === 0 ? 'Choose some troops'
       : !field ? 'Enter the field as x|y'
       : field.x === detail?.x && field.y === detail?.y ? 'That is this city'
-      : kind === 'SCOUT' && !scoutsOnly ? 'A scouting run takes scouts only'
-      : kind === 'ATTACK' && scoutsOnly ? 'Scouts alone cannot attack'
       : null
 
   return (

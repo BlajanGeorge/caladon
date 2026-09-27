@@ -205,7 +205,7 @@ export interface UnitView {
 }
 
 
-export type MovementKind = 'ATTACK' | 'SUPPORT' | 'SCOUT'
+export type MovementKind = 'ATTACK' | 'SUPPORT' | 'ESPIONAGE'
 export type MovementDirection = 'OUTWARD' | 'HOMEWARD'
 
 export interface MovementUnit {
