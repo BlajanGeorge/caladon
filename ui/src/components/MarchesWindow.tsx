@@ -24,14 +24,11 @@ const MARK: Record<Movement['kind'], string> = {
   ESPIONAGE: spyUrl,
 }
 
-/** What a row is, in words, without a coordinate anywhere. */
-function headline(m: Movement): string {
-  if (m.direction === 'HOMEWARD') {
-    return m.kind === 'ATTACK' ? 'Coming home from the attack'
-      : m.kind === 'SUPPORT' ? 'Support coming home'
-      : 'Spies coming home'
-  }
-  return m.kind === 'ATTACK' ? 'Attacking' : m.kind === 'SUPPORT' ? 'Going to support' : 'Spying'
+/** The errand, beside its medallion; the arrow after it says which way it is flying. */
+const ERRAND: Record<Movement['kind'], string> = {
+  ATTACK: 'Attack',
+  SUPPORT: 'Support',
+  ESPIONAGE: 'Spying',
 }
 
 /**
@@ -53,48 +50,52 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
       <li key={m.id} className={m.direction === 'HOMEWARD' ? 'back' : undefined}>
         <img className="mw-mark" src={MARK[m.kind]} alt="" />
         <div className="mw-body">
+          {/* The city and the player are what a march is about, so they lead; the errand sits under them
+              beside the numbers, and the medallion has already said which it is. */}
           <div className="mw-head">
-            <b>{headline(m)}</b>
-            <span className="mw-where">
-              {m.otherCityName}{m.otherPlayerName ? <em> · {m.otherPlayerName}</em> : null}
+            <span className="mw-what">
+              {ERRAND[m.kind]}
+              <i className="mw-way">{m.direction === 'OUTWARD' ? '→' : '←'}</i>
             </span>
+            <span className="mw-city">{m.otherCityName}</span>
+            {m.otherPlayerName ? <span className="mw-player">{m.otherPlayerName}</span> : null}
             <b className="mw-clock">{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
           </div>
 
+          {m.units.length > 0 && (
+            <ul className="mw-units">
+              {m.units.map((u) => (
+                <li key={u.type}>
+                  <img src={UNIT_ICONS[u.type]} alt="" />
+                  <span>{u.count.toLocaleString()}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Only numbers under the head: the errand and its direction are said above. */}
           {m.kind === 'ESPIONAGE' ? (
-            <div className="mw-line">
-              {m.direction === 'OUTWARD' && load
-                ? <span className="mw-load"><img src={silverUrl} alt="Silver" />{load.silver.toLocaleString()} silver paid</span>
-                : <span className="mw-quiet">Nothing comes back but the spy</span>}
-            </div>
-          ) : m.units.length === 0 ? (
-            <div className="mw-line"><span className="mw-quiet">Nothing to show</span></div>
-          ) : (
-            <>
-              <ul className="mw-units">
-                {m.units.map((u) => (
-                  <li key={u.type}>
-                    <img src={UNIT_ICONS[u.type]} alt="" />
-                    <span>{u.count.toLocaleString()}</span>
-                  </li>
-                ))}
-              </ul>
+            m.direction === 'OUTWARD' && load ? (
               <div className="mw-line">
-                <span className="mw-quiet">{troops.toLocaleString()} troops</span>
-                {m.direction === 'OUTWARD' && m.kind === 'ATTACK' && (
-                  <span className="mw-quiet">· can carry {carry.toLocaleString()}</span>
-                )}
-                {m.direction === 'HOMEWARD' && (
-                  carrying > 0 ? (
-                    <span className="mw-load">
-                      <img src={woodUrl} alt="Wood" />{load!.wood.toLocaleString()}
-                      <img src={stoneUrl} alt="Stone" />{load!.stone.toLocaleString()}
-                      <img src={silverUrl} alt="Silver" />{load!.silver.toLocaleString()}
-                    </span>
-                  ) : <span className="mw-quiet">· carrying nothing</span>
-                )}
+                <span className="mw-load"><img src={silverUrl} alt="Silver" />{load.silver.toLocaleString()} paid</span>
               </div>
-            </>
+            ) : null
+          ) : m.units.length === 0 ? null : (
+            <div className="mw-line">
+              <span className="mw-quiet">{troops.toLocaleString()} troops</span>
+              {m.direction === 'OUTWARD' && m.kind === 'ATTACK' && (
+                <span className="mw-quiet">can carry {carry.toLocaleString()}</span>
+              )}
+              {m.direction === 'HOMEWARD' && (
+                carrying > 0 ? (
+                  <span className="mw-load">
+                    <img src={woodUrl} alt="Wood" />{load!.wood.toLocaleString()}
+                    <img src={stoneUrl} alt="Stone" />{load!.stone.toLocaleString()}
+                    <img src={silverUrl} alt="Silver" />{load!.silver.toLocaleString()}
+                  </span>
+                ) : <span className="mw-quiet">carrying nothing</span>
+              )}
+            </div>
           )}
         </div>
         {m.canRecall ? (
