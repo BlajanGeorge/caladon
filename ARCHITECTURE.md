@@ -1123,6 +1123,31 @@ on arrival and delete the row when the troops come home or die.
 
 ---
 
+## Ranking
+
+**Status: backend built, no UI yet.** Two numbers stand for a player in a world.
+
+**Points** are not stored: they are the sum of `city.points` over the cities that player holds, which is
+what the map already colours cities by. Losing a city loses its points with it.
+
+**Battle points** are stored, in `player_score(world_id, user_id, attack_points, defence_points)`, and
+count **population killed**, not troops: a Nobleman at 100 population is worth a hundred spearmen, which
+is the point. A battle awards them once, on arrival:
+
+- the attacker takes **attack points** for every defender that died, its own and any support alike;
+- the **defence points** for the attackers that died are split between the defending city and each
+  supporter **in proportion to what each contributed to the defence** — the same weighted numbers the
+  combat used, so a supporter that held a third of the wall earns a third. What rounding leaves over goes
+  to the city that was attacked, so nothing is lost.
+
+A player who loses their last city keeps the battle points they earned.
+
+`GET /api/v1/worlds/{id}/ranking?limit=50` returns the standings, best first: by points, then by battle
+points, then by name so the order never wobbles. Each row is `rank`, `playerId`, `player`, `cities`,
+`points`, `attackPoints`, `defencePoints`, `battlePoints`. The caller must have joined the world.
+
+---
+
 ## UI (frontend)
 
 A separate **single-page app (SPA)** consuming the APIs above.

@@ -62,6 +62,13 @@ object MovementRules {
         return CombatOf(
             attackPower = attackPower,
             defencePower = defencePower,
+            defenceByHolder = defenders.mapValues { (_, held) ->
+                held.entries.sumOf { (u, n) ->
+                    n * (shares.getValue(Arm.INFANTRY) * u.defence +
+                        shares.getValue(Arm.CAVALRY) * u.defenceCavalry +
+                        shares.getValue(Arm.ARCHER) * u.defenceArcher)
+                } * BuildingRules.wallFactor(wallLevel)
+            },
             attackerWon = attackerWon,
             attackerLeft = if (attackerWon) attackers.mapValues { survivors(it.value, loss) } else attackers.mapValues { 0 },
             defenderLeft = defenders.mapValues { (_, held) ->
@@ -73,6 +80,8 @@ object MovementRules {
     data class CombatOf<K>(
         val attackPower: Double,
         val defencePower: Double,
+        /** What each holder contributed to the defence, for splitting what the defence earned. */
+        val defenceByHolder: Map<K, Double>,
         val attackerWon: Boolean,
         val attackerLeft: Map<Unit, Int>,
         val defenderLeft: Map<K, Map<Unit, Int>>,

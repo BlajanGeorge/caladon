@@ -143,6 +143,14 @@ class WorldService(
         return mapQueryDao.citiesOwnedBy(worldId, userId)
     }
 
+    /** A world a player may look at: it exists, it is not a draft, and they have joined it. */
+    @Transactional(readOnly = true)
+    fun requirePlayable(worldId: Long, userId: Long) {
+        val world = worldRepository.findById(worldId).orElse(null) ?: throw WorldException.NotFound()
+        if (world.state == WorldState.DRAFT) throw WorldException.NotFound()
+        if (!membershipRepository.existsById(WorldMembershipId(worldId, userId))) throw WorldException.NotJoined()
+    }
+
     /** Everything inside the rectangle. DRAFT worlds are visible to administrators only. */
     @Transactional(readOnly = true)
     fun map(worldId: Long, viewport: Viewport, requesterRole: Role): MapView {

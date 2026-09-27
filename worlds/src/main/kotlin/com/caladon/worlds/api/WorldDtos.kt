@@ -41,3 +41,18 @@ data class MapResponse(
     val barbarians: List<TileResponse>,
 )
 
+
+/**
+ * A player's standing in a world: the points of the cities they hold, and the battle points they have
+ * earned — the population they have killed attacking and defending.
+ */
+data class StandingResponse(
+    val rank: Int,
+    val playerId: Long,
+    val player: String,
+    val cities: Int,
+    val points: Long,
+    val attackPoints: Long,
+    val defencePoints: Long,
+    val battlePoints: Long,
+)

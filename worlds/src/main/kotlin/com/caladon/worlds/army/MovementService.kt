@@ -2,6 +2,7 @@ package com.caladon.worlds.army
 
 import com.caladon.users.domain.Role
 import com.caladon.worlds.map.MapQueryDao
+import com.caladon.worlds.ranking.RankingService
 import com.caladon.worlds.repository.CityRepository
 import com.caladon.worlds.repository.CitySlotRepository
 import com.caladon.worlds.resources.CityAccess
@@ -33,6 +34,7 @@ class MovementService(
     private val movementRepository: CityMovementRepository,
     private val movementUnitRepository: CityMovementUnitRepository,
     private val mapQueryDao: MapQueryDao,
+    private val rankingService: RankingService,
     private val jdbc: NamedParameterJdbcTemplate,
 ) {
     data class MovementUnitView(val unit: Unit, val count: Int)
@@ -283,6 +285,16 @@ class MovementService(
         val attackerFreed = attackers.entries.sumOf { (u, n) -> u.population.toLong() * (n - (survivors[u] ?: 0)) }
         origin.resources.population += attackerFreed.toInt()
         writeUnits(requireNotNull(m.id), survivors)
+
+        // Whose troops each supporting city's were, so what the defence earned can be shared out.
+        val supporters = cityRepository.findAllById(support.map { it.id.ownerCityId }.toSet())
+            .associate { requireNotNull(it.id) to it.ownerUserId }
+        awardBattlePoints(
+            origin, target, supporters,
+            killedDefending = targetFreed + freedByOwner.values.sum(),
+            killedAttacking = attackerFreed,
+            defenceByHolder = combat.defenceByHolder,
+        )
         if (survivors.isEmpty()) {
             m.applied = true
             return
@@ -316,7 +328,39 @@ class MovementService(
         m.arrivesAt = m.arrivesAt.plusSeconds(seconds)
     }
 
-    /** Both rows in one ordered statement, so two movements crossing between the same pair cannot deadlock. */
+    /**
+     * What the battle earned each side: the **population it killed**. The attacker takes all of it for
+     * the defenders that died; the defence is split between the city and every supporter in proportion
+     * to what each contributed, the remainder going to the city that was attacked.
+     */
+    private fun awardBattlePoints(
+        origin: CityState,
+        target: CityState,
+        supporters: Map<Long, Long>,
+        killedDefending: Long,
+        killedAttacking: Long,
+        defenceByHolder: Map<Long, Double>,
+    ) {
+        val worldId = target.city.worldId
+        rankingService.award(worldId, origin.city.ownerUserId, attack = killedDefending)
+        if (killedAttacking <= 0) return
+
+        // Every holder's share of the whole defence, the city's own included; what is not given to a
+        // supporter stays with the city that was attacked, so nothing is lost to rounding.
+        val total = defenceByHolder.values.sum()
+        var given = 0L
+        if (total > 0) {
+            for ((holder, power) in defenceByHolder) {
+                if (holder == target.cityId) continue
+                val userId = supporters[holder] ?: continue
+                val share = (killedAttacking * (power / total)).toLong()
+                rankingService.award(worldId, userId, defence = share)
+                given += share
+            }
+        }
+        rankingService.award(worldId, target.city.ownerUserId, defence = killedAttacking - given)
+    }
+
     /**
      * Gives a third city back the population of the support it lost here. Its row is not one of the two
      * this arrival locks, so it is written straight, in id order, and never read back into a state.
@@ -331,6 +375,7 @@ class MovementService(
         }
     }
 
+    /** Both rows in one ordered statement, so two movements crossing between the same pair cannot deadlock. */
     private fun lockInIdOrder(a: Long, b: Long) {
         jdbc.queryForList(
             "SELECT city_id FROM city_resources WHERE city_id IN (:a, :b) ORDER BY city_id FOR UPDATE",

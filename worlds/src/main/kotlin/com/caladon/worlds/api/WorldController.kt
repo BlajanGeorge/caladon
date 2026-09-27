@@ -2,6 +2,7 @@ package com.caladon.worlds.api
 
 import com.caladon.users.security.AuthenticatedUser
 import com.caladon.worlds.map.Viewport
+import com.caladon.worlds.ranking.RankingService
 import com.caladon.worlds.service.WorldService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,7 +14,26 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/worlds")
-class WorldController(private val worldService: WorldService) {
+class WorldController(
+    private val worldService: WorldService,
+    private val rankingService: RankingService,
+) {
+
+    /** The world's standings, best first. Any player may read them; a world's ranking is public. */
+    @GetMapping("/{id}/ranking")
+    fun ranking(
+        @AuthenticationPrincipal user: AuthenticatedUser,
+        @PathVariable id: Long,
+        @RequestParam(defaultValue = "50") limit: Int,
+    ): List<StandingResponse> {
+        worldService.requirePlayable(id, user.id)
+        return rankingService.standings(id, limit.coerceIn(1, 200)).map {
+            StandingResponse(
+                rank = it.rank, playerId = it.userId, player = it.player, cities = it.cities, points = it.points,
+                attackPoints = it.attackPoints, defencePoints = it.defencePoints, battlePoints = it.battlePoints,
+            )
+        }
+    }
 
     /** PLAYABLE worlds only; `joined` tells the UI whether to show "Play" or "Join". */
     @GetMapping

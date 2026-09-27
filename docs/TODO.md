@@ -19,6 +19,11 @@ what is still owed, newest first. Cross off by deleting the line in the commit t
 - **Remove the Scout unit**: a migration for the rows that exist (`city_unit`, `city_study`,
   `city_recruit_order`), its place on the Academy ladder, and its medallion.
 
+## Ranking
+
+- The backend is built (points from cities, battle points from population killed). **No UI yet**: a
+  standings screen, and the player's own rank somewhere in the HUD.
+
 ## Smaller things
 
 - The bar's improvements the user has in mind for the Marches and Arrivals sections.
