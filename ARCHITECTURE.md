@@ -1317,9 +1317,9 @@ a standalone preview.
 - **Movements in the bar**: two more sections, **Marches** (this city's own movements, out and back) and
   **Arrivals** (anything heading this way), named to sit beside Construction, Training and Studies. A row
   carries a medallion for the errand, in the style of the unit ones — crossed swords for an attack, a
-  shield for support, a hood for spying, each with its own gem — then **what it is in words** (Attack, Support, Spying going out; From attack, From
-  support, From spying coming home; Attack or Support for what is arriving), an arrow for the leg, the
-  city at the other end, and the countdown. Troops on the way home are greyed; an incoming attack is red, and so is the count
+  shield for support, a hood for spying, each with its own gem — an arrow for the leg, the city at the other end, and the countdown. No words
+  name the errand: the medallion and the arrow already say it twice, and hovering the row gives the
+  sentence in full. Troops on the way home are greyed; an incoming attack is red, and so is the count
   in that header. Our own outward movements carry a recall button, behind the same confirmation as a
   cancel. Arrivals never shows a spy mission aimed at us, only Marches shows our own. Everything a player watches for is there — attacks out and back, support out and back, spying
   out and back, attacks and support inbound — said by the mark, the words and the arrow rather than by a

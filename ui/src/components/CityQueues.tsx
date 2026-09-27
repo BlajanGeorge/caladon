@@ -204,11 +204,8 @@ export function CityQueues({
             {outgoing.map((m) => (
               <li key={m.id} className={m.direction === 'HOMEWARD' ? 'back' : 'running'}>
                 <img className="cq-mark" src={KIND[m.kind].mark} alt="" />
-                <span className={`cq-what ${m.kind.toLowerCase()}`}>
-                  {m.direction === 'OUTWARD' ? KIND[m.kind].out : KIND[m.kind].back}
-                </span>
                 <span className="cq-name" title={`${m.direction === 'OUTWARD' ? KIND[m.kind].out : KIND[m.kind].back}: ${m.otherCityName} (${m.x}|${m.y})`}>
-                  {m.direction === 'OUTWARD' ? '→' : '←'} {m.otherCityName}
+                  <i className="way">{m.direction === 'OUTWARD' ? '→' : '←'}</i> {m.otherCityName}
                 </span>
                 <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
                 {m.canRecall ? (
@@ -240,9 +237,8 @@ export function CityQueues({
             {incoming.map((m) => (
               <li key={m.id} className={m.kind === 'ATTACK' ? 'alarm' : undefined}>
                 <img className="cq-mark" src={KIND[m.kind].mark} alt="" />
-                <span className={`cq-what ${m.kind.toLowerCase()}`}>{KIND[m.kind].out}</span>
                 <span className="cq-name" title={`${KIND[m.kind].label} from ${m.otherCityName} (${m.x}|${m.y})`}>
-                  ← {m.otherCityName}
+                  <i className="way">←</i> {m.otherCityName}
                 </span>
                 <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
                 <span className="cq-cancel placeholder" aria-hidden="true" />

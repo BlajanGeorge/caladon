@@ -337,12 +337,9 @@ input { font: inherit; cursor: text; }
 }
 .cq-list img { width: 20px; height: 20px; display: block; flex: 0 0 20px; }
 .cq-list .cq-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* What the errand is, beside its mark: the same three tones, so a row reads without the tooltip. */
-.cq-what { flex: 0 0 auto; font-weight: 700; white-space: nowrap; }
-.cq-what.attack { color: #8c2f24; }
-.cq-what.support { color: #3f6b3a; }
-.cq-what.espionage { color: #3a5a7a; }
-.cq-list li.back .cq-what { font-weight: 600; opacity: .75; }
+/* No words on a movement row: the medallion says the errand, the arrow says the leg, and the tooltip
+   says both in full. The arrow carries that on its own, so it is not allowed to look faint. */
+.cq-list .cq-name .way { font-style: normal; font-weight: 700; margin-right: 2px; }
 .cq-list .cq-name em { font-style: normal; color: #6b5a3c; margin-left: 8px; }
 /* The entry actually being worked on, as against the ones waiting behind it. */
 .cq-list li.running { font-weight: 700; color: #2c2216; }
