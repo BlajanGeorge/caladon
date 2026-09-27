@@ -1019,9 +1019,10 @@ on**; the level sets the capacity only. Max level 20, cost 80/120/60 growing at 
 **600 silver at level 1** on the Deposit's 1.2294934 curve (30,405 at 20), 7 points at level 1, and Town
 Hall 5 with Silver Mine 5 to build it, Town Hall 10 from level 10.
 
-Until the city picture has a plot for it, the Cave — like the Wall — is reached from the **Town Hall's
-window**: every building's name there opens that building's own window, which for the Cave carries the
-silver and the field that moves more in.
+The Cave stands where the dirt road running north out of the city fades into the grass, under the
+treeline: one picture at every level, since a hole in the ground looks the same however deep it goes. It
+is also reached from the **Town Hall's window**, where every building's name opens that building's own
+window — the only way in for the Wall, which still has no plot.
 
 **A spy mission** is a movement of kind `ESPIONAGE` that carries an amount of silver instead of troops:
 
@@ -1045,9 +1046,6 @@ and an unread mark in the top bar. Battle reports belong in the same place when 
 **What the Scout unit leaves behind.** Removing it takes a migration for the rows that exist
 (`city_unit`, `city_study`, `city_recruit_order`), its place on the Academy ladder (level 2 simply
 becomes empty; nothing else shifts), and its medallion stops being drawn.
-
-**Open, deliberately.** The city picture has nine plots and the Wall already has none; the Cave makes
-eleven buildings for nine plots. Where it is drawn is not decided.
 
 ### Later, not designed here
 

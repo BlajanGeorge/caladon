@@ -9,6 +9,7 @@ import barracks from '@assets/sprites/icon-barracks.png'
 import academy from '@assets/sprites/icon-academy.png'
 import vault from '@assets/sprites/icon-vault.png'
 import wall from '@assets/sprites/icon-wall.png'
+import cave from '@assets/sprites/icon-cave.png'
 
 /**
  * A small picture of each building, the way the unit medallions stand for the units. Made from the
@@ -27,4 +28,5 @@ export const BUILDING_ICONS: Partial<Record<BuildingType, string>> = {
   ACADEMY: academy,
   VAULT: vault,
   WALL: wall,
+  CAVE: cave,
 }

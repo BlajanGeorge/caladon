@@ -23,6 +23,7 @@ import barracks3 from '@assets/sprites/b-barracks-3.png'
 import academy1 from '@assets/sprites/b-academy-1.png'
 import academy2 from '@assets/sprites/b-academy-2.png'
 import academy3 from '@assets/sprites/b-academy-3.png'
+import cave from '@assets/sprites/b-cave-1.png'
 import vault1 from '@assets/sprites/b-vault-1.png'
 import vault2 from '@assets/sprites/b-vault-2.png'
 import vault3 from '@assets/sprites/b-vault-3.png'
@@ -89,6 +90,13 @@ const SPRITES: Partial<Record<BuildingType, [BuildingArt, BuildingArt, BuildingA
     { src: academy1, footprint: 0.52, scale: 0.62 },
     { src: academy2, footprint: 0.5344, scale: 0.68 },
     { src: academy3, footprint: 0.3754, scale: 0.86 },
+  ],
+  // The Cave is a hole in the ground: it looks the same however deep it goes, so all three tiers are the
+  // one picture.
+  CAVE: [
+    { src: cave, footprint: 0.4995, scale: 1.35, slide: -0.06 },
+    { src: cave, footprint: 0.4995, scale: 1.35, slide: -0.06 },
+    { src: cave, footprint: 0.4995, scale: 1.35, slide: -0.06 },
   ],
   VAULT: [
     { src: vault1, footprint: 0.4855, scale: 0.6, slide: 0.1, drop: 0.12 },

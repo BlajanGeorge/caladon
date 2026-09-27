@@ -9,10 +9,6 @@ what is still owed, newest first. Cross off by deleting the line in the commit t
   today (`⚔`, `✚`, `◎` in `CityQueues.tsx`), tinted red, green and blue. Wanted: three small medallions in
   the style of the unit ones (`hud-unit-*.png`), readable at 16 px, one per errand, used in both the
   Marches and the Arrivals rows.
-- **The Cave** — three tiers like every other building (`b-cave-1..3.png`), plus its icon
-  (`docs/building_icons.py` makes that from the top tier). The building exists and can be built; it has
-  no art and no plot in the city picture, so it is reached from the Town Hall's window. Where it stands
-  in the picture is still open — the ground has nine plots and the Wall has none either.
 
 ## Espionage (designed in ARCHITECTURE.md → Army → Espionage and the Cave)
 

@@ -23,8 +23,10 @@ export interface Plot {
   box: [number, number, number, number]
 }
 
-/** The picture has nine plots; the Wall and the Cave have none yet and are reached from the Town Hall. */
-export const PLOTS: Record<Exclude<BuildingType, 'WALL' | 'CAVE'>, Plot> = {
+/** The picture has ten plots; only the Wall has none and is reached from the Town Hall's window. */
+export const PLOTS: Record<Exclude<BuildingType, 'WALL'>, Plot> = {
+  // Where the dirt road running north out of the city fades into the grass, under the treeline.
+  CAVE: { anchor: [995, 320], box: [880, 175, 1110, 345] },
   TOWN_HALL: { anchor: [1017, 640], box: [857, 434, 1181, 640] },
   DEPOSIT: { anchor: [587, 534], box: [498, 434, 682, 534] },
   VAULT: { anchor: [1162, 859], box: [1069, 741, 1251, 859] },
