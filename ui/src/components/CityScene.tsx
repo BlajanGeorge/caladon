@@ -8,6 +8,7 @@ import { BuildingInfo } from './BuildingInfo'
 import { StudiesWindow } from './StudiesWindow'
 import { RecruitWindow } from './RecruitWindow'
 import { BuildingsWindow } from './BuildingsWindow'
+import { CityQueues } from './CityQueues'
 import groundUrl from '@assets/sprites/city-ground.png'
 
 /**
@@ -212,6 +213,14 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           onClose={() => setWindow(null)}
         />
       )}
+
+      <CityQueues
+        detail={detail}
+        style={{ left: PANEL_INSET, right: PANEL_W + PANEL_INSET * 2, bottom: PANEL_INSET }}
+        onOpenBuildings={() => setWindow({ kind: 'buildings' })}
+        onOpenRecruit={() => setWindow({ kind: 'recruit' })}
+        onOpenStudies={() => setWindow({ kind: 'studies' })}
+      />
 
       <aside className="city-panel" style={{ width: PANEL_W }} aria-label="City information">
         <div className="cp-head">

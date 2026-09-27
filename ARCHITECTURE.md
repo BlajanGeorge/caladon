@@ -1175,5 +1175,20 @@ a standalone preview.
   login, register, the lobby and the map. Pure helpers in `ui/src/city/format.ts`
   (durations, requirements, affordability) are unit-tested. Resource numbers still never tick; only
   queue countdowns do.
+- **The bottom bar** (`CityQueues`): what the city is working on, in the side panel's frame, spanning the
+  bottom of the scene and stopping clear of that panel. Three sections today, each mirroring one queue:
+  **Construction**, **Training**, **Studies**. The first entry of a section is the one running and is
+  printed heavier; the rest wait behind it. Every entry counts down per second, the header carries the
+  number of orders, and clicking a header opens the window that owns the queue, where orders are placed
+  and cancelled. An empty section says so rather than disappearing, so the bar does not jump about. A
+  section scrolls on its own when its queue is longer than the bar, which is capped at a third of the
+  scene's height.
+- **Sections the bar still needs** (each waits for the movement feature, none of them exist yet):
+  **attacks incoming** (with arrival and, once scouted, what is coming), **attacks outgoing**,
+  **support incoming** and **support leaving**, **scouts out**, **troops on their way home** (the return
+  leg of every one of those, carrying plunder), and **conquest** runs with a Nobleman. Two more that are
+  easy to forget: a **recall** of support already standing in another city, and the **arrival of plunder**
+  as distinct from the troops that carry it, if we ever split them. Once there are more than about five,
+  the bar wants tabs or a single "Movements" section rather than a section each.
 - Admin panel: not built (deferred in the spec).
 

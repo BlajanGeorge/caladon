@@ -278,6 +278,58 @@ input { font: inherit; cursor: text; }
 .cp-tip .at-home { color: #f0e6c8; }
 .cp-tip .hosted { color: #8fd18a; }
 .cp-tip .away { color: #e8b063; }
+/* The bar along the bottom of the city: the three queues, in the same frame as the side panel. Its left,
+   right and bottom come from the scene, which keeps it clear of that panel. */
+.city-queues {
+  position: absolute; z-index: 1; display: flex; align-items: stretch;
+  border: var(--overlay-border); border-radius: 14px;
+  background: url('@assets/sprites/panel-parchment.png') center / cover, #b59c72;
+  box-shadow: 0 8px 22px rgba(0,0,0,.55);
+  color: #2c2216; max-height: 34%; overflow: hidden;
+}
+.cq-section {
+  flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px;
+  padding: 10px 14px 12px; overflow: hidden;
+}
+.cq-section + .cq-section { border-left: 1px solid rgba(90,70,40,.45); }
+/* The header is a button: it opens the window that owns the queue. */
+.cq-head {
+  display: flex; align-items: center; gap: 6px; padding: 0 0 6px; width: 100%;
+  background: none; border: none; border-bottom: 1px solid rgba(90,70,40,.35); border-radius: 0;
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 12px; letter-spacing: .1em;
+  text-transform: uppercase; text-align: left; color: #4a3a22;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.cq-head:hover { color: #2c2216; }
+/* How many orders the queue holds. */
+.cq-head em {
+  font-style: normal; font-size: 11px; letter-spacing: 0; font-weight: 700;
+  min-width: 16px; padding: 1px 5px; border-radius: 8px;
+  background: rgba(70,54,28,.28); color: #3a2e1e;
+}
+.cq-empty { margin: 4px 0 0; font-size: 12px; color: #6b5a3c; }
+.cq-list {
+  list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px;
+  overflow-y: auto; scrollbar-gutter: stable;
+}
+.cq-list li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #3a2e1e; }
+.cq-list img { width: 22px; height: 22px; display: block; flex: 0 0 22px; }
+.cq-list .cq-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cq-list .cq-name em { font-style: normal; color: #6b5a3c; }
+/* The entry actually being worked on, as against the ones waiting behind it. */
+.cq-list li.running { font-weight: 700; color: #2c2216; }
+.cq-list li b {
+  font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
+}
+.cq-list li:not(.running) b { font-weight: 400; color: #6b5a3c; }
+/* Same sunken track and gold-brown grip as the side panel. */
+.cq-list::-webkit-scrollbar { width: 8px; }
+.cq-list::-webkit-scrollbar-track { background: rgba(70,54,28,.14); border-radius: 5px; }
+.cq-list::-webkit-scrollbar-thumb {
+  background: rgba(122,102,54,.75); border-radius: 5px; border: 1px solid rgba(60,46,22,.45);
+}
+.cq-list::-webkit-scrollbar-thumb:hover { background: rgba(140,116,62,.9); }
+
 /* Scrollbar in the panel's own tones: a sunken track and a gold-brown grip, matching the thin edge. */
 .city-panel { padding-right: 8px; }
 .city-panel::-webkit-scrollbar { width: 10px; }
