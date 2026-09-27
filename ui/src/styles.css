@@ -465,10 +465,14 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-muted); white-space: nowrap;
 }
 .mw-way { font-style: normal; font-size: 14px; font-weight: 700; color: #c79a44; }
-.mw-units { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
-.mw-units li { display: inline-flex; align-items: center; gap: 5px; padding: 0; background: none; border: none; }
-.mw-units img { width: 22px; height: 22px; display: block; }
-.mw-unit-name { font-size: 12px; color: #d8cfb4; white-space: nowrap; }
+/* A grid, not a ragged wrap: an army of ten types then reads as tidy columns with its counts aligned. */
+.mw-units {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 3px 14px;
+}
+.mw-units li { display: flex; align-items: center; gap: 5px; padding: 0; background: none; border: none; min-width: 0; }
+.mw-units img { flex: 0 0 22px; width: 22px; height: 22px; display: block; }
+.mw-unit-name { flex: 1; min-width: 0; font-size: 12px; color: #d8cfb4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mw-unit-count { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
 .mw-line { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; }
 .mw-quiet { color: var(--overlay-muted); }

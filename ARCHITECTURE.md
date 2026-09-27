@@ -1330,7 +1330,8 @@ a standalone preview.
   in that header. Our own outward movements carry a recall button, behind the same confirmation as a
   cancel. The header opens **`MarchesWindow`**, which lists **this city's own** movements in full. A row leads
   with the errand and an arrow for the leg (`Attack →`, `Spying ←`), then the city **and its player**,
-  never a coordinate, then the countdown; under that only numbers — each unit with its name and count, what an
+  never a coordinate, then the countdown; under that only numbers — each unit with its name and count, laid out as a
+  grid of three columns so an army of all ten types reads in tidy rows rather than a ragged wrap, what an
   attack can carry out (the goods medallion, `hud-resources.png`), what a homeward leg carries in, the
   silver a spy was paid. What is heading here stays in the
   bar's Arrivals section, where the defender can see nothing anyway. Troops are not sent from there — the
