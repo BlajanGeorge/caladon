@@ -15,11 +15,13 @@ interface Props {
   busy: boolean
   onRecruit: (unit: UnitType, count: number) => void
   onCancel: (orderId: number) => void
+  /** Opens the window that marches troops out; the Barracks is where they stand. */
+  onSendTroops: () => void
   onClose: () => void
 }
 
 /** The Barracks: which units can be trained, what each costs, and the queue with its countdown. */
-export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, onCancel, onClose }: Props) {
+export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, onCancel, onSendTroops, onClose }: Props) {
   const [counts, setCounts] = useState<Partial<Record<UnitType, string>>>({})
   const byType = new Map(units.map((u) => [u.type, u]))
   const queue = detail?.recruitQueue ?? []
@@ -32,6 +34,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
     <div className="b-info studies" role="dialog" aria-label="Barracks">
       <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
       <h3>Barracks</h3>
+      <button type="button" className="b-info-action send-from-barracks" onClick={onSendTroops}>Send troops out</button>
       <p className="b-info-level">Barracks level {barracksLevel}</p>
       <p className="b-info-desc">
         Troops are trained here, one at a time, and each order waits its turn. A unit can be trained once its

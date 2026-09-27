@@ -62,8 +62,8 @@ interface Props {
   onOpenBuildings: () => void
   onOpenRecruit: () => void
   onOpenStudies: () => void
-  /** Opens the window that sends troops out. */
-  onOpenSend: () => void
+  /** Opens the window listing everything on the road. */
+  onOpenMarches: () => void
 }
 
 /**
@@ -76,7 +76,7 @@ interface Props {
  */
 export function CityQueues({
   detail, units, movements, style, busy, onOpenBuildings, onOpenRecruit, onOpenStudies,
-  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenSend,
+  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenMarches,
 }: Props) {
   const builds = detail?.buildQueue ?? []
   const troops = detail?.recruitQueue ?? []
@@ -218,9 +218,9 @@ export function CityQueues({
       </section>
 
       <section className="cq-section">
-        <button type="button" className="cq-head" onClick={onOpenSend} title="Send troops somewhere">
+        <button type="button" className="cq-head" onClick={onOpenMarches} title="Everything on the road, in full">
           Marches{outgoing.length > 0 ? <em>{outgoing.length}</em> : null}
-          <span className="cq-go" aria-hidden="true"><i>Send troops</i>›</span>
+          <span className="cq-go" aria-hidden="true"><i>In full</i>›</span>
         </button>
         {outgoing.length === 0 ? (
           <p className="cq-empty">Nobody is marching</p>

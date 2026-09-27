@@ -985,6 +985,11 @@ everything, and the winner loses the fraction
 `(loser / winner)^1.5` of each of its unit types, rounded down. Rams and catapults do no damage to the
 Wall or to buildings yet, and a Nobleman does not lower loyalty yet: both wait for their own feature.
 
+**An attack that loses every man never comes home**: there is no homeward leg, the movement simply ends.
+It follows that such an attack **discloses nothing** in its report — no troops, no buildings, no
+resources of the city it hit — because nobody survived to carry the news back. Reports are not built yet;
+this is the rule they must keep.
+
 **Plunder.** A winning attacker takes, per resource, at most `stock − vault(level)`, and no more than the
 surviving attackers can carry. The carry is filled evenly across the three resources.
 
@@ -1323,10 +1328,14 @@ a standalone preview.
   — drawn by the view above the row, never the browser's own `title`, and **without coordinates**: the
   city's name is what a player recognises. Troops on the way home are greyed; an incoming attack is red, and so is the count
   in that header. Our own outward movements carry a recall button, behind the same confirmation as a
-  cancel. Arrivals never shows a spy mission aimed at us, only Marches shows our own. Everything a player watches for is there — attacks out and back, support out and back, spying
+  cancel. The header opens **`MarchesWindow`**, which lists **this city's own** movements in full: what went out
+  and what it can carry, what is coming back and with what, which spy went where and for how much silver,
+  and at the other end the city **and its player**, never a coordinate. What is heading here stays in the
+  bar's Arrivals section, where the defender can see nothing anyway. Troops are not sent from there — the
+  **Barracks** sends them, since that is where they stand. Arrivals never shows a spy mission aimed at us, only Marches shows our own. Everything a player watches for is there — attacks out and back, support out and back, spying
   out and back, attacks and support inbound — said by the mark, the words and the arrow rather than by a
   section each, which the bar has no width for.
-- **Sending** (`SendWindow`, opened from the *Marches* header): the errand (Attack, Support, Scout),
+- **Sending** (`SendWindow`, opened from the Barracks' *Send troops out*): the errand (Attack, Support, Scout),
   the target field typed as `x|y`, and a count per unit type with an "all" button, over the troops at
   home. Every rule the server enforces is stated beside the button before it can be pressed: no troops
   chosen, no field, this city, scouts only, or no scouts alone on an attack.

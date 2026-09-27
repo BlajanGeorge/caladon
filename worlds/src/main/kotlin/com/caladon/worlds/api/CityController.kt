@@ -154,7 +154,8 @@ class CityController(
     ): CityDetailResponse = toDetail(movementService.recall(worldId, cityId, user.id, user.role, id))
 
     private fun toMovement(v: MovementService.MovementView) = MovementResponse(
-        id = v.id, kind = v.kind, direction = v.direction, otherCityName = v.otherCityName, x = v.x, y = v.y,
+        id = v.id, kind = v.kind, direction = v.direction, otherCityName = v.otherCityName,
+        otherPlayerName = v.otherPlayerName, x = v.x, y = v.y,
         departsAt = v.departsAt, arrivesAt = v.arrivesAt,
         units = v.units.map { MovementUnitResponse(it.unit, it.unit.displayName, it.count) },
         carrying = v.carrying?.let { CostResponse(it.first, it.second, it.third) },

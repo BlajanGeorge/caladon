@@ -221,6 +221,8 @@ export interface Movement {
   direction: MovementDirection
   /** The city at the other end: the target on the way out, the origin on the way home. */
   otherCityName: string
+  /** Whose city that is. */
+  otherPlayerName: string
   x: number
   y: number
   departsAt: string

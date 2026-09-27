@@ -426,6 +426,45 @@ input { font: inherit; cursor: text; }
 .cq-cancel:hover:not(:disabled) { background: rgba(178,58,46,.34); color: #4d211a; }
 .cq-cancel:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 .cq-cancel.placeholder { visibility: hidden; }
+/* The Marches window: every movement in full, one block each. */
+.b-info.studies.marches { width: 720px; }
+.mw-title {
+  display: flex; align-items: center; gap: 8px; margin: 16px 0 6px;
+  font-family: "Cinzel", Georgia, serif; font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--overlay-muted);
+}
+.mw-title em {
+  font-style: normal; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 8px;
+  background: rgba(122,102,54,.3); color: var(--overlay-text);
+}
+.mw-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mw-list li {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 8px;
+  background: rgba(10,11,13,.45); border: 1px solid rgba(122,102,54,.28);
+}
+.mw-list li.back { opacity: .8; }
+.mw-mark { flex: 0 0 28px; width: 28px; height: 28px; display: block; }
+.mw-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mw-head { display: flex; align-items: baseline; gap: 10px; }
+.mw-head b { font-size: 13px; color: var(--overlay-text); white-space: nowrap; }
+.mw-where { flex: 1; min-width: 0; font-size: 12px; color: #d8cfb4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mw-where em { font-style: normal; color: var(--overlay-muted); }
+.mw-clock { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mw-units { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.mw-units li { display: inline-flex; align-items: center; gap: 4px; padding: 0; background: none; border: none; }
+.mw-units img { width: 22px; height: 22px; display: block; }
+.mw-units span { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
+.mw-line { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.mw-quiet { color: var(--overlay-muted); }
+.mw-load { display: inline-flex; align-items: center; gap: 4px; color: var(--overlay-text); font-variant-numeric: tabular-nums; }
+.mw-load img { width: 18px; height: 18px; display: block; margin-left: 6px; }
+.mw-load img:first-child { margin-left: 0; }
+/* Holds the recall button's place on rows that have none. */
+.mw-nogo { flex: 0 0 72px; }
+.mw-list .cave-max { flex: 0 0 auto; height: 28px; align-self: center; }
+/* Sending is done from the Barracks, where the troops are. */
+.send-from-barracks { margin-top: 0; margin-bottom: 12px; width: auto; padding: 8px 16px; }
+
 /* The bar's tooltip, drawn above the row it belongs to and kept inside the screen. */
 .cq-tip {
   position: fixed; z-index: 30; transform: translateY(-115%);

@@ -43,6 +43,8 @@ class MovementService(
         val kind: MovementKind,
         val direction: MovementDirection,
         val otherCityName: String,
+        /** Whose city it is: a player recognises a name, not a field number. */
+        val otherPlayerName: String,
         val x: Int,
         val y: Int,
         val departsAt: Instant,
@@ -84,7 +86,7 @@ class MovementService(
         val hidden = !own && m.kind != MovementKind.SUPPORT
         return MovementView(
             id = requireNotNull(m.id), kind = m.kind, direction = m.direction,
-            otherCityName = other?.name ?: "", x = other?.x ?: 0, y = other?.y ?: 0,
+            otherCityName = other?.name ?: "", otherPlayerName = other?.player ?: "", x = other?.x ?: 0, y = other?.y ?: 0,
             departsAt = m.departsAt, arrivesAt = m.arrivesAt,
             units = if (hidden) emptyList() else Unit.entries.mapNotNull { u ->
                 units?.get(u)?.takeIf { it > 0 }?.let { MovementUnitView(u, it) }
@@ -341,15 +343,20 @@ class MovementService(
             .mapValues { (_, rows) -> rows.associate { it.id.unit to it.count } }
     }
 
-    private data class CityRef(val name: String, val x: Int, val y: Int)
+    private data class CityRef(val name: String, val x: Int, val y: Int, val player: String)
 
+    /** The other end of a movement, as a player reads it: whose city it is, not where it is. */
     private fun refs(cityIds: Set<Long>): Map<Long, CityRef> {
         if (cityIds.isEmpty()) return emptyMap()
         val cities = cityRepository.findAllById(cityIds)
         val slots = citySlotRepository.findAllById(cities.map { it.slotId }).associateBy { requireNotNull(it.id) }
+        val owners = jdbc.queryForList(
+            "SELECT c.id AS city_id, u.nickname FROM city c JOIN users u ON u.id = c.owner_user_id WHERE c.id IN (:ids)",
+            mapOf("ids" to cityIds),
+        ).associate { (it["city_id"] as Number).toLong() to it["nickname"] as String }
         return cities.mapNotNull { c ->
             val slot = slots[c.slotId] ?: return@mapNotNull null
-            requireNotNull(c.id) to CityRef(c.name, slot.x.toInt(), slot.y.toInt())
+            requireNotNull(c.id) to CityRef(c.name, slot.x.toInt(), slot.y.toInt(), owners[c.id] ?: "")
         }.toMap()
     }
 

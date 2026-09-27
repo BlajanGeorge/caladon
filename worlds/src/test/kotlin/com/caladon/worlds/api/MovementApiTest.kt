@@ -123,6 +123,7 @@ class MovementApiTest : ApiTestBase() {
         assertThat(out["kind"].asText()).isEqualTo("ATTACK")
         assertThat(out["direction"].asText()).isEqualTo("OUTWARD")
         assertThat(out["otherCityName"].asText()).isEqualTo("ana's city")
+        assertThat(out["otherPlayerName"].asText()).isEqualTo("ana")
         assertThat(out["x"].asInt()).isEqualTo(two.x)
         assertThat(out["y"].asInt()).isEqualTo(two.y)
         assertThat(out["departsAt"].asText()).isEqualTo(t0.toString())

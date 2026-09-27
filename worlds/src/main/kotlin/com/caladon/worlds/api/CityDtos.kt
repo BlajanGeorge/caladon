@@ -171,6 +171,8 @@ data class MovementResponse(
     val direction: MovementDirection,
     /** The other end of the movement: the target when outgoing, the origin when incoming. */
     val otherCityName: String,
+    /** Whose city it is at the other end. */
+    val otherPlayerName: String,
     val x: Int,
     val y: Int,
     val departsAt: Instant,

@@ -12,6 +12,7 @@ import { RecruitWindow } from './RecruitWindow'
 import { BuildingsWindow } from './BuildingsWindow'
 import { CityQueues } from './CityQueues'
 import { SendWindow } from './SendWindow'
+import { MarchesWindow } from './MarchesWindow'
 import { CaveWindow } from './CaveWindow'
 import groundUrl from '@assets/sprites/city-ground.png'
 
@@ -70,7 +71,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
   const [hover, setHover] = useState<string | null>(null)
   // One window at a time: a building's own, or the Academy's studies.
   const [window_, setWindow] = useState<
-    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | { kind: 'cave' } | null
+    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | { kind: 'cave' } | { kind: 'marches' } | null
   >(null)
   const open = window_?.kind === 'building' ? window_.type : null
   const studies = window_?.kind === 'studies'
@@ -78,6 +79,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
   const building = window_?.kind === 'buildings'
   const sending = window_?.kind === 'send'
   const cave = window_?.kind === 'cave'
+  const marches = window_?.kind === 'marches'
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -217,6 +219,15 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           onClose={() => setWindow(null)}
         />
       )}
+      {marches && (
+        <MarchesWindow
+          movements={movements}
+          units={units}
+          busy={busy}
+          onRecall={onRecall}
+          onClose={() => setWindow(null)}
+        />
+      )}
       {cave && (
         <CaveWindow detail={detail} busy={busy} onStore={onStoreSilver} onClose={() => setWindow(null)} />
       )}
@@ -225,6 +236,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
       )}
       {recruiting && units && (
         <RecruitWindow
+          onSendTroops={() => setWindow({ kind: 'send' })}
           units={units}
           barracksLevel={viewOf('BARRACKS')?.level ?? 0}
           detail={detail}
@@ -256,7 +268,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         onCancelRecruit={onCancelRecruit}
         onCancelStudy={onCancelStudy}
         onRecall={onRecall}
-        onOpenSend={() => setWindow({ kind: 'send' })}
+        onOpenMarches={() => setWindow({ kind: 'marches' })}
         onOpenBuildings={() => setWindow({ kind: 'buildings' })}
         onOpenRecruit={() => setWindow({ kind: 'recruit' })}
         onOpenStudies={() => setWindow({ kind: 'studies' })}
