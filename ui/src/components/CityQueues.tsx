@@ -59,8 +59,9 @@ export function CityQueues({
   return (
     <div className="city-queues" style={style} aria-label="What the city is working on">
       <section className="cq-section">
-        <button type="button" className="cq-head" onClick={onOpenBuildings}>
+        <button type="button" className="cq-head" onClick={onOpenBuildings} title="Open the Town Hall">
           Construction{builds.length > 0 ? <em>{builds.length}</em> : null}
+          <span className="cq-go" aria-hidden="true"><i>Town Hall</i>›</span>
         </button>
         {builds.length === 0 ? (
           <p className="cq-empty">Nothing being built</p>
@@ -91,8 +92,9 @@ export function CityQueues({
       </section>
 
       <section className="cq-section">
-        <button type="button" className="cq-head" onClick={onOpenRecruit}>
+        <button type="button" className="cq-head" onClick={onOpenRecruit} title="Open the Barracks">
           Training{troops.length > 0 ? <em>{troops.length}</em> : null}
+          <span className="cq-go" aria-hidden="true"><i>Barracks</i>›</span>
         </button>
         {troops.length === 0 ? (
           <p className="cq-empty">No troops in training</p>
@@ -129,8 +131,9 @@ export function CityQueues({
       </section>
 
       <section className="cq-section">
-        <button type="button" className="cq-head" onClick={onOpenStudies}>
+        <button type="button" className="cq-head" onClick={onOpenStudies} title="Open the Academy">
           Studies{studies.length > 0 ? <em>{studies.length}</em> : null}
+          <span className="cq-go" aria-hidden="true"><i>Academy</i>›</span>
         </button>
         {studies.length === 0 ? (
           <p className="cq-empty">Nothing being studied</p>

@@ -1180,7 +1180,9 @@ a standalone preview.
   **Construction**, **Training**, **Studies**. The first entry of a section is the one running and is
   printed heavier; the rest wait behind it. Every entry carries a small picture of what it is — the unit's
   medallion, or the building's icon from `BUILDING_ICONS` — counts down per second, and the header carries
-  the number of orders and opens the window that owns the queue. The **last** entry of each section has a
+  the number of orders, the building it belongs to ("Town Hall ›", "Barracks ›", "Academy ›", the name
+  dropped on a narrow screen) and opens that building's window. The header carries **no picture**: beside
+  the queue's own entries it read as another building under construction. The **last** entry of each section has a
   cancel button of its own, behind the same confirmation and with the same refunds as the windows, so an
   order can go without opening anything; that confirmation covers the view, the bar being too short to
   hold it. An empty section says so rather than disappearing, and the bar has a **constant height**

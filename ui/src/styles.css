@@ -304,6 +304,18 @@ input { font: inherit; cursor: text; }
   cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }
 .cq-head:hover { color: #2c2216; }
+/* No picture in the header: it read as another building in progress. The name on the right says where
+   the header leads instead. */
+.cq-head .cq-go {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+  font-family: inherit; font-size: 10px; letter-spacing: .06em;
+  font-weight: 700; color: #7a6540; white-space: nowrap;
+}
+.cq-head .cq-go i { font-style: normal; }
+/* The building's name only where the section is wide enough for it; the chevron and the picture carry
+   the meaning otherwise, with the title for the rest. */
+@media (max-width: 1360px) { .cq-head .cq-go i { display: none; } }
+.cq-head:hover .cq-go { color: #4a3a22; }
 /* How many orders the queue holds. */
 .cq-head em {
   font-style: normal; font-size: 11px; letter-spacing: 0; font-weight: 700;
