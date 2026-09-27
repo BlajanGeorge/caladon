@@ -1313,15 +1313,15 @@ a standalone preview.
   each building, made from its top-tier art by `docs/building_icons.py` — the whole sprite scaled to fit a
   square, never cropped, so it stays legible at 22 px. Used by the bottom bar and the Town Hall's window,
   as the unit medallions are used for troops. Re-run the script after replacing any `b-*-3.png`.
-- **Movements in the bar**: two more sections, **On the road** (this city's own movements, out and back)
-  and **Coming here** (anything heading this way). A row carries a mark for the kind — swords for an
+- **Movements in the bar**: two more sections, **Marches** (this city's own movements, out and back) and
+  **Arrivals** (anything heading this way), named to sit beside Construction, Training and Studies. A row carries a mark for the kind — swords for an
   attack, a cross for support, a ring for scouting, each in its own tone — an arrow for the leg, the city
   at the other end, and the countdown to arrival. Troops on the way home are greyed; an incoming attack is
   red, and so is the count in that header. Our own outward movements carry a recall button, behind the
   same confirmation as a cancel. The seven things a player watches for (attacks out and back, support out
   and back, scouts out and back, attacks and support inbound) are all there: the kind and the arrow say
   which, rather than a section each, which the bar has no width for.
-- **Sending** (`SendWindow`, opened from the *On the road* header): the errand (Attack, Support, Scout),
+- **Sending** (`SendWindow`, opened from the *Marches* header): the errand (Attack, Support, Scout),
   the target field typed as `x|y`, and a count per unit type with an "all" button, over the troops at
   home. Every rule the server enforces is stated beside the button before it can be pressed: no troops
   chosen, no field, this city, scouts only, or no scouts alone on an attack.

@@ -57,8 +57,8 @@ interface Props {
  * three queues. The first entry of each is running and counts down; the rest wait their turn. A section's
  * header opens the window that owns it, where orders are placed and cancelled.
  *
- * Movements will join it later — attacks coming in and going out, support arriving and leaving, scouts on
- * their way, and troops on their way home — each as another section of the same bar.
+ * Movements have two sections of their own: Marches, everything of ours on the road in either direction,
+ * and Arrivals, everything heading here from somewhere else.
  */
 export function CityQueues({
   detail, units, movements, style, busy, onOpenBuildings, onOpenRecruit, onOpenStudies,
@@ -188,11 +188,11 @@ export function CityQueues({
 
       <section className="cq-section">
         <button type="button" className="cq-head" onClick={onOpenSend} title="Send troops somewhere">
-          On the road{outgoing.length > 0 ? <em>{outgoing.length}</em> : null}
+          Marches{outgoing.length > 0 ? <em>{outgoing.length}</em> : null}
           <span className="cq-go" aria-hidden="true"><i>Send troops</i>›</span>
         </button>
         {outgoing.length === 0 ? (
-          <p className="cq-empty">Nobody is out</p>
+          <p className="cq-empty">Nobody is marching</p>
         ) : (
           <ul className="cq-list">
             {outgoing.map((m) => (
@@ -222,10 +222,10 @@ export function CityQueues({
 
       <section className="cq-section">
         <div className="cq-head as-label">
-          Coming here{incoming.length > 0 ? <em className={incoming.some((m) => m.kind === 'ATTACK') ? 'alarm' : undefined}>{incoming.length}</em> : null}
+          Arrivals{incoming.length > 0 ? <em className={incoming.some((m) => m.kind === 'ATTACK') ? 'alarm' : undefined}>{incoming.length}</em> : null}
         </div>
         {incoming.length === 0 ? (
-          <p className="cq-empty">Nothing is coming</p>
+          <p className="cq-empty">Nothing is arriving</p>
         ) : (
           <ul className="cq-list">
             {incoming.map((m) => (
