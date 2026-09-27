@@ -1328,7 +1328,8 @@ a standalone preview.
   — drawn by the view above the row, never the browser's own `title`, and **without coordinates**: the
   city's name is what a player recognises. Troops on the way home are greyed; an incoming attack is red, and so is the count
   in that header. Our own outward movements carry a recall button, behind the same confirmation as a
-  cancel. The header opens **`MarchesWindow`**, which lists **this city's own** movements in full. A row leads
+  cancel, and **only one question is on screen at a time**: asking from the bar closes whatever window
+  was open, and opening a window takes the bar's question away. The header opens **`MarchesWindow`**, which lists **this city's own** movements in full. A row leads
   with the errand and an arrow for the leg (`Attack →`, `Spying ←`), then the city **and its player**,
   never a coordinate, then the countdown; under that only numbers — each unit with its name and count, one per line with the
   counts aligned; a march of more than three types shows the first three and a button that opens the

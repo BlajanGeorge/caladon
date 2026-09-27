@@ -64,6 +64,10 @@ interface Props {
   onOpenStudies: () => void
   /** Opens the window listing everything on the road. */
   onOpenMarches: () => void
+  /** True while a window of the scene is open: only one thing is asked at a time. */
+  windowOpen: boolean
+  /** Closes whatever window the scene has open. */
+  onCloseWindows: () => void
 }
 
 /**
@@ -76,7 +80,7 @@ interface Props {
  */
 export function CityQueues({
   detail, units, movements, style, busy, onOpenBuildings, onOpenRecruit, onOpenStudies,
-  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenMarches,
+  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenMarches, windowOpen, onCloseWindows,
 }: Props) {
   const builds = detail?.buildQueue ?? []
   const troops = detail?.recruitQueue ?? []
@@ -87,11 +91,15 @@ export function CityQueues({
   const now = useNow(working)
   // Only the tail of a queue can go, the rule the server enforces, and never without being asked first.
   const [confirming, setConfirming] = useState<Confirm | null>(null)
+  // One question on screen at a time: a window opening takes the bar's own away.
+  useLayoutEffect(() => { if (windowOpen) setConfirming(null) }, [windowOpen])
   const byType = new Map((units ?? []).map((u) => [u.type, u]))
   // The bar's own tooltip: a native `title` waits a second and is easy to miss, and every row here
   // ellipsises, which is exactly when the whole text is wanted.
   const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
   const tipRef = useRef<HTMLDivElement>(null)
+  /** Asking anything from the bar closes the window that was open, so only one question is on screen. */
+  const ask = (c: Confirm) => { onCloseWindows(); setConfirming(c) }
   const rowTip = (text: string) => ({
     onMouseEnter: (e: ReactMouseEvent<HTMLElement>) => {
       const r = e.currentTarget.getBoundingClientRect()
@@ -127,7 +135,7 @@ export function CityQueues({
                   <button
                     type="button" className="cq-cancel" disabled={busy}
                     title="Cancel this build" aria-label={`Cancel ${o.name} level ${o.targetLevel}`}
-                    onClick={() => setConfirming({
+                    onClick={() => ask({
                       kind: 'build', id: o.id,
                       title: 'Cancel this build?',
                       text: `${o.name} level ${o.targetLevel} is dropped from the queue. Half of what it cost comes back, and all of its population.`,
@@ -162,7 +170,7 @@ export function CityQueues({
                     <button
                       type="button" className="cq-cancel" disabled={busy}
                       title="Cancel this training" aria-label={`Cancel the ${o.name} order`}
-                      onClick={() => setConfirming({
+                      onClick={() => ask({
                         kind: 'recruit', id: o.id,
                         title: 'Cancel this training?',
                         text: `${o.remaining} of ${o.count} ${u.name} are not trained yet. Half their resources come back, and all of their people. Any already trained stay in the city.`,
@@ -201,7 +209,7 @@ export function CityQueues({
                     title="Cancel this study" aria-label={`Cancel the ${o.name} study`}
                     onClick={() => {
                       const c = byType.get(o.unit)?.studyCost
-                      setConfirming({
+                      ask({
                         kind: 'study', unit: o.unit,
                         title: 'Cancel this study?',
                         text: `The ${o.name} study stops and half of what it cost comes back.`,
@@ -241,7 +249,7 @@ export function CityQueues({
                   <button
                     type="button" className="cq-cancel" disabled={busy}
                     title="Turn them around" aria-label={`Recall the troops sent to ${m.otherCityName}`}
-                    onClick={() => setConfirming({
+                    onClick={() => ask({
                       kind: 'recall', id: m.id,
                       title: 'Turn them around?',
                       text: `The troops on their way to ${m.otherCityName} turn back now. They take as long to come home as they have been flying.`,

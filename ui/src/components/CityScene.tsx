@@ -269,6 +269,8 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         onCancelStudy={onCancelStudy}
         onRecall={onRecall}
         onOpenMarches={() => setWindow({ kind: 'marches' })}
+        windowOpen={window_ !== null}
+        onCloseWindows={() => setWindow(null)}
         onOpenBuildings={() => setWindow({ kind: 'buildings' })}
         onOpenRecruit={() => setWindow({ kind: 'recruit' })}
         onOpenStudies={() => setWindow({ kind: 'studies' })}
