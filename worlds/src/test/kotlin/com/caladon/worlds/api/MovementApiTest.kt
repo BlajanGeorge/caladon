@@ -374,6 +374,41 @@ class MovementApiTest : ApiTestBase() {
     }
 
     @Test
+    fun `the dead give their population back to the city that raised them`() {
+        val two = twoCities()
+        // A third city lends ten spearmen, so all three sides have something to lose.
+        val third = json(post("/api/v1/worlds/${two.world}/join", adminToken).andExpect { status { isOk() } })["startCity"]["id"].asLong()
+        place(third, two.x + 3, two.y + 4)
+        give(third, Unit.SPEARMAN, 10)
+        post(
+            "/api/v1/worlds/${two.world}/cities/$third/movements", adminToken,
+            mapOf("kind" to "SUPPORT", "targetX" to two.x, "targetY" to two.y, "units" to mapOf("SPEARMAN" to 10)),
+        ).andExpect { status { isOk() } }
+        jump(5401)
+        sweeper.sweep()
+
+        give(two.mine, Unit.AXEMAN, 100)     // 4000 attack
+        give(two.theirs, Unit.SPEARMAN, 40)  // with the ten lent, 750 defence
+        val before = mapOf(
+            two.mine to population(two, two.mine, playerToken),
+            two.theirs to population(two, two.theirs, otherPlayerToken),
+            third to population(two, third, adminToken),
+        )
+        send(two, "ATTACK", mapOf("AXEMAN" to 100)).andExpect { status { isOk() } }
+        jump(5401)
+        sweeper.sweep()
+
+        // The attacker wins and loses 8 of 100 axemen, 1 population each; both defending sides lose
+        // everything, 40 spearmen for the city and the 10 it was lent.
+        assertThat(population(two, two.mine, playerToken) - before.getValue(two.mine)).isEqualTo(8)
+        assertThat(population(two, two.theirs, otherPlayerToken) - before.getValue(two.theirs)).isEqualTo(40)
+        assertThat(population(two, third, adminToken) - before.getValue(third)).isEqualTo(10)
+    }
+
+    private fun population(two: Two, cityId: Long, token: String): Int =
+        json(get("/api/v1/worlds/${two.world}/cities/$cityId", token).andExpect { status { isOk() } })["population"].asInt()
+
+    @Test
     fun `plunder leaves what the vault hides and is capped again by the deposit at home`() {
         val two = twoCities()
         give(two.mine, Unit.AXEMAN, 100)

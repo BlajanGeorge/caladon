@@ -960,7 +960,9 @@ who may be faster than what set out. A movement to the city's own coordinates is
 
 **Sending.** The units leave `city_unit` at once and are held by the movement, so they cannot defend, be
 sent twice, or be counted at home. Their **population stays spent** by the origin the whole time: troops
-on the road are still the city's troops, and troops that die free no population on either side. Sending
+on the road are still the city's troops. **Troops that die free their population**, each to the city that
+raised them — the attacker for what it lost, the defender for its own dead, and every supporter for the
+troops it had lent, that last one written straight to a third city's row in id order. Sending
 needs the units to be at home (not already out, not supporting elsewhere) and at least one unit.
 
 **Recall.** An outward movement can be turned around at any time before it arrives; it becomes a homeward
@@ -974,7 +976,14 @@ movements crossing cannot deadlock. A homeward leg credits the units back into `
 plunder into the resources, **capped by the Deposit** — anything over the cap is lost, as it is for
 production.
 
-**Combat (first cut, to be tuned).** The attacker's power is the sum of the attack
+**Combat (first cut, to be tuned).** Worked example: 150 Axemen and 50 Light Cavalry (12 500 attack, 48 %
+infantry and 52 % cavalry) against 120 Spearmen and 60 Swordsmen in the city with 40 Archers lent by a
+friend (7 372 bare defence, 8 840 behind a level-5 Wall). The attacker wins, and loses
+`(8840/12500)^1.5 = 59.5 %` of each of its types: 89 Axemen and 29 Light Cavalry, freeing 89 + 116
+population at home. Every defender dies: the city gets 180 population back, its ally 40. The 82 survivors
+can carry 2 290.
+
+The attacker's power is the sum of the attack
 values of the units it brought. The defender's power is the sum, over every unit standing in the city
 (its own and any support), of the defence value that matches what is attacking: the attack is split into
 infantry, cavalry and archer shares by the attacking power, and each share meets `defence`,

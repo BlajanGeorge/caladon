@@ -260,17 +260,28 @@ class MovementService(
         }
         val combat = MovementRules.resolve(attackers, defenders, target.level(Building.WALL))
 
+        // The dead free the population they were paid for, each to the city that raised them: the target
+        // for its own, every supporter for the troops it lent, and the attacker for what it lost.
+        var targetFreed = 0L
         for ((u, left) in combat.defenderLeft.getValue(target.cityId)) {
             val row = target.units[u] ?: continue
+            targetFreed += u.population.toLong() * (row.count - left)
             row.count = left
             cityUnitRepository.save(row)
         }
+        target.resources.population += targetFreed.toInt()
+
+        val freedByOwner = mutableMapOf<Long, Long>()
         for (row in support) {
             val left = combat.defenderLeft[row.id.ownerCityId]?.get(row.id.unit) ?: 0
+            freedByOwner.merge(row.id.ownerCityId, row.id.unit.population.toLong() * (row.count - left), Long::plus)
             if (left <= 0) citySupportRepository.delete(row) else citySupportRepository.save(row.also { it.count = left })
         }
+        freePopulation(freedByOwner)
 
         val survivors = combat.attackerLeft.filterValues { it > 0 }
+        val attackerFreed = attackers.entries.sumOf { (u, n) -> u.population.toLong() * (n - (survivors[u] ?: 0)) }
+        origin.resources.population += attackerFreed.toInt()
         writeUnits(requireNotNull(m.id), survivors)
         if (survivors.isEmpty()) {
             m.applied = true
@@ -306,6 +317,20 @@ class MovementService(
     }
 
     /** Both rows in one ordered statement, so two movements crossing between the same pair cannot deadlock. */
+    /**
+     * Gives a third city back the population of the support it lost here. Its row is not one of the two
+     * this arrival locks, so it is written straight, in id order, and never read back into a state.
+     */
+    private fun freePopulation(byCity: Map<Long, Long>) {
+        for ((cityId, freed) in byCity.toSortedMap()) {
+            if (freed <= 0) continue
+            jdbc.update(
+                "UPDATE city_resources SET population = population + :n WHERE city_id = :id",
+                mapOf("n" to freed, "id" to cityId),
+            )
+        }
+    }
+
     private fun lockInIdOrder(a: Long, b: Long) {
         jdbc.queryForList(
             "SELECT city_id FROM city_resources WHERE city_id IN (:a, :b) ORDER BY city_id FOR UPDATE",
