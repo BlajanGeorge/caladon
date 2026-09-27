@@ -41,6 +41,8 @@ const ERRAND: Record<Movement['kind'], string> = {
 export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Props) {
   // A march of every unit type would be ten lines, so only the first few show until it is opened.
   const [opened, setOpened] = useState<number[]>([])
+  // Recalling is asked about first, the way cancelling is in the bar and in every other window.
+  const [confirming, setConfirming] = useState<Movement | null>(null)
   const out = movements?.outgoing ?? []
   const now = useNow(out.length > 0)
   const carryOf = new Map((units ?? []).map((u) => [u.type, u.carry]))
@@ -125,7 +127,7 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
           )}
         </div>
         {m.canRecall ? (
-          <button type="button" className="cave-max" disabled={busy} onClick={() => onRecall(m.id)}>
+          <button type="button" className="cave-max" disabled={busy} onClick={() => setConfirming(m)}>
             Recall
           </button>
         ) : <span className="mw-nogo" aria-hidden="true" />}
@@ -140,6 +142,29 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
       <p className="b-info-desc">Everything this city has on the road, out and back.</p>
 
       {out.length === 0 ? <p className="cq-empty">Nobody is marching</p> : <ul className="mw-list">{rows(out)}</ul>}
+
+      {confirming && (
+        <div className="confirm">
+          <div className="confirm-box" role="alertdialog" aria-label="Turn them around?">
+            <h4>Turn them around?</h4>
+            <p>
+              The troops on their way to {confirming.otherCityName} turn back now. They take as long to
+              come home as they have been flying.
+            </p>
+            <div className="confirm-buttons">
+              <button type="button" className="confirm-no" onClick={() => setConfirming(null)}>Let them go on</button>
+              <button
+                type="button"
+                className="confirm-yes"
+                disabled={busy}
+                onClick={() => { onRecall(confirming.id); setConfirming(null) }}
+              >
+                Turn them around
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
