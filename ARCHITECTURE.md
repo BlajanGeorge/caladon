@@ -1178,13 +1178,20 @@ a standalone preview.
 - **The bottom bar** (`CityQueues`): what the city is working on, in the side panel's frame, spanning the
   bottom of the scene and stopping clear of that panel. Three sections today, each mirroring one queue:
   **Construction**, **Training**, **Studies**. The first entry of a section is the one running and is
-  printed heavier; the rest wait behind it. Every entry counts down per second, the header carries the
-  number of orders, and clicking a header opens the window that owns the queue, where orders are placed
-  and cancelled. An empty section says so rather than disappearing, and the bar has a **constant height**
+  printed heavier; the rest wait behind it. Every entry carries a small picture of what it is — the unit's
+  medallion, or the building's icon from `BUILDING_ICONS` — counts down per second, and the header carries
+  the number of orders and opens the window that owns the queue. The **last** entry of each section has a
+  cancel button of its own, behind the same confirmation and with the same refunds as the windows, so an
+  order can go without opening anything; that confirmation covers the view, the bar being too short to
+  hold it. An empty section says so rather than disappearing, and the bar has a **constant height**
   (150 px, room for the longest queue the rules allow: 4 build orders, 4 recruit orders, 3 studies), so it
   never grows or shrinks as orders come and go. A section scrolls inside itself if it ever holds more than
   fits, and on a screen too short for 150 px the bar gives way to a third of the scene's height and the
   sections scroll.
+- **Building icons** (`ui/src/city/buildingIcons.ts`, `web/assets/sprites/icon-*.png`): a 96 px picture of
+  each building, made from its top-tier art by `docs/building_icons.py` — the whole sprite scaled to fit a
+  square, never cropped, so it stays legible at 22 px. Used by the bottom bar and the Town Hall's window,
+  as the unit medallions are used for troops. Re-run the script after replacing any `b-*-3.png`.
 - **Sections the bar still needs** (each waits for the movement feature, none of them exist yet):
   **attacks incoming** (with arrival and, once scouted, what is coming), **attacks outgoing**,
   **support incoming** and **support leaving**, **scouts out**, **troops on their way home** (the return

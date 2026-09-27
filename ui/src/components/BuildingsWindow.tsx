@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { BuildingType, BuildingView, CityDetail } from '../api/worlds'
 import { formatDuration, formatRequirements, secondsUntil } from '../city/format'
 import { describeGain } from '../city/buildingInfo'
+import { BUILDING_ICONS } from '../city/buildingIcons'
 import { useNow } from '../city/useNow'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
@@ -64,6 +65,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
           const gain = describeGain(b.type, b)
           return (
             <li key={b.type} className={state}>
+              <img className="study-icon" src={BUILDING_ICONS[b.type]} alt="" />
               <span className="study-name">
                 {b.name}
                 <em>
@@ -121,6 +123,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
               return (
                 <li key={o.id} className={i === 0 ? 'first' : undefined}>
                   <span className="rq-pos">{i + 1}</span>
+                  <img src={BUILDING_ICONS[o.building]} alt="" />
                   <span className="rq-name">{o.name} <em>level {o.targetLevel}</em></span>
                   <span className="study-cost">
                     <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>

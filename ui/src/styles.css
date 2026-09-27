@@ -321,13 +321,27 @@ input { font: inherit; cursor: text; }
 .cq-list li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #3a2e1e; }
 .cq-list img { width: 22px; height: 22px; display: block; flex: 0 0 22px; }
 .cq-list .cq-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cq-list .cq-name em { font-style: normal; color: #6b5a3c; }
+.cq-list .cq-name em { font-style: normal; color: #6b5a3c; margin-left: 8px; }
 /* The entry actually being worked on, as against the ones waiting behind it. */
 .cq-list li.running { font-weight: 700; color: #2c2216; }
 .cq-list li b {
   font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
 }
 .cq-list li:not(.running) b { font-weight: 400; color: #6b5a3c; }
+/* Cancel on the tail of a queue, straight from the bar. The placeholder holds its column on the rows
+   above, so the countdowns stay in line. */
+.cq-cancel {
+  flex: 0 0 18px; width: 18px; height: 18px; padding: 0; line-height: 1; font-size: 13px;
+  color: #6b2f26; background: rgba(140,58,46,.18);
+  border: 1px solid rgba(110,52,40,.45); border-radius: 5px;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.cq-cancel:hover:not(:disabled) { background: rgba(178,58,46,.34); color: #4d211a; }
+.cq-cancel:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
+.cq-cancel.placeholder { visibility: hidden; }
+/* The bar is too short to hold a dialog, so its confirmation covers the view instead. */
+.confirm.floating { position: fixed; inset: 0; z-index: 40; border-radius: 0; }
+
 /* Same sunken track and gold-brown grip as the side panel. */
 .cq-list::-webkit-scrollbar { width: 8px; }
 .cq-list::-webkit-scrollbar-track { background: rgba(70,54,28,.14); border-radius: 5px; }
@@ -474,7 +488,7 @@ input { font: inherit; cursor: text; }
 .recruit-queue li.first .rq-pos { color: #9ed08a; }
 .recruit-queue img { width: 28px; height: 28px; display: block; }
 .recruit-queue .rq-name { flex: 1; min-width: 130px; color: var(--overlay-text); }
-.recruit-queue .rq-name em { font-style: normal; color: var(--overlay-muted); }
+.recruit-queue .rq-name em { font-style: normal; color: var(--overlay-muted); margin-left: 8px; }
 .recruit-queue b { min-width: 72px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
 .study-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .study-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; }
@@ -499,7 +513,8 @@ input { font: inherit; cursor: text; }
 .builds .study-cost span { min-width: 72px; }
 .builds .study-action { flex: 1; min-width: 0; }
 .builds .study-list li.max .study-name, .builds .study-list li.max em { color: var(--overlay-muted); }
-.builds .recruit-queue .rq-name { flex: 0 0 194px; min-width: 0; overflow: hidden; }
+/* 200px lines the queue's cost column up with the list's, past the position number and the icon. */
+.builds .recruit-queue .rq-name { flex: 0 0 200px; min-width: 0; overflow: hidden; }
 
 .b-info-close {
   position: absolute; top: 8px; right: 10px; width: 24px; height: 24px;

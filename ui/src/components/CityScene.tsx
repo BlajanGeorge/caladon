@@ -216,7 +216,12 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
 
       <CityQueues
         detail={detail}
+        units={units}
+        busy={busy}
         style={{ left: PANEL_INSET, right: PANEL_W + PANEL_INSET * 2, bottom: PANEL_INSET }}
+        onCancelBuild={onCancelBuild}
+        onCancelRecruit={onCancelRecruit}
+        onCancelStudy={onCancelStudy}
         onOpenBuildings={() => setWindow({ kind: 'buildings' })}
         onOpenRecruit={() => setWindow({ kind: 'recruit' })}
         onOpenStudies={() => setWindow({ kind: 'studies' })}
