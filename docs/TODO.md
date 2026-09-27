@@ -18,8 +18,9 @@ what is still owed, newest first. Cross off by deleting the line in the commit t
 
 - **Reports**: a `report` table owned by a player, a list to read them in, an unread mark in the top bar.
   Espionage cannot ship without it, and battle reports belong in the same place.
-- **The spy mission itself**: an `ESPIONAGE` movement carrying silver, one per target city at a time, its
-  silver spent whatever happens, resolved against the target's Cave balance.
+- **The spy mission itself**: the `ESPIONAGE` movement kind exists and the bar draws it, but nothing can
+  send one and one that lands only turns around. Still owed: paying the silver out of the Cave, one
+  mission per target city at a time, and resolving it against the target's Cave balance.
 - **Remove the Scout unit**: a migration for the rows that exist (`city_unit`, `city_study`,
   `city_recruit_order`), its place on the Academy ladder, and its medallion.
 

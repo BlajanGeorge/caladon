@@ -214,6 +214,9 @@ class MovementService(
         when {
             m.direction == MovementDirection.HOMEWARD -> arriveHome(m, origin)
             m.kind == MovementKind.SUPPORT -> arriveSupport(m, target)
+            // A spy mission has nothing to resolve against until the Cave and reports are wired up; it
+            // turns around so it cannot sit on the road for ever.
+            m.kind == MovementKind.ESPIONAGE -> turnAroundAt(m, MovementRules.SPY_SPEED, origin, target)
             else -> arriveAttack(m, origin, target)
         }
     }
@@ -282,10 +285,13 @@ class MovementService(
     }
 
     /** The way home takes as long as the way out, at the speed of whoever is left. */
-    private fun turnAround(m: CityMovement, units: Map<Unit, Int>, origin: CityState, target: CityState) {
+    private fun turnAround(m: CityMovement, units: Map<Unit, Int>, origin: CityState, target: CityState) =
+        turnAroundAt(m, MovementRules.slowestSpeed(units), origin, target)
+
+    private fun turnAroundAt(m: CityMovement, speed: Int, origin: CityState, target: CityState) {
         val (ox, oy) = cityAccess.coordinates(origin)
         val (tx, ty) = cityAccess.coordinates(target)
-        val seconds = MovementRules.travelSeconds(MovementRules.distance(ox, oy, tx, ty), MovementRules.slowestSpeed(units))
+        val seconds = MovementRules.travelSeconds(MovementRules.distance(ox, oy, tx, ty), speed)
         m.direction = MovementDirection.HOMEWARD
         m.departsAt = m.arrivesAt
         m.arrivesAt = m.arrivesAt.plusSeconds(seconds)

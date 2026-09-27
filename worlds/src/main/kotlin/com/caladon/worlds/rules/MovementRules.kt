@@ -10,6 +10,12 @@ import kotlin.math.pow
  * unit counts: who wins, what it costs the winner, and what the survivors can carry home.
  */
 object MovementRules {
+    /**
+     * Minutes per field a spy mission travels at: faster than any unit, since it is one person and a
+     * purse rather than an army (ARCHITECTURE.md → Espionage and the Cave).
+     */
+    const val SPY_SPEED = 6
+
     /** What an attacking unit counts as, so the defence value that meets it can be picked. */
     enum class Arm { INFANTRY, CAVALRY, ARCHER }
 

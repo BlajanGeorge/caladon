@@ -17,7 +17,12 @@ import org.springframework.data.repository.query.Param
 import java.io.Serializable
 import java.time.Instant
 
-enum class MovementKind { ATTACK, SUPPORT }
+/**
+ * `ESPIONAGE` carries silver rather than troops (ARCHITECTURE.md → Espionage and the Cave). The kind
+ * exists so the bar can draw a spy mission; nothing sends one yet, and one that lands simply turns
+ * around until reports are built (docs/TODO.md).
+ */
+enum class MovementKind { ATTACK, SUPPORT, ESPIONAGE }
 
 /** Which way the troops are flying: out to the target, or back to the city that sent them. */
 enum class MovementDirection { OUTWARD, HOMEWARD }
