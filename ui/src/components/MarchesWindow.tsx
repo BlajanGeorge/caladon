@@ -110,10 +110,7 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
     <div className="b-info studies marches" role="dialog" aria-label="Marches">
       <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
       <h3>Marches</h3>
-      <p className="b-info-desc">
-        Everything this city has on the road, out and back. An attack that loses every man never comes
-        home.
-      </p>
+      <p className="b-info-desc">Everything this city has on the road, out and back.</p>
 
       {out.length === 0 ? <p className="cq-empty">Nobody is marching</p> : <ul className="mw-list">{rows(out)}</ul>}
     </div>
