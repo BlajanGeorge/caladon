@@ -1180,9 +1180,11 @@ a standalone preview.
   **Construction**, **Training**, **Studies**. The first entry of a section is the one running and is
   printed heavier; the rest wait behind it. Every entry counts down per second, the header carries the
   number of orders, and clicking a header opens the window that owns the queue, where orders are placed
-  and cancelled. An empty section says so rather than disappearing, so the bar does not jump about. A
-  section scrolls on its own when its queue is longer than the bar, which is capped at a third of the
-  scene's height.
+  and cancelled. An empty section says so rather than disappearing, and the bar has a **constant height**
+  (150 px, room for the longest queue the rules allow: 4 build orders, 4 recruit orders, 3 studies), so it
+  never grows or shrinks as orders come and go. A section scrolls inside itself if it ever holds more than
+  fits, and on a screen too short for 150 px the bar gives way to a third of the scene's height and the
+  sections scroll.
 - **Sections the bar still needs** (each waits for the movement feature, none of them exist yet):
   **attacks incoming** (with arrival and, once scouted, what is coming), **attacks outgoing**,
   **support incoming** and **support leaving**, **scouts out**, **troops on their way home** (the return
