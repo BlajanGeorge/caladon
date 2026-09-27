@@ -106,7 +106,7 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
             <div className="mw-line">
               {m.direction === 'OUTWARD' && m.kind === 'ATTACK' && (
                 <span className="mw-load" title="What they can carry home">
-                  <img src={goodsUrl} alt="Resources" />{carry.toLocaleString()}
+                  <img src={goodsUrl} alt="" />resources {carry.toLocaleString()}
                 </span>
               )}
               {m.direction === 'HOMEWARD' && (
@@ -116,7 +116,7 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
                     className="mw-load"
                     title={`${load!.wood.toLocaleString()} wood, ${load!.stone.toLocaleString()} stone, ${load!.silver.toLocaleString()} silver`}
                   >
-                    <img src={goodsUrl} alt="Resources" />{carrying.toLocaleString()}
+                    <img src={goodsUrl} alt="" />resources {carrying.toLocaleString()}
                   </span>
                 ) : null
               )}
