@@ -475,6 +475,10 @@ input { font: inherit; cursor: text; }
 .mw-unit-name { flex: 1; min-width: 0; font-size: 12px; color: #d8cfb4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mw-unit-count { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
 .mw-line { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+/* What a march carries, ruled off from the troops above but in the same column. */
+.mw-units + .mw-units, .mw-more + .mw-units {
+  margin-top: 3px; padding-top: 3px; border-top: 1px solid rgba(122,102,54,.25);
+}
 .mw-quiet { color: var(--overlay-muted); }
 /* Opens the rest of a long army, and folds it back. */
 .mw-more {

@@ -95,32 +95,33 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
             )
           })()}
 
-          {/* Only numbers under the head: the errand and its direction are said above. */}
-          {m.kind === 'ESPIONAGE' ? (
-            m.direction === 'OUTWARD' && load ? (
-              <div className="mw-line">
-                <span className="mw-load"><img src={silverUrl} alt="Silver" />silver {load.silver.toLocaleString()}</span>
-              </div>
-            ) : null
-          ) : m.units.length === 0 ? null : (
-            <div className="mw-line">
-              {m.direction === 'OUTWARD' && m.kind === 'ATTACK' && (
-                <span className="mw-load" title="What they can carry home">
-                  <img src={goodsUrl} alt="" />resources {carry.toLocaleString()}
-                </span>
-              )}
-              {m.direction === 'HOMEWARD' && (
-                carrying > 0 ? (
-                  // One mark for goods, as on the way out; the three amounts are a hover away.
-                  <span
-                    className="mw-load"
-                    title={`${load!.wood.toLocaleString()} wood, ${load!.stone.toLocaleString()} stone, ${load!.silver.toLocaleString()} silver`}
-                  >
-                    <img src={goodsUrl} alt="" />resources {carrying.toLocaleString()}
-                  </span>
-                ) : null
-              )}
-            </div>
+          {/* What it carries is a line of the same list, so its number stands under the troop counts. */}
+          {m.kind === 'ESPIONAGE' && m.direction === 'OUTWARD' && load && (
+            <ul className="mw-units">
+              <li>
+                <img src={silverUrl} alt="" />
+                <span className="mw-unit-name">Silver</span>
+                <span className="mw-unit-count">{load.silver.toLocaleString()}</span>
+              </li>
+            </ul>
+          )}
+          {m.kind !== 'ESPIONAGE' && m.units.length > 0 && m.direction === 'OUTWARD' && m.kind === 'ATTACK' && (
+            <ul className="mw-units">
+              <li title="What they can carry home">
+                <img src={goodsUrl} alt="" />
+                <span className="mw-unit-name">Resources</span>
+                <span className="mw-unit-count">{carry.toLocaleString()}</span>
+              </li>
+            </ul>
+          )}
+          {m.kind !== 'ESPIONAGE' && m.direction === 'HOMEWARD' && carrying > 0 && (
+            <ul className="mw-units">
+              <li title={`${load!.wood.toLocaleString()} wood, ${load!.stone.toLocaleString()} stone, ${load!.silver.toLocaleString()} silver`}>
+                <img src={goodsUrl} alt="" />
+                <span className="mw-unit-name">Resources</span>
+                <span className="mw-unit-count">{carrying.toLocaleString()}</span>
+              </li>
+            </ul>
           )}
         </div>
         {m.canRecall ? (
