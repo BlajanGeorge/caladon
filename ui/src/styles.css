@@ -410,14 +410,8 @@ input { font: inherit; cursor: text; }
    the gauntlet: a plain `default` here would drop back to the system arrow mid-screen. */
 .cq-head.as-label { cursor: url('@assets/sprites/cursor-point.png') 1 0, default; color: #4a3a22; }
 .cq-head.as-label:hover { color: #4a3a22; }
-/* What kind of movement it is: swords for an attack, a cross for support, a ring for scouting. */
-.cq-mark {
-  flex: 0 0 16px; width: 16px; height: 16px; display: grid; place-items: center;
-  font-size: 11px; line-height: 1; border-radius: 4px; background: rgba(70,54,28,.18);
-}
-.cq-mark.attack { color: #8c2f24; }
-.cq-mark.support { color: #3f6b3a; }
-.cq-mark.espionage { color: #3a5a7a; }
+/* Which errand it is: crossed swords, a shield, a hood — the same medallions the units wear. */
+.cq-mark { flex: 0 0 20px; width: 20px; height: 20px; display: block; }
 /* Troops on their way home are done with their errand: lighter than the ones still going out. */
 .cq-list li.back { color: #6b5a3c; }
 /* An attack heading here, and the count of what is coming. */

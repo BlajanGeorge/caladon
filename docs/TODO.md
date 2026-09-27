@@ -5,10 +5,8 @@ what is still owed, newest first. Cross off by deleting the line in the commit t
 
 ## Art to generate
 
-- **Marks for the three errands** — attack, support and espionage. The bar draws them as text glyphs
-  today (`⚔`, `✚`, `◎` in `CityQueues.tsx`), tinted red, green and blue. Wanted: three small medallions in
-  the style of the unit ones (`hud-unit-*.png`), readable at 16 px, one per errand, used in both the
-  Marches and the Arrivals rows.
+- Nothing outstanding.
+
 
 ## Espionage (designed in ARCHITECTURE.md → Army → Espionage and the Cave)
 
