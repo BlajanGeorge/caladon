@@ -52,7 +52,7 @@ export interface ResourceStock {
 export interface CityResources {
   wood: ResourceStock
   stone: ResourceStock
-  iron: ResourceStock
+  silver: ResourceStock
   /** Max stock of each resource. */
   capacity: number
   /** ISO instant the stocks are settled to. */
@@ -60,7 +60,7 @@ export interface CityResources {
 }
 
 export type BuildingType =
-  | 'FARM' | 'WOODCUTTER' | 'STONE_MINE' | 'IRON_MINE' | 'DEPOSIT' | 'TOWN_HALL'
+  | 'FARM' | 'WOODCUTTER' | 'STONE_MINE' | 'SILVER_MINE' | 'DEPOSIT' | 'TOWN_HALL'
   | 'BARRACKS' | 'ACADEMY' | 'WALL' | 'VAULT'
 
 export type UnitType =
@@ -69,7 +69,7 @@ export type UnitType =
 export interface Cost {
   wood: number
   stone: number
-  iron: number
+  silver: number
 }
 
 export interface Effect {

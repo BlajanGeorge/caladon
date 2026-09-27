@@ -39,7 +39,7 @@ class CityMovement(
     @Column(name = "arrives_at", nullable = false) var arrivesAt: Instant,
     @Column(name = "carried_wood", nullable = false) var carriedWood: Long = 0,
     @Column(name = "carried_stone", nullable = false) var carriedStone: Long = 0,
-    @Column(name = "carried_iron", nullable = false) var carriedIron: Long = 0,
+    @Column(name = "carried_silver", nullable = false) var carriedSilver: Long = 0,
     /** Set once the last leg has been processed; an applied movement is history and no longer shown. */
     @Column(nullable = false) var applied: Boolean = false,
 )

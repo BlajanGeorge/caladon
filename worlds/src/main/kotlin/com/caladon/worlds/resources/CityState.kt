@@ -73,11 +73,11 @@ class CityState(
     fun shortfall(cost: Cost): Map<Resource, Long> = buildMap {
         if (resources.wood < cost.wood) put(Resource.WOOD, cost.wood - resources.wood)
         if (resources.stone < cost.stone) put(Resource.STONE, cost.stone - resources.stone)
-        if (resources.iron < cost.iron) put(Resource.IRON, cost.iron - resources.iron)
+        if (resources.silver < cost.silver) put(Resource.SILVER, cost.silver - resources.silver)
     }
 
     fun pay(cost: Cost, population: Long) {
-        resources.wood -= cost.wood; resources.stone -= cost.stone; resources.iron -= cost.iron
+        resources.wood -= cost.wood; resources.stone -= cost.stone; resources.silver -= cost.silver
         resources.population -= population.toInt()
     }
 
@@ -86,7 +86,7 @@ class CityState(
         val cap = capacity()
         resources.wood = minOf(cap, resources.wood + cost.wood)
         resources.stone = minOf(cap, resources.stone + cost.stone)
-        resources.iron = minOf(cap, resources.iron + cost.iron)
+        resources.silver = minOf(cap, resources.silver + cost.silver)
         resources.population += population.toInt()
     }
 
@@ -94,7 +94,7 @@ class CityState(
         fun producer(r: Resource): Building = when (r) {
             Resource.WOOD -> Building.WOODCUTTER
             Resource.STONE -> Building.STONE_MINE
-            Resource.IRON -> Building.IRON_MINE
+            Resource.SILVER -> Building.SILVER_MINE
         }
     }
 }

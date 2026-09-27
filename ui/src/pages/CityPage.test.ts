@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { pollIntervalMs } from './CityPage'
 import type { CityResources } from '../api/worlds'
 
-const res = (wood: number, stone = wood, iron = wood): CityResources => ({
+const res = (wood: number, stone = wood, silver = wood): CityResources => ({
   wood: { stock: 0, ratePerHour: wood },
   stone: { stock: 0, ratePerHour: stone },
-  iron: { stock: 0, ratePerHour: iron },
+  silver: { stock: 0, ratePerHour: silver },
   capacity: 1000,
   serverTime: '2026-09-22T19:00:00Z',
 })

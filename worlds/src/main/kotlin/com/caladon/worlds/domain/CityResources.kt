@@ -19,11 +19,11 @@ class CityResources(
 
     @Column(nullable = false) var wood: Long,
     @Column(nullable = false) var stone: Long,
-    @Column(nullable = false) var iron: Long,
+    @Column(nullable = false) var silver: Long,
 
     @Column(name = "wood_settled_at", nullable = false) var woodSettledAt: Instant,
     @Column(name = "stone_settled_at", nullable = false) var stoneSettledAt: Instant,
-    @Column(name = "iron_settled_at", nullable = false) var ironSettledAt: Instant,
+    @Column(name = "silver_settled_at", nullable = false) var silverSettledAt: Instant,
 
     @Column(nullable = false)
     var population: Int,
@@ -31,24 +31,24 @@ class CityResources(
     fun stock(resource: Resource): Long = when (resource) {
         Resource.WOOD -> wood
         Resource.STONE -> stone
-        Resource.IRON -> iron
+        Resource.SILVER -> silver
     }
 
     fun setStock(resource: Resource, value: Long) = when (resource) {
         Resource.WOOD -> wood = value
         Resource.STONE -> stone = value
-        Resource.IRON -> iron = value
+        Resource.SILVER -> silver = value
     }
 
     fun settledAt(resource: Resource): Instant = when (resource) {
         Resource.WOOD -> woodSettledAt
         Resource.STONE -> stoneSettledAt
-        Resource.IRON -> ironSettledAt
+        Resource.SILVER -> silverSettledAt
     }
 
     fun setSettledAt(resource: Resource, value: Instant) = when (resource) {
         Resource.WOOD -> woodSettledAt = value
         Resource.STONE -> stoneSettledAt = value
-        Resource.IRON -> ironSettledAt = value
+        Resource.SILVER -> silverSettledAt = value
     }
 }

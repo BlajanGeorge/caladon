@@ -142,8 +142,8 @@ class CityAccess(
         cityResourcesRepository.save(
             CityResources(
                 cityId = cityId,
-                wood = ResourceConstants.STARTING_STOCK, stone = ResourceConstants.STARTING_STOCK, iron = ResourceConstants.STARTING_STOCK,
-                woodSettledAt = now, stoneSettledAt = now, ironSettledAt = now,
+                wood = ResourceConstants.STARTING_STOCK, stone = ResourceConstants.STARTING_STOCK, silver = ResourceConstants.STARTING_STOCK,
+                woodSettledAt = now, stoneSettledAt = now, silverSettledAt = now,
                 population = BuildingRules.farmPop(1).toInt(),
             ),
         )

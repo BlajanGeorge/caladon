@@ -6,14 +6,14 @@ import { formatDuration, secondsUntil } from '../city/format'
 import { useNow } from '../city/useNow'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
-import ironUrl from '@assets/sprites/hud-iron.png'
+import silverUrl from '@assets/sprites/hud-silver.png'
 import popUrl from '@assets/sprites/hud-population.png'
 
 /** What the confirmation asks about, and what the city gets back if it is agreed to. */
 type Confirm = {
   title: string
   text: string
-  back: { wood: number; stone: number; iron: number; pop: number } | null
+  back: { wood: number; stone: number; silver: number; pop: number } | null
   keep: string
   go: string
 } & (
@@ -100,7 +100,7 @@ export function CityQueues({
                       kind: 'build', id: o.id,
                       title: 'Cancel this build?',
                       text: `${o.name} level ${o.targetLevel} is dropped from the queue. Half of what it cost comes back, and all of its population.`,
-                      back: { wood: half(o.cost.wood), stone: half(o.cost.stone), iron: half(o.cost.iron), pop: o.popCost },
+                      back: { wood: half(o.cost.wood), stone: half(o.cost.stone), silver: half(o.cost.silver), pop: o.popCost },
                       keep: 'Keep building', go: 'Cancel the build',
                     })}
                   >×</button>
@@ -137,7 +137,7 @@ export function CityQueues({
                         text: `${o.remaining} of ${o.count} ${u.name} are not trained yet. Half their resources come back, and all of their people. Any already trained stay in the city.`,
                         back: {
                           wood: half(u.cost.wood * o.remaining), stone: half(u.cost.stone * o.remaining),
-                          iron: half(u.cost.iron * o.remaining), pop: u.population * o.remaining,
+                          silver: half(u.cost.silver * o.remaining), pop: u.population * o.remaining,
                         },
                         keep: 'Keep training', go: 'Cancel the order',
                       })}
@@ -174,7 +174,7 @@ export function CityQueues({
                         kind: 'study', unit: o.unit,
                         title: 'Cancel this study?',
                         text: `The ${o.name} study stops and half of what it cost comes back.`,
-                        back: c ? { wood: half(c.wood), stone: half(c.stone), iron: half(c.iron), pop: 0 } : null,
+                        back: c ? { wood: half(c.wood), stone: half(c.stone), silver: half(c.silver), pop: 0 } : null,
                         keep: 'Keep studying', go: 'Cancel the study',
                       })
                     }}
@@ -251,7 +251,7 @@ export function CityQueues({
               <span className="study-cost">
                 <span><img src={woodUrl} alt="Wood" />{confirming.back.wood.toLocaleString()}</span>
                 <span><img src={stoneUrl} alt="Stone" />{confirming.back.stone.toLocaleString()}</span>
-                <span><img src={ironUrl} alt="Iron" />{confirming.back.iron.toLocaleString()}</span>
+                <span><img src={silverUrl} alt="Silver" />{confirming.back.silver.toLocaleString()}</span>
                 <span><img src={popUrl} alt="People" />{confirming.back.pop.toLocaleString()}</span>
               </span>
             )}

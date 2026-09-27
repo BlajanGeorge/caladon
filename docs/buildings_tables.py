@@ -21,12 +21,12 @@ START_STOCK = 500
 
 def r(v): return int(math.floor(v + 0.5))
 
-# code, name, max, founded, TW L1 (wood, clay->stone, iron), TW pop, factors (w, s, i, pop), P1 (TW points L1), TW base build time s, prerequisites, job
+# code, name, max, founded, TW L1 (wood, clay->stone, iron->silver), TW pop, factors (w, s, i, pop), P1 (TW points L1), TW base build time s, prerequisites, job
 B = [
  ('FARM',       'Farm',       30, True,  (45, 40, 30),     0,  (1.30, 1.32, 1.29, 1.00),     5, 1200,  '—',                                  'population'),
  ('WOODCUTTER', 'Woodcutter', 30, True,  (50, 60, 40),     5,  (1.25, 1.275, 1.245, 1.155),  6, 900,   '—',                                  'wood/h'),
  ('STONE_MINE', 'Stone Mine', 30, True,  (65, 50, 40),     10, (1.27, 1.265, 1.24, 1.14),    6, 900,   '—',                                  'stone/h'),
- ('IRON_MINE',  'Iron Mine',  30, True,  (75, 65, 70),     10, (1.252, 1.275, 1.24, 1.17),   6, 1080,  '—',                                  'iron/h'),
+ ('SILVER_MINE','Silver Mine',  30, True,  (75, 65, 70),     10, (1.252, 1.275, 1.24, 1.17),   6, 1080,  '—',                                  'silver/h'),
  ('DEPOSIT',    'Deposit',    30, True,  (60, 50, 40),     0,  (1.265, 1.27, 1.245, 1.15),   6, 1020,  '—',                                  'capacity'),
  ('TOWN_HALL',  'Town Hall',  30, True,  (90, 80, 70),     5,  (1.26, 1.275, 1.26, 1.17),   10, 900,   '—',                                  'build speed, gates'),
  ('BARRACKS',   'Barracks',   25, False, (200, 170, 90),   7,  (1.26, 1.28, 1.26, 1.17),    16, 1800,  'Town Hall 3',                        'recruits all troops; level unlocks unit types'),
@@ -43,7 +43,7 @@ HIGHER = {
 }
 def hall_needed(L): return 5 * ((L - 1) // 5)   # Town Hall step rule: levels 6-10 need TH 5, 11-15 need TH 10, ...
 def gain(b, L): return points(b, L) - points(b, L - 1)
-TW_NAME = {'FARM': 'Farm', 'WOODCUTTER': 'Timber camp', 'STONE_MINE': 'Clay pit', 'IRON_MINE': 'Iron mine', 'DEPOSIT': 'Warehouse',
+TW_NAME = {'FARM': 'Farm', 'WOODCUTTER': 'Timber camp', 'STONE_MINE': 'Clay pit', 'SILVER_MINE': 'Iron mine', 'DEPOSIT': 'Warehouse',
            'TOWN_HALL': 'Headquarters', 'BARRACKS': 'Barracks', 'ACADEMY': 'Smithy (numbers)',
            'WALL': 'Wall', 'VAULT': 'Hiding place'}
 
@@ -67,7 +67,7 @@ def hms(sec):
 def effect(b, L):
     c = b[0]
     if c == 'FARM': return f'{farm_pop(L):,} (+{farm_pop(L) - farm_pop(L - 1) if L > 1 else farm_pop(L)})'
-    if c in ('WOODCUTTER', 'STONE_MINE', 'IRON_MINE'): return f'{prod(L):,}/h'
+    if c in ('WOODCUTTER', 'STONE_MINE', 'SILVER_MINE'): return f'{prod(L):,}/h'
     if c == 'DEPOSIT': return f'{cap(L):,}'
     if c == 'TOWN_HALL': return f'{round(100 * 1.05 ** (-L))}% build time, queue {queue_len(L)}'
     if c == 'BARRACKS': return f'{round(100 * (2 / 3) * 1.06 ** (-L))}% recruit time'
@@ -202,7 +202,7 @@ P('```')
 P(f'cost[r](L)      = round(COST_SCALE × base_r × f_r^(L−1))        COST_SCALE = {COST_SCALE}; base/f per building in §8')
 P(f'popTotal(L)     = round(POP_SCALE × base_pop × f_pop^(L−1))     POP_SCALE = {POP_SCALE}; popCost(L) = popTotal(L) − popTotal(L−1)')
 P(f'points(L)       = round(P1 × {POINTS_GROWTH}^(L−1))                     cumulative; the city gains points(L) − points(L−1) per upgrade')
-P(f'production(L)   = round({PROD_L1} × {PROD_GROWTH}^(L−1)) per hour          Woodcutter / Stone Mine / Iron Mine; {prod(30):,}/h at 30')
+P(f'production(L)   = round({PROD_L1} × {PROD_GROWTH}^(L−1)) per hour          Woodcutter / Stone Mine / Silver Mine; {prod(30):,}/h at 30')
 P(f'capacity(L)     = round({CAP_L1} × {CAP_GROWTH}^(L−1))              Deposit, per resource; {cap(30):,} at 30')
 P(f'farmPop(L)      = floor({FARM_L1} × {FARM_MAX_MULT}^((L−1)/29))              Farm; farmGain(L) = farmPop(L) − farmPop(L−1); {farm_pop(30):,} at 30')
 P(f'buildTime(L)    = (base_s / TIME_SCALE) × 1.18 × 1.2^(L−1−14/(L−1)) × 1.05^(−TownHall)   TIME_SCALE = {TIME_SCALE}; exponent = −13 for L ≤ 2')
@@ -232,13 +232,13 @@ P('  (Tribal Wars: 233).')
 P('')
 P('## 4. Full tables — founded buildings (all 30 levels)')
 P('')
-P('Columns: cost to reach the level (wood / stone / iron), population that level takes, effect **at** the level,')
+P('Columns: cost to reach the level (wood / stone / silver), population that level takes, effect **at** the level,')
 P('cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 multiply by 0.38).')
 P('')
 for b in founded:
     P(f'### {b[1]} (`{b[0]}`, max {b[2]})')
     P('')
-    P('| lvl | wood / stone / iron | pop | effect | points | build time |')
+    P('| lvl | wood / stone / silver | pop | effect | points | build time |')
     P('|---|---|---|---|---|---|')
     for L in range(1, b[2] + 1):
         cst = '— (founded)' if L == 1 else fmt_cost(cost(b, L))
@@ -277,14 +277,14 @@ for b in B:
     if b[3]: continue
     P(f'### {b[1]} (`{b[0]}`, max {b[2]}) — requires {b[9]}')
     P('')
-    P('| lvl | wood / stone / iron | pop | effect | points | build time |')
+    P('| lvl | wood / stone / silver | pop | effect | points | build time |')
     P('|---|---|---|---|---|---|')
     for L in sorted((set([1, 2, 3, 5, 10, 15, 20, 25, 30]) & set(range(1, b[2] + 1))) | {b[2]}):
         P(f'| {L} | {fmt_cost(cost(b, L))} | {pop_step(b, L)} | {effect(b, L)} | {points(b, L):,} | {hms(build_time(b, L))} |')
     P('')
 
 # ---- Units (Tribal Wars values from the live get_unit_info XML; swordsman cavalry defence is the archer-world value)
-# code, name, role, (wood, stone, iron), pop, recruit base s (speed 1), atk, def, def_cav, def_arch, speed min/field, carry, barracks lvl, academy lvl (None = no study), study cost (w,s,i)
+# code, name, role, (wood, stone, silver), pop, recruit base s (speed 1), atk, def, def_cav, def_arch, speed min/field, carry, barracks lvl, academy lvl (None = no study), study cost (w,s,i)
 UNITS = [
  ('SPEARMAN',   'Spearman',      'cheap defence, strong vs cavalry',        (50, 30, 10),    1, 1020,  10,  15,  45,  20, 18,  25,  1, None, None),
  ('SWORDSMAN',  'Swordsman',     'defence vs infantry',                     (30, 30, 70),    1, 1500,  25,  50,  15,  40, 22,  15,  3, 1,  (400, 500, 300)),
@@ -327,7 +327,7 @@ P("Ten land units, all recruited from the Barracks. Stats are Tribal Wars' (live
 P('world, world speed 1): cost, population, base recruit time in seconds, attack, defence vs general / cavalry /')
 P('archers, speed in minutes per field, carry capacity.')
 P('')
-P('| unit | role | wood / stone / iron | pop | base time | atk | def / cav / arch | speed | carry | Barracks ≥ | study at Academy ≥ |')
+P('| unit | role | wood / stone / silver | pop | base time | atk | def / cav / arch | speed | carry | Barracks ≥ | study at Academy ≥ |')
 P('|---|---|---|---|---|---|---|---|---|---|---|')
 for u in UNITS:
     code, name, role, c, pop, bt, atk, d, dc, da, spd, carry, bl, al, sc = u
@@ -360,7 +360,7 @@ P('research durations, so **studyBase = 2 × the unit\'s recruit base time** is 
 P("Tribal Wars' simple-tech research costs; the Nobleman's study cost is Tribal Wars' Academy building cost (the")
 P('price of gaining the ability to make nobles there), as a placeholder.')
 P('')
-P('| Academy level | unlocks for study | study cost (wood / stone / iron) | study time at that level |')
+P('| Academy level | unlocks for study | study cost (wood / stone / silver) | study time at that level |')
 P('|---|---|---|---|')
 for u in sorted((u for u in UNITS if u[13] is not None), key=lambda u: u[13]):
     if u[13] == 20: P('| 17 – 19 | nothing new; study time keeps shrinking | | |')

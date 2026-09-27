@@ -6,7 +6,7 @@ import { BUILDING_ICONS } from '../city/buildingIcons'
 import { useNow } from '../city/useNow'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
-import ironUrl from '@assets/sprites/hud-iron.png'
+import silverUrl from '@assets/sprites/hud-silver.png'
 import peopleUrl from '@assets/sprites/hud-population.png'
 
 interface Props {
@@ -31,7 +31,7 @@ function stateOf(b: BuildingView, detail: CityDetail | null): State {
   if (detail && detail.buildQueue.length >= detail.buildQueueSlots) return 'full'
   if (detail) {
     const r = detail.resources
-    if (next.cost.wood > r.wood.stock || next.cost.stone > r.stone.stock || next.cost.iron > r.iron.stock) return 'poor'
+    if (next.cost.wood > r.wood.stock || next.cost.stone > r.stone.stock || next.cost.silver > r.silver.stock) return 'poor'
     if (next.popCost > detail.population) return 'crowded'
   }
   return 'ready'
@@ -77,7 +77,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
                 <span className="study-cost">
                   <span><img src={woodUrl} alt="Wood" />{next.cost.wood.toLocaleString()}</span>
                   <span><img src={stoneUrl} alt="Stone" />{next.cost.stone.toLocaleString()}</span>
-                  <span><img src={ironUrl} alt="Iron" />{next.cost.iron.toLocaleString()}</span>
+                  <span><img src={silverUrl} alt="Silver" />{next.cost.silver.toLocaleString()}</span>
                   <span><img src={peopleUrl} alt="Population" />{next.popCost.toLocaleString()}</span>
                 </span>
               ) : (
@@ -118,7 +118,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
               const back = {
                 wood: Math.floor(o.cost.wood / 2),
                 stone: Math.floor(o.cost.stone / 2),
-                iron: Math.floor(o.cost.iron / 2),
+                silver: Math.floor(o.cost.silver / 2),
               }
               return (
                 <li key={o.id} className={i === 0 ? 'first' : undefined}>
@@ -128,7 +128,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
                   <span className="study-cost">
                     <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>
                     <span><img src={stoneUrl} alt="Stone" />{back.stone.toLocaleString()}</span>
-                    <span><img src={ironUrl} alt="Iron" />{back.iron.toLocaleString()}</span>
+                    <span><img src={silverUrl} alt="Silver" />{back.silver.toLocaleString()}</span>
                     <span><img src={peopleUrl} alt="Population" />{o.popCost.toLocaleString()}</span>
                   </span>
                   <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
@@ -166,7 +166,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
               <span className="study-cost">
                 <span><img src={woodUrl} alt="Wood" />{Math.floor(order.cost.wood / 2).toLocaleString()}</span>
                 <span><img src={stoneUrl} alt="Stone" />{Math.floor(order.cost.stone / 2).toLocaleString()}</span>
-                <span><img src={ironUrl} alt="Iron" />{Math.floor(order.cost.iron / 2).toLocaleString()}</span>
+                <span><img src={silverUrl} alt="Silver" />{Math.floor(order.cost.silver / 2).toLocaleString()}</span>
                 <span><img src={peopleUrl} alt="Population" />{order.popCost.toLocaleString()}</span>
               </span>
               <div className="confirm-buttons">

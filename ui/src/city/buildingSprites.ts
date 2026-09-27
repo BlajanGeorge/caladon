@@ -11,9 +11,9 @@ import wood3 from '@assets/sprites/b-woodcutter-3.png'
 import stone1 from '@assets/sprites/b-stone-mine-1.png'
 import stone2 from '@assets/sprites/b-stone-mine-2.png'
 import stone3 from '@assets/sprites/b-stone-mine-3.png'
-import iron1 from '@assets/sprites/b-iron-mine-1.png'
-import iron2 from '@assets/sprites/b-iron-mine-2.png'
-import iron3 from '@assets/sprites/b-iron-mine-3.png'
+import silver1 from '@assets/sprites/b-silver-mine-1.png'
+import silver2 from '@assets/sprites/b-silver-mine-2.png'
+import silver3 from '@assets/sprites/b-silver-mine-3.png'
 import deposit1 from '@assets/sprites/b-deposit-1.png'
 import deposit2 from '@assets/sprites/b-deposit-2.png'
 import deposit3 from '@assets/sprites/b-deposit-3.png'
@@ -70,10 +70,10 @@ const SPRITES: Partial<Record<BuildingType, [BuildingArt, BuildingArt, BuildingA
     { src: stone2, footprint: 0.24, scale: 1.1, drop: 0.34, slide: -0.26 },
     { src: stone3, footprint: 0.26, scale: 1.05, drop: 0.34, slide: -0.26 },
   ],
-  IRON_MINE: [
-    { src: iron1, footprint: 0.4715, slide: 0.08, drop: 0.22 },
-    { src: iron2, footprint: 0.483, slide: 0.08, drop: 0.22 },
-    { src: iron3, footprint: 0.386, slide: 0.08, drop: 0.22 },
+  SILVER_MINE: [
+    { src: silver1, footprint: 0.4715, slide: 0.08, drop: 0.22 },
+    { src: silver2, footprint: 0.483, slide: 0.08, drop: 0.22 },
+    { src: silver3, footprint: 0.386, slide: 0.08, drop: 0.22 },
   ],
   DEPOSIT: [
     { src: deposit1, footprint: 0.506, scale: 0.68 },

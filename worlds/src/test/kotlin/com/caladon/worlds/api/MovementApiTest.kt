@@ -85,7 +85,7 @@ class MovementApiTest : ApiTestBase() {
 
     private fun stock(cityId: Long, amount: Long) {
         val row = cityResourcesRepository.findById(cityId).orElseThrow()
-        row.wood = amount; row.stone = amount; row.iron = amount
+        row.wood = amount; row.stone = amount; row.silver = amount
         cityResourcesRepository.save(row)
     }
 
@@ -340,7 +340,7 @@ class MovementApiTest : ApiTestBase() {
         assertThat(home["units"].single()["count"].asInt()).isEqualTo(100)
         assertThat(home["carrying"]["wood"].asLong()).isEqualTo(157)
         assertThat(home["carrying"]["stone"].asLong()).isEqualTo(157)
-        assertThat(home["carrying"]["iron"].asLong()).isEqualTo(157)
+        assertThat(home["carrying"]["silver"].asLong()).isEqualTo(157)
         assertThat(cityResourcesRepository.findById(two.theirs).orElseThrow().wood).isEqualTo(843)
 
         stock(two.mine, 1000)   // the Deposit is full: the plunder arrives and is lost

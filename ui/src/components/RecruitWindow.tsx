@@ -5,7 +5,7 @@ import { formatDuration, formatRequirements, maxAffordable, secondsUntil } from 
 import { useNow } from '../city/useNow'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
-import ironUrl from '@assets/sprites/hud-iron.png'
+import silverUrl from '@assets/sprites/hud-silver.png'
 import popUrl from '@assets/sprites/hud-population.png'
 
 interface Props {
@@ -43,8 +43,8 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
           const u = byType.get(type)!
           const blocked = !u.recruitable
           const stocks = detail
-            ? { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, iron: detail.resources.iron.stock }
-            : { wood: 0, stone: 0, iron: 0 }
+            ? { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, silver: detail.resources.silver.stock }
+            : { wood: 0, stone: 0, silver: 0 }
           const most = detail ? maxAffordable(stocks, detail.population, u.cost, u.population) : 0
           const typed = counts[type] ?? ''
           const want = Math.max(0, Math.min(Math.floor(Number(typed) || 0), most))
@@ -62,7 +62,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
               <span className="study-cost">
                 <span><img src={woodUrl} alt="Wood" />{u.cost.wood.toLocaleString()}</span>
                 <span><img src={stoneUrl} alt="Stone" />{u.cost.stone.toLocaleString()}</span>
-                <span><img src={ironUrl} alt="Iron" />{u.cost.iron.toLocaleString()}</span>
+                <span><img src={silverUrl} alt="Silver" />{u.cost.silver.toLocaleString()}</span>
                 <span><img src={popUrl} alt="People" />{u.population}</span>
               </span>
               <span className="study-action">
@@ -99,7 +99,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
                   <span className="study-cost">
                     <span><img src={woodUrl} alt="Wood" />{(u.cost.wood * want).toLocaleString()}</span>
                     <span><img src={stoneUrl} alt="Stone" />{(u.cost.stone * want).toLocaleString()}</span>
-                    <span><img src={ironUrl} alt="Iron" />{(u.cost.iron * want).toLocaleString()}</span>
+                    <span><img src={silverUrl} alt="Silver" />{(u.cost.silver * want).toLocaleString()}</span>
                     <span><img src={popUrl} alt="People" />{(u.population * want).toLocaleString()}</span>
                   </span>
                   <em>{formatDuration(u.recruitSeconds * want)}</em>
@@ -116,7 +116,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
           <ul>
             {queue.map((o, i) => {
               const u = byType.get(o.unit)
-              const paid = u ? { wood: u.cost.wood * o.count, stone: u.cost.stone * o.count, iron: u.cost.iron * o.count, pop: u.population * o.count } : null
+              const paid = u ? { wood: u.cost.wood * o.count, stone: u.cost.stone * o.count, silver: u.cost.silver * o.count, pop: u.population * o.count } : null
               return (
                 <li key={o.id} className={i === 0 ? 'first' : undefined}>
                   <span className="rq-pos">{i + 1}</span>
@@ -126,7 +126,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
                     <span className="study-cost">
                       <span><img src={woodUrl} alt="Wood" />{paid.wood.toLocaleString()}</span>
                       <span><img src={stoneUrl} alt="Stone" />{paid.stone.toLocaleString()}</span>
-                      <span><img src={ironUrl} alt="Iron" />{paid.iron.toLocaleString()}</span>
+                      <span><img src={silverUrl} alt="Silver" />{paid.silver.toLocaleString()}</span>
                       <span><img src={popUrl} alt="People" />{paid.pop.toLocaleString()}</span>
                     </span>
                   )}
@@ -160,7 +160,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
         const back = {
           wood: Math.floor((u.cost.wood * o.remaining) / 2),
           stone: Math.floor((u.cost.stone * o.remaining) / 2),
-          iron: Math.floor((u.cost.iron * o.remaining) / 2),
+          silver: Math.floor((u.cost.silver * o.remaining) / 2),
           pop: u.population * o.remaining,
         }
         return (
@@ -174,7 +174,7 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
               <span className="study-cost">
                 <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>
                 <span><img src={stoneUrl} alt="Stone" />{back.stone.toLocaleString()}</span>
-                <span><img src={ironUrl} alt="Iron" />{back.iron.toLocaleString()}</span>
+                <span><img src={silverUrl} alt="Silver" />{back.silver.toLocaleString()}</span>
                 <span><img src={popUrl} alt="People" />{back.pop.toLocaleString()}</span>
               </span>
               <div className="confirm-buttons">

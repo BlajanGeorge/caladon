@@ -102,7 +102,7 @@ input { font: inherit; cursor: text; }
 .map-topbar .mtb-menu button.danger:hover { background: rgba(178,58,46,.24); }
 .map-topbar .mtb-menu button.danger:hover span { color: #ffd9d2; }
 
-/* Resource strip (City view): wood / stone / iron / population, left of the Profile icon. */
+/* Resource strip (City view): wood / stone / silver / population, left of the Profile icon. */
 .map-topbar .mtb-resources, .city-panel .mtb-resources { display: flex; align-items: center; gap: 18px; margin-right: 22px; }
 .map-topbar .mtb-res, .city-panel .mtb-res {
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;

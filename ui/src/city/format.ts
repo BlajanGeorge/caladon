@@ -17,7 +17,7 @@ export function secondsUntil(iso: string, nowMs: number): number {
 }
 
 export const BUILDING_NAMES: Record<string, string> = {
-  FARM: 'Farm', WOODCUTTER: 'Woodcutter', STONE_MINE: 'Stone Mine', IRON_MINE: 'Iron Mine', DEPOSIT: 'Deposit',
+  FARM: 'Farm', WOODCUTTER: 'Woodcutter', STONE_MINE: 'Stone Mine', SILVER_MINE: 'Silver Mine', DEPOSIT: 'Deposit',
   TOWN_HALL: 'Town Hall', BARRACKS: 'Barracks', ACADEMY: 'Academy', WALL: 'Wall', VAULT: 'Vault',
 }
 
@@ -39,7 +39,7 @@ export function affordability(
   const short: string[] = []
   if (stocks.wood < cost.wood * count) short.push('wood')
   if (stocks.stone < cost.stone * count) short.push('stone')
-  if (stocks.iron < cost.iron * count) short.push('iron')
+  if (stocks.silver < cost.silver * count) short.push('silver')
   if (short.length > 0) return { ok: false, reason: `Not enough ${short.join(', ')}` }
   if (population < popCost * count) return { ok: false, reason: 'Not enough population' }
   return { ok: true, reason: '' }
@@ -48,6 +48,6 @@ export function affordability(
 /** Largest count of a unit the stocks and population can pay for (0 when none). */
 export function maxAffordable(stocks: Cost, population: number, cost: Cost, popCost: number): number {
   const by = (have: number, per: number) => (per > 0 ? Math.floor(have / per) : Number.POSITIVE_INFINITY)
-  const n = Math.min(by(stocks.wood, cost.wood), by(stocks.stone, cost.stone), by(stocks.iron, cost.iron), by(population, popCost))
+  const n = Math.min(by(stocks.wood, cost.wood), by(stocks.stone, cost.stone), by(stocks.silver, cost.silver), by(population, popCost))
   return Number.isFinite(n) ? Math.max(0, n) : 0
 }

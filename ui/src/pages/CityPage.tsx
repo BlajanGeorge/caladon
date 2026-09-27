@@ -23,7 +23,7 @@ interface NavState {
  */
 export function pollIntervalMs(resources?: CityResources): number {
   if (!resources) return 60_000
-  const max = Math.max(resources.wood.ratePerHour, resources.stone.ratePerHour, resources.iron.ratePerHour)
+  const max = Math.max(resources.wood.ratePerHour, resources.stone.ratePerHour, resources.silver.ratePerHour)
   return max > 60 ? 60_000 : 300_000
 }
 

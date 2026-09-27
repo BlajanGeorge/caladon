@@ -58,7 +58,7 @@ class CityApiTest : ApiTestBase() {
             jsonPath("$[?(@.type=='WOODCUTTER')].next.level") { value(2) }
             jsonPath("$[?(@.type=='WOODCUTTER')].next.cost.wood") { value(63) }
             jsonPath("$[?(@.type=='WOODCUTTER')].next.cost.stone") { value(77) }
-            jsonPath("$[?(@.type=='WOODCUTTER')].next.cost.iron") { value(50) }
+            jsonPath("$[?(@.type=='WOODCUTTER')].next.cost.silver") { value(50) }
             jsonPath("$[?(@.type=='WOODCUTTER')].next.popCost") { value(1) }
             jsonPath("$[?(@.type=='WOODCUTTER')].next.effect.value") { value(35) }
             jsonPath("$[?(@.type=='WOODCUTTER')].next.buildTimeSeconds") { value(95) }
@@ -75,7 +75,7 @@ class CityApiTest : ApiTestBase() {
             status { isOk() }
             jsonPath("$.resources.wood.stock") { value(437) }
             jsonPath("$.resources.stone.stock") { value(423) }
-            jsonPath("$.resources.iron.stock") { value(450) }
+            jsonPath("$.resources.silver.stock") { value(450) }
             jsonPath("$.population") { value(239) }
             jsonPath("$.points") { value(39) }
             jsonPath("$.buildQueue.length()") { value(1) }
@@ -85,7 +85,7 @@ class CityApiTest : ApiTestBase() {
             // The order carries what it was paid; cancelling gives back half of it.
             jsonPath("$.buildQueue[0].cost.wood") { value(63) }
             jsonPath("$.buildQueue[0].cost.stone") { value(77) }
-            jsonPath("$.buildQueue[0].cost.iron") { value(50) }
+            jsonPath("$.buildQueue[0].cost.silver") { value(50) }
             jsonPath("$.buildQueue[0].popCost") { value(1) }
             jsonPath("$.buildings[?(@.type=='WOODCUTTER')].level") { value(1) }
             jsonPath("$.resources.wood.ratePerHour") { value(30) }
@@ -230,7 +230,7 @@ class CityApiTest : ApiTestBase() {
 
     private fun stock(cityId: Long, amount: Long) {
         val row = cityResourcesRepository.findById(cityId).orElseThrow()
-        row.wood = amount; row.stone = amount; row.iron = amount; cityResourcesRepository.save(row)
+        row.wood = amount; row.stone = amount; row.silver = amount; cityResourcesRepository.save(row)
     }
 
     @Test
@@ -242,7 +242,7 @@ class CityApiTest : ApiTestBase() {
             status { isOk() }
             jsonPath("$.resources.wood.stock") { value(350) }
             jsonPath("$.resources.stone.stock") { value(410) }
-            jsonPath("$.resources.iron.stock") { value(470) }
+            jsonPath("$.resources.silver.stock") { value(470) }
             jsonPath("$.population") { value(237) }
             jsonPath("$.recruitQueue.length()") { value(1) }
             jsonPath("$.recruitQueue[0].unit") { value("SPEARMAN") }
@@ -302,7 +302,7 @@ class CityApiTest : ApiTestBase() {
             status { isOk() }
             jsonPath("$.resources.wood.stock") { value(2600) }
             jsonPath("$.resources.stone.stock") { value(2500) }
-            jsonPath("$.resources.iron.stock") { value(2700) }
+            jsonPath("$.resources.silver.stock") { value(2700) }
             jsonPath("$.population") { value(240) }
             jsonPath("$.studyQueue[0].unit") { value("SWORDSMAN") }
             jsonPath("$.studyQueue[0].position") { value(1) }
@@ -370,7 +370,7 @@ class CityApiTest : ApiTestBase() {
             jsonPath("$.recruitQueue.length()") { value(0) }
             // 4 paid, 3 untrained refunded at half, +5 produced in 643 s
             jsonPath("$.resources.wood.stock") { value(500 - 200 + 75 + 5) }
-            jsonPath("$.resources.iron.stock") { value(500 - 40 + 15 + 5) }
+            jsonPath("$.resources.silver.stock") { value(500 - 40 + 15 + 5) }
             jsonPath("$.population") { value(239) }
         }
     }

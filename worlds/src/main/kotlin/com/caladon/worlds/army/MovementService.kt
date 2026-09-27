@@ -83,7 +83,7 @@ class MovementService(
             units = if (hidden) emptyList() else Unit.entries.mapNotNull { u ->
                 units?.get(u)?.takeIf { it > 0 }?.let { MovementUnitView(u, it) }
             },
-            carrying = if (hidden) null else Triple(m.carriedWood, m.carriedStone, m.carriedIron),
+            carrying = if (hidden) null else Triple(m.carriedWood, m.carriedStone, m.carriedSilver),
             canRecall = own && m.direction == MovementDirection.OUTWARD,
         )
     }
@@ -221,7 +221,7 @@ class MovementService(
     /** The troops are back in `city_unit` and the plunder in the stocks, capped by the Deposit. */
     private fun arriveHome(m: CityMovement, origin: CityState) {
         for ((u, n) in unitsOf(m)) addUnits(origin, u, n)
-        origin.refund(Cost(m.carriedWood, m.carriedStone, m.carriedIron), 0)
+        origin.refund(Cost(m.carriedWood, m.carriedStone, m.carriedSilver), 0)
         m.applied = true
     }
 
@@ -268,15 +268,15 @@ class MovementService(
         if (combat.attackerWon) {
             val hidden = BuildingRules.vault(target.level(Building.VAULT))
             val taken = MovementRules.plunder(
-                Triple(target.resources.wood - hidden, target.resources.stone - hidden, target.resources.iron - hidden),
+                Triple(target.resources.wood - hidden, target.resources.stone - hidden, target.resources.silver - hidden),
                 MovementRules.carry(survivors),
             )
             target.resources.wood -= taken.first
             target.resources.stone -= taken.second
-            target.resources.iron -= taken.third
+            target.resources.silver -= taken.third
             m.carriedWood = taken.first
             m.carriedStone = taken.second
-            m.carriedIron = taken.third
+            m.carriedSilver = taken.third
         }
         turnAround(m, survivors, origin, target)
     }

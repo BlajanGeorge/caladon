@@ -24,7 +24,7 @@ object BuildingRules {
         return Cost(
             Tw.curve(b.baseCost.wood.toDouble(), fw, level),
             Tw.curve(b.baseCost.stone.toDouble(), fs, level),
-            Tw.curve(b.baseCost.iron.toDouble(), fi, level),
+            Tw.curve(b.baseCost.silver.toDouble(), fi, level),
         )
     }
 
@@ -93,7 +93,7 @@ object BuildingRules {
     /** The building's job at [level], as a number, and the unit it is expressed in. */
     fun effect(b: Building, level: Int): Effect = when (b) {
         Building.FARM -> Effect(farmPop(level), "population")
-        Building.WOODCUTTER, Building.STONE_MINE, Building.IRON_MINE -> Effect(production(level), "per hour")
+        Building.WOODCUTTER, Building.STONE_MINE, Building.SILVER_MINE -> Effect(production(level), "per hour")
         Building.DEPOSIT -> Effect(capacity(level), "capacity")
         Building.TOWN_HALL -> Effect(Tw.round(100 * townHallFactor(level)), "% build time")
         Building.BARRACKS -> Effect(Tw.round(100 * recruitFactor(level)), "% recruit time")

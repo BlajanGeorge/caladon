@@ -5,7 +5,7 @@ import { useNow } from '../city/useNow'
 import { useState } from 'react'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
-import ironUrl from '@assets/sprites/hud-iron.png'
+import silverUrl from '@assets/sprites/hud-silver.png'
 
 interface Props {
   /** Every unit type, as the army endpoint returns it. */
@@ -31,7 +31,7 @@ function stateOf(u: UnitView, detail: CityDetail | null, queued: boolean): State
   const c = u.studyCost
   if (c && detail) {
     const r = detail.resources
-    if (c.wood > r.wood.stock || c.stone > r.stone.stock || c.iron > r.iron.stock) return 'poor'
+    if (c.wood > r.wood.stock || c.stone > r.stone.stock || c.silver > r.silver.stock) return 'poor'
   }
   return 'ready'
 }
@@ -72,7 +72,7 @@ export function StudiesWindow({ units, academyLevel, detail, busy, onStudy, onCa
                 <span className="study-cost">
                   <span><img src={woodUrl} alt="Wood" />{c.wood.toLocaleString()}</span>
                   <span><img src={stoneUrl} alt="Stone" />{c.stone.toLocaleString()}</span>
-                  <span><img src={ironUrl} alt="Iron" />{c.iron.toLocaleString()}</span>
+                  <span><img src={silverUrl} alt="Silver" />{c.silver.toLocaleString()}</span>
                 </span>
               )}
               <span className="study-action">
@@ -113,7 +113,7 @@ export function StudiesWindow({ units, academyLevel, detail, busy, onStudy, onCa
                 ? {
                     wood: Math.floor(u.studyCost.wood / 2),
                     stone: Math.floor(u.studyCost.stone / 2),
-                    iron: Math.floor(u.studyCost.iron / 2),
+                    silver: Math.floor(u.studyCost.silver / 2),
                   }
                 : null
               return (
@@ -125,7 +125,7 @@ export function StudiesWindow({ units, academyLevel, detail, busy, onStudy, onCa
                     <span className="study-cost">
                       <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>
                       <span><img src={stoneUrl} alt="Stone" />{back.stone.toLocaleString()}</span>
-                      <span><img src={ironUrl} alt="Iron" />{back.iron.toLocaleString()}</span>
+                      <span><img src={silverUrl} alt="Silver" />{back.silver.toLocaleString()}</span>
                     </span>
                   )}
                   <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
@@ -153,7 +153,7 @@ export function StudiesWindow({ units, academyLevel, detail, busy, onStudy, onCa
         const u = byType.get(confirming)!
         const c = u.studyCost
         // Half, rounded down, the same rule the server applies when it refunds.
-        const back = c ? { wood: Math.floor(c.wood / 2), stone: Math.floor(c.stone / 2), iron: Math.floor(c.iron / 2) } : null
+        const back = c ? { wood: Math.floor(c.wood / 2), stone: Math.floor(c.stone / 2), silver: Math.floor(c.silver / 2) } : null
         return (
           <div className="confirm">
             <div className="confirm-box" role="alertdialog" aria-label="Cancel this study?">
@@ -165,7 +165,7 @@ export function StudiesWindow({ units, academyLevel, detail, busy, onStudy, onCa
                 <span className="study-cost">
                   <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>
                   <span><img src={stoneUrl} alt="Stone" />{back.stone.toLocaleString()}</span>
-                  <span><img src={ironUrl} alt="Iron" />{back.iron.toLocaleString()}</span>
+                  <span><img src={silverUrl} alt="Silver" />{back.silver.toLocaleString()}</span>
                 </span>
               )}
               <div className="confirm-buttons">

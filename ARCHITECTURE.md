@@ -417,7 +417,7 @@ city has a **population** pool that buildings and troops are paid from (see *Pop
 |---------|-------|------------------------------------------------|-------------------------------|
 | `WOOD`  | Wood  | timber for buildings and siege equipment       | Woodcutter                    |
 | `STONE` | Stone | quarried stone for walls and stone buildings   | Stone Mine                    |
-| `IRON`  | Iron  | smelted iron for weapons and armour            | Iron Mine                     |
+| `SILVER`| Silver| coin: pays troops, buys studies, and funds spying | Silver Mine                   |
 
 - The set is **fixed and global** (same three on every world), so it is a Kotlin enum, not a table.
 - Resources are **per city**, never per player: cities do not share a pool and there is no trade
@@ -448,7 +448,7 @@ one per two minutes). At capacity the clock is simply reset (production above th
 `settledAt` is per resource because the three rates differ.
 
 - `rate[r]` (per hour) is **derived, never stored**: `production[level]` of the resource
-  building for `r` (Woodcutter / Stone Mine / Iron Mine), times the world speed.
+  building for `r` (Woodcutter / Stone Mine / Silver Mine), times the world speed.
 - `capacity` is the same for all three resources and is **derived** from the Deposit's level
   (`capacity[level]`). Production above capacity is **lost**, not queued.
 - `stock` is a whole number; what the player sees is exactly what is stored and exactly what they can
@@ -523,10 +523,10 @@ city_resources(
   city_id     PK, FK city ON DELETE CASCADE,
   wood        bigint NOT NULL CHECK (wood >= 0),     -- whole units
   stone       bigint NOT NULL CHECK (stone >= 0),
-  iron        bigint NOT NULL CHECK (iron >= 0),
+  silver      bigint NOT NULL CHECK (silver >= 0),
   wood_settled_at  timestamptz NOT NULL,     -- production clock per resource (see Production model)
   stone_settled_at timestamptz NOT NULL,
-  iron_settled_at  timestamptz NOT NULL,
+  silver_settled_at  timestamptz NOT NULL,
   population  integer      NOT NULL CHECK (population >= 0)   -- free people, see Population
 )
 ```
@@ -558,7 +558,7 @@ Resources are reported on the city, never as a free-standing list.
   "resources": {
     "wood":  { "stock": 512, "ratePerHour": 30 },
     "stone": { "stock": 512, "ratePerHour": 30 },
-    "iron":  { "stock": 512, "ratePerHour": 30 },
+    "silver": { "stock": 512, "ratePerHour": 30 },
     "capacity": 1000,
     "serverTime": "2026-09-22T19:00:00Z"
   },
@@ -567,7 +567,7 @@ Resources are reported on the city, never as a free-standing list.
     { "type": "FARM",       "level": 1, "points": 50 },
     { "type": "WOODCUTTER", "level": 1, "points": 50 },
     { "type": "STONE_MINE", "level": 1, "points": 50 },
-    { "type": "IRON_MINE",  "level": 1, "points": 50 },
+    { "type": "SILVER_MINE","level": 1, "points": 50 },
     { "type": "DEPOSIT",    "level": 1, "points": 50 }
   ]
 }
@@ -623,10 +623,10 @@ Resources are reported on the city, never as a free-standing list.
 
 ### Open questions
 
-1. Names: **Wood / Stone / Iron** (proposed) vs Wood / Clay / Iron (Tribal Wars) vs Wood / Stone /
+1. Names: **Wood / Stone / Silver** (settled) vs Wood / Clay / Iron (Tribal Wars) vs Wood / Stone /
    Silver (Grepolis). Purely naming; codes are the only thing that matters in the schema.
 2. Should the three resources have **different** base rates or costs to give them character (e.g.
-   iron scarcer, stone bulkier)? Proposed: identical base values now, differentiate through costs
+   silver scarcer, stone bulkier)? Proposed: identical base values now, differentiate through costs
    once buildings and troops exist.
 3. Should a **DRAFT** world's cities accrue? Moot today (players cannot join a DRAFT world).
 4. Population is paid at **order time** (proposed) vs at **completion**. Order-time is stricter
@@ -652,7 +652,7 @@ player. Each building has exactly one job.
 | `FARM`       | Farm         | **population** — each level adds people to the pool | +240 population   | 5                 |
 | `WOODCUTTER` | Woodcutter   | **wood** production rate                          | 30 wood / h        | 6                 |
 | `STONE_MINE` | Stone Mine   | **stone** production rate                         | 30 stone / h       | 6                 |
-| `IRON_MINE`  | Iron Mine    | **iron** production rate                          | 30 iron / h        | 6                 |
+| `SILVER_MINE`| Silver Mine  | **silver** production rate                        | 30 silver / h      | 6                 |
 | `DEPOSIT`    | Deposit      | **capacity** — max stock of each resource         | 1000 per resource  | 6                 |
 | `TOWN_HALL`  | Town Hall    | **build speed**, prerequisite gate, **build queue length** | 95 % build time, 2 queue slots | 10        |
 
@@ -701,7 +701,7 @@ For each building type there are four per-level lookup tables in config (constan
 
 | table                 | meaning                                                          |
 |-----------------------|------------------------------------------------------------------|
-| `cost[level]`         | wood / stone / iron to reach `level` (from `level-1`)             |
+| `cost[level]`         | wood / stone / silver to reach `level` (from `level-1`)           |
 | `popCost[level]`      | population to reach `level`                                       |
 | `points[level]`       | points the building is worth **at** `level` (cumulative, not per step) |
 | `effect[level]`       | the building's job at `level`: `farmGain`, `production`, `capacity`, build/recruit/study speed, defence bonus, hidden amount, queue slots |
@@ -820,7 +820,7 @@ Owner only. Returns the city's settled state so the client re-syncs from the res
 A read-only companion for the UI's building panel (what the next level costs and gives):
 **GET `/api/v1/worlds/{id}/cities/{cityId}/buildings`** →
 `[ { "type": "FARM", "level": 1, "maxLevel": 30, "points": 50, "effect": 100,
-     "next": { "cost": { "wood": 90, "stone": 80, "iron": 70 }, "popCost": 5, "points": 120, "effect": 220 } }, … ]`
+     "next": { "cost": { "wood": 90, "stone": 80, "silver": 70 }, "popCost": 5, "points": 120, "effect": 220 } }, … ]`
 (`next` is absent at max level).
 
 ### Implementation notes (buildings)
@@ -863,7 +863,7 @@ A read-only companion for the UI's building panel (what the next level costs and
 
 ### Decided along the way
 
-- Names: Woodcutter, Stone Mine, Iron Mine, Deposit, Vault, Town Hall (not Timber Camp / Quarry /
+- Names: Woodcutter, Stone Mine, Silver Mine, Deposit, Vault, Town Hall (not Timber Camp / Quarry /
   Warehouse / Hiding Place / Headquarters). Codes are what the schema and API use.
 - Pace: Tribal Wars 1:1 at world speed 1; faster worlds use the world-speed multiplier.
 - Build queue: 2 / 3 / 4 slots at Town Hall 1 / 10 / 20, every order paid at placement.
@@ -880,7 +880,7 @@ world, world speed 1); the tables with recruit and study times per level are in
 
 ### The ten units
 
-All land units, all recruited from the **Barracks**. Cost in wood / stone / iron, population per unit,
+All land units, all recruited from the **Barracks**. Cost in wood / stone / silver, population per unit,
 base recruit time, attack, defence vs infantry / cavalry / archers, speed in minutes per map field, carry
 capacity when plundering.
 
@@ -1003,9 +1003,9 @@ with the **other city's** id, so either end can end it.
 place in an army, and one scout per run is not an army anyway, so the Scout unit goes and espionage
 becomes what it is in Grepolis: a payment.
 
-**Silver.** The third resource is renamed **iron → silver** everywhere (the resource, the `IRON_MINE`
-building becomes the `SILVER_MINE`, every cost, the API field, the icon). It is the ordinary third
-resource, produced by its mine and held by the Deposit like the other two.
+**Silver** (done, `V108`). The third resource is **silver**, produced by the `SILVER_MINE` and held by
+the Deposit like the other two; it was called iron until espionage needed a coin to be paid in. Only the
+names changed: every stock, rate and cost is the same number it was.
 
 **The Cave** (`CAVE`) is a new building holding a **silver balance of its own**, separate from the city's
 stock. Silver is moved into it from the stock at any time, instantly, up to the level's capacity, and it
@@ -1152,11 +1152,11 @@ Back to Lobby, Logout — on the right), not the plain page top bar. It adds one
 group:
 
 ```
-[ Caladon I ]                       [wood 512] [stone 512] [iron 512] [pop 236]  (profile) (account)
+[ Caladon I ]                       [wood 512] [stone 512] [silver 512] [pop 236]  (profile) (account)
 ```
 
-- Four items, in this order: **Wood, Stone, Iron, Population**, each an icon (registry keys
-  `hud.wood`, `hud.stone`, `hud.iron`, `hud.population`) followed by the number. All four icons
+- Four items, in this order: **Wood, Stone, Silver, Population**, each an icon (registry keys
+  `hud.wood`, `hud.stone`, `hud.silver`, `hud.population`) followed by the number. All four icons
   are **finished PNG art** already in the repo (see *Resource icons*, below). All four numbers
   are shown exactly as the server returned them and change only on refresh.
 - Hover on a resource shows a tooltip with `+<ratePerHour>/h` and the capacity; a stock at
@@ -1177,7 +1177,7 @@ sits in the centre; transparent background):
 |----------------------|------------------|----------------------------------------------------|-------|
 | `res-wood.png`       | `hud.wood`       | bundle of logs, leather strap                       | green |
 | `res-stone.png`      | `hud.stone`      | pile of grey and tan boulders                       | red   |
-| `res-iron.png`       | `hud.iron`       | two strapped iron ingots                            | blue  |
+| `res-silver.png`     | `hud.silver`     | two strapped silver ingots                          | blue  |
 | `res-population.png` | `hud.population` | family relief (man, woman, child), wheat sheaf, house | amber |
 
 - **Source size 1024 × 1024**, RGBA, edges fully transparent; ~1.8 MB each. They are far larger than
@@ -1185,7 +1185,7 @@ sits in the centre; transparent background):
   should be **downscaled to 64 × 64** (retina-safe at 32 px) and re-exported, keeping the 1024
   originals under `web/assets/sprites/` as the source of truth, in line with the other sprites.
 - The gem colour doubles as the item's **accent colour** in the UI (green = wood, red = stone,
-  blue = iron, amber = population) — e.g. for the at-capacity warning tint and tooltip heading —
+  blue = silver, amber = population) — e.g. for the at-capacity warning tint and tooltip heading —
   so the four items read as distinct at a glance.
 - Like every other sprite they are referenced through the `@assets` alias and the registry in
   `ui/src/map/assets.ts`; nothing outside the registry knows the file names.
@@ -1269,7 +1269,7 @@ a standalone preview.
 - **Join response** now carries `startCity.points` so the City view can show points without a
   second request.
 - **City view HUD (built)**: `CityPage` uses `MapTopBar` with a `strip` slot rendered just before
-  the Profile icon; `ResourceStrip` shows Wood / Stone / Iron / Population from
+  the Profile icon; `ResourceStrip` shows Wood / Stone / Silver / Population from
   `worldsApi.cityDetail`, re-fetched every 60 s when any rate exceeds 60/h, else every 300 s
   (`pollIntervalMs`, unit-tested), paused while `document.hidden` and re-fetched on return. All numbers are shown exactly as returned (a per-second local extrapolation was built
   and removed as distracting). Icons are 128 px copies (`hud-*.png`) of the 1024 px medallions,

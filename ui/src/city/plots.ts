@@ -32,7 +32,7 @@ export const PLOTS: Record<Exclude<BuildingType, 'WALL'>, Plot> = {
   FARM: { anchor: [826, 398], box: [744, 279, 914, 398] },
   WOODCUTTER: { anchor: [1224, 397], box: [1134, 278, 1307, 397] },
   STONE_MINE: { anchor: [615, 724], box: [529, 608, 725, 724] },
-  IRON_MINE: { anchor: [1422, 722], box: [1318, 614, 1510, 722] },
+  SILVER_MINE: { anchor: [1422, 722], box: [1318, 614, 1510, 722] },
 }
 
 /** Anchor as CSS percentages of the image box. */

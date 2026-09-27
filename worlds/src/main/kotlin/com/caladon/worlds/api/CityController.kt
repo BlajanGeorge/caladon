@@ -50,7 +50,7 @@ class CityController(
                 queued = v.queued,
                 next = v.next?.let { n ->
                     NextLevelResponse(
-                        level = n.level, cost = CostResponse(n.cost.wood, n.cost.stone, n.cost.iron), popCost = n.popCost,
+                        level = n.level, cost = CostResponse(n.cost.wood, n.cost.stone, n.cost.silver), popCost = n.popCost,
                         points = n.points, effect = EffectResponse(n.effect.value, n.effect.unit),
                         buildTimeSeconds = n.buildTimeSeconds, blockedBy = n.blockedBy.map { RequirementResponse(it.building, it.level) },
                     )
@@ -82,11 +82,11 @@ class CityController(
             val u = v.unit
             UnitViewResponse(
                 type = u, name = u.displayName, role = u.role, count = v.count,
-                cost = CostResponse(u.cost.wood, u.cost.stone, u.cost.iron), population = u.population,
+                cost = CostResponse(u.cost.wood, u.cost.stone, u.cost.silver), population = u.population,
                 attack = u.attack, defence = u.defence, defenceCavalry = u.defenceCavalry, defenceArcher = u.defenceArcher,
                 speed = u.speed, carry = u.carry, barracksLevel = u.barracksLevel, academyLevel = u.academyLevel,
                 recruitSeconds = v.recruitSeconds, studied = v.studied, studyCompletesAt = v.studyCompletesAt,
-                studyCost = u.studyCost?.let { CostResponse(it.wood, it.stone, it.iron) }, studySeconds = v.studySeconds,
+                studyCost = u.studyCost?.let { CostResponse(it.wood, it.stone, it.silver) }, studySeconds = v.studySeconds,
                 studyBlockedBy = v.studyBlockedBy.map { RequirementResponse(it.building, it.level) },
                 blockedBy = v.blockedBy.map { RequirementResponse(it.building, it.level) },
                 recruitable = v.blockedBy.isEmpty() && v.studied,
@@ -158,7 +158,7 @@ class CityController(
         return CityDetailResponse(
             id = state.cityId, name = state.city.name, x = x, y = y, points = state.city.points,
             resources = CityResourcesResponse(
-                wood = stock(Resource.WOOD), stone = stock(Resource.STONE), iron = stock(Resource.IRON),
+                wood = stock(Resource.WOOD), stone = stock(Resource.STONE), silver = stock(Resource.SILVER),
                 capacity = state.capacity(), serverTime = state.now,
             ),
             population = state.resources.population,
@@ -170,7 +170,7 @@ class CityController(
                 val cost = BuildingRules.cost(it.building, it.targetLevel)
                 BuildOrderResponse(
                     requireNotNull(it.id), it.building, it.building.displayName, it.targetLevel, it.startedAt, it.completesAt,
-                    CostResponse(cost.wood, cost.stone, cost.iron), BuildingRules.popCost(it.building, it.targetLevel),
+                    CostResponse(cost.wood, cost.stone, cost.silver), BuildingRules.popCost(it.building, it.targetLevel),
                 )
             },
             buildQueueSlots = BuildingRules.queueSlots(state.level(Building.TOWN_HALL)),

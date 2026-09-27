@@ -7,7 +7,7 @@ export function describeEffect(type: BuildingType, e: Effect): string {
     case 'FARM': return `${n} people`
     case 'WOODCUTTER': return `${n} wood per hour`
     case 'STONE_MINE': return `${n} stone per hour`
-    case 'IRON_MINE': return `${n} iron per hour`
+    case 'SILVER_MINE': return `${n} silver per hour`
     case 'DEPOSIT': return `${n} of each resource`
     case 'VAULT': return `${n} of each resource hidden`
     case 'WALL': return `+${n}% defence`
@@ -26,7 +26,7 @@ export function describeGain(type: BuildingType, view: BuildingView): string | n
     case 'FARM': return `${sign}${n} people`
     case 'WOODCUTTER': return `${sign}${n} wood per hour`
     case 'STONE_MINE': return `${sign}${n} stone per hour`
-    case 'IRON_MINE': return `${sign}${n} iron per hour`
+    case 'SILVER_MINE': return `${sign}${n} silver per hour`
     case 'DEPOSIT': return `${sign}${n} of each resource`
     case 'VAULT': return `${sign}${n} hidden`
     case 'WALL': return `${sign}${n}% defence`

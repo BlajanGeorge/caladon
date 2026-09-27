@@ -3,7 +3,7 @@ import townHall from '@assets/sprites/icon-town-hall.png'
 import farm from '@assets/sprites/icon-farm.png'
 import woodcutter from '@assets/sprites/icon-woodcutter.png'
 import stoneMine from '@assets/sprites/icon-stone-mine.png'
-import ironMine from '@assets/sprites/icon-iron-mine.png'
+import silverMine from '@assets/sprites/icon-silver-mine.png'
 import deposit from '@assets/sprites/icon-deposit.png'
 import barracks from '@assets/sprites/icon-barracks.png'
 import academy from '@assets/sprites/icon-academy.png'
@@ -20,7 +20,7 @@ export const BUILDING_ICONS: Record<BuildingType, string> = {
   FARM: farm,
   WOODCUTTER: woodcutter,
   STONE_MINE: stoneMine,
-  IRON_MINE: ironMine,
+  SILVER_MINE: silverMine,
   DEPOSIT: deposit,
   BARRACKS: barracks,
   ACADEMY: academy,

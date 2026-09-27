@@ -16,7 +16,7 @@ interface Props {
 /** Units at home, the recruitment form per type, study status, and the recruitment queue. */
 export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCancel, onCancelStudy }: Props) {
   const [counts, setCounts] = useState<Record<string, string>>({})
-  const stocks = { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, iron: detail.resources.iron.stock }
+  const stocks = { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, silver: detail.resources.silver.stock }
 
   return (
     <section className="card panel">
@@ -82,7 +82,7 @@ export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCanc
                 <td>{u.count}</td>
                 <td className="small-text">atk {u.attack} · def {u.defence}/{u.defenceCavalry}/{u.defenceArcher} · {u.speed} min/field · carry {u.carry}</td>
                 <td className="small-text">
-                  {u.cost.wood.toLocaleString()} <i>wood</i> · {u.cost.stone.toLocaleString()} <i>stone</i> · {u.cost.iron.toLocaleString()} <i>iron</i> · {u.population} <i>pop</i>
+                  {u.cost.wood.toLocaleString()} <i>wood</i> · {u.cost.stone.toLocaleString()} <i>stone</i> · {u.cost.silver.toLocaleString()} <i>silver</i> · {u.population} <i>pop</i>
                   <div className="muted">{formatDuration(u.recruitSeconds)} each</div>
                 </td>
                 <td>
@@ -101,7 +101,7 @@ export function ArmyPanel({ detail, units, now, busy, onRecruit, onStudy, onCanc
                   ) : (
                     <>
                       <button className="secondary small" disabled={busy || studyReason !== ''} title={studyReason} onClick={() => onStudy(u.type)}>
-                        Study{u.studyCost ? ` (${u.studyCost.wood.toLocaleString()} / ${u.studyCost.stone.toLocaleString()} / ${u.studyCost.iron.toLocaleString()}${u.studySeconds ? `, ${formatDuration(u.studySeconds)}` : ''})` : ''}
+                        Study{u.studyCost ? ` (${u.studyCost.wood.toLocaleString()} / ${u.studyCost.stone.toLocaleString()} / ${u.studyCost.silver.toLocaleString()}${u.studySeconds ? `, ${formatDuration(u.studySeconds)}` : ''})` : ''}
                       </button>
                       {studyReason && <div className="reason">{studyReason}</div>}
                     </>

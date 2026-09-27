@@ -1,4 +1,5 @@
-# Caladon — Buildings proposal (research + numbers)
+lines 590
+— Buildings proposal (research + numbers)
 
 **Status: accepted (design only, nothing implemented).** Companion to the *Buildings* and *Army* sections of
 ARCHITECTURE.md, which record the rules; this file holds the numbers and is the source of the config tables.
@@ -45,7 +46,7 @@ built by the player.
 | `FARM` | Farm | 30 | yes | population | 240 (+240) | 5 (+1 / +5 / +165) | — |
 | `WOODCUTTER` | Woodcutter | 30 | yes | wood/h | 30/h | 6 (+1 / +5 / +198) | — |
 | `STONE_MINE` | Stone Mine | 30 | yes | stone/h | 30/h | 6 (+1 / +5 / +198) | — |
-| `IRON_MINE` | Iron Mine | 30 | yes | iron/h | 30/h | 6 (+1 / +5 / +198) | — |
+| `SILVER_MINE` | Silver Mine | 30 | yes | silver/h | 30/h | 6 (+1 / +5 / +198) | — |
 | `DEPOSIT` | Deposit | 30 | yes | capacity | 1,000 | 6 (+1 / +5 / +198) | — |
 | `TOWN_HALL` | Town Hall | 30 | yes | build speed, gates | 95% build time, queue 2 | 10 (+2 / +9 / +330) | — |
 | `BARRACKS` | Barracks | 25 | no | recruits all troops; level unlocks unit types | 63% recruit time | 16 (+3 / +14 / +212) | Town Hall 3 |
@@ -113,7 +114,7 @@ Two kinds of conditions, both checked at order time:
 | Farm | founded | step rule only |
 | Woodcutter | founded | step rule only |
 | Stone Mine | founded | step rule only |
-| Iron Mine | founded | step rule only |
+| Silver Mine | founded | step rule only |
 | Deposit | founded | step rule only |
 | Town Hall | founded | none (it is the gate) |
 | Barracks | Town Hall 3 | L10: Town Hall 10, L20: Town Hall 20 |
@@ -128,7 +129,7 @@ Two kinds of conditions, both checked at order time:
 cost[r](L)      = round(COST_SCALE × base_r × f_r^(L−1))        COST_SCALE = 1; base/f per building in §8
 popTotal(L)     = round(POP_SCALE × base_pop × f_pop^(L−1))     POP_SCALE = 1; popCost(L) = popTotal(L) − popTotal(L−1)
 points(L)       = round(P1 × 1.2^(L−1))                     cumulative; the city gains points(L) − points(L−1) per upgrade
-production(L)   = round(30 × 1.163118^(L−1)) per hour          Woodcutter / Stone Mine / Iron Mine; 2,400/h at 30
+production(L)   = round(30 × 1.163118^(L−1)) per hour          Woodcutter / Stone Mine / Silver Mine; 2,400/h at 30
 capacity(L)     = round(1000 × 1.2294934^(L−1))              Deposit, per resource; 400,000 at 30
 farmPop(L)      = floor(240 × 100^((L−1)/29))              Farm; farmGain(L) = farmPop(L) − farmPop(L−1); 24,000 at 30
 buildTime(L)    = (base_s / TIME_SCALE) × 1.18 × 1.2^(L−1−14/(L−1)) × 1.05^(−TownHall)   TIME_SCALE = 1; exponent = −13 for L ≤ 2
@@ -158,12 +159,12 @@ Why these knobs:
 
 ## 4. Full tables — founded buildings (all 30 levels)
 
-Columns: cost to reach the level (wood / stone / iron), population that level takes, effect **at** the level,
+Columns: cost to reach the level (wood / stone / silver), population that level takes, effect **at** the level,
 cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 multiply by 0.38).
 
 ### Farm (`FARM`, max 30)
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | — (founded) | 0 | 240 (+240) | 5 | — |
 | 2 | 59 / 53 / 39 | 0 | 281 (+41) | 6 | 2m06s |
@@ -198,7 +199,7 @@ cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 
 
 ### Woodcutter (`WOODCUTTER`, max 30)
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | — (founded) | 0 | 30/h | 6 | — |
 | 2 | 63 / 77 / 50 | 1 | 35/h | 7 | 1m35s |
@@ -233,7 +234,7 @@ cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 
 
 ### Stone Mine (`STONE_MINE`, max 30)
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | — (founded) | 0 | 30/h | 6 | — |
 | 2 | 83 / 63 / 50 | 1 | 35/h | 7 | 1m35s |
@@ -266,9 +267,9 @@ cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 
 | 29 | 52,410 / 36,100 / 16,515 | 48 | 2,063/h | 989 | 42h16m |
 | 30 | 66,561 / 45,666 / 20,478 | 55 | 2,400/h | 1,187 | 50h53m |
 
-### Iron Mine (`IRON_MINE`, max 30)
+### Silver Mine (`SILVER_MINE`, max 30)
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | — (founded) | 0 | 30/h | 6 | — |
 | 2 | 94 / 83 / 87 | 2 | 35/h | 7 | 1m53s |
@@ -303,7 +304,7 @@ cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 
 
 ### Deposit (`DEPOSIT`, max 30)
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | — (founded) | 0 | 1,000 | 6 | — |
 | 2 | 76 / 64 / 50 | 0 | 1,229 | 7 | 1m47s |
@@ -338,7 +339,7 @@ cumulative points, build time at Town Hall 1 and world speed 1 (at Town Hall 20 
 
 ### Town Hall (`TOWN_HALL`, max 30)
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | — (founded) | 0 | 95% build time, queue 2 | 10 | — |
 | 2 | 113 / 102 / 88 | 1 | 91% build time, queue 2 | 12 | 1m35s |
@@ -412,7 +413,7 @@ Same columns, sampled levels. Level 1 must be built (it is not founded).
 
 ### Barracks (`BARRACKS`, max 25) — requires Town Hall 3
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | 200 / 170 / 90 | 7 | 63% recruit time | 16 | 3m09s |
 | 2 | 252 / 218 / 113 | 1 | 59% recruit time | 19 | 3m09s |
@@ -425,7 +426,7 @@ Same columns, sampled levels. Level 1 must be built (it is not founded).
 
 ### Academy (`ACADEMY`, max 20) — requires Town Hall 8, Farm 6, Barracks 5
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | 220 / 180 / 240 | 20 | 91% study time | 19 | 10m30s |
 | 2 | 277 / 229 / 302 | 3 | 83% study time | 23 | 10m30s |
@@ -437,7 +438,7 @@ Same columns, sampled levels. Level 1 must be built (it is not founded).
 
 ### Wall (`WALL`, max 20) — requires Town Hall 5
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | 50 / 100 / 20 | 5 | +4% defence | 8 | 6m18s |
 | 2 | 63 / 127 / 25 | 1 | +8% defence | 10 | 6m18s |
@@ -449,7 +450,7 @@ Same columns, sampled levels. Level 1 must be built (it is not founded).
 
 ### Vault (`VAULT`, max 10) — requires Town Hall 5, Deposit 5
 
-| lvl | wood / stone / iron | pop | effect | points | build time |
+| lvl | wood / stone / silver | pop | effect | points | build time |
 |---|---|---|---|---|---|
 | 1 | 50 / 60 / 50 | 2 | 150 per resource | 5 | 3m09s |
 | 2 | 63 / 75 / 63 | 0 | 200 per resource | 6 | 3m09s |
@@ -491,7 +492,7 @@ Ten land units, all recruited from the Barracks. Stats are Tribal Wars' (live `g
 world, world speed 1): cost, population, base recruit time in seconds, attack, defence vs general / cavalry /
 archers, speed in minutes per field, carry capacity.
 
-| unit | role | wood / stone / iron | pop | base time | atk | def / cav / arch | speed | carry | Barracks ≥ | study at Academy ≥ |
+| unit | role | wood / stone / silver | pop | base time | atk | def / cav / arch | speed | carry | Barracks ≥ | study at Academy ≥ |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Spearman | cheap defence, strong vs cavalry | 50 / 30 / 10 | 1 | 17m00s | 10 | 15 / 45 / 20 | 18 | 25 | 1 | — |
 | Swordsman | defence vs infantry | 30 / 30 / 70 | 1 | 25m00s | 25 | 50 / 15 / 40 | 22 | 15 | 3 | 1 |
@@ -539,7 +540,7 @@ research durations, so **studyBase = 2 × the unit's recruit base time** is a pl
 Tribal Wars' simple-tech research costs; the Nobleman's study cost is Tribal Wars' Academy building cost (the
 price of gaining the ability to make nobles there), as a placeholder.
 
-| Academy level | unlocks for study | study cost (wood / stone / iron) | study time at that level |
+| Academy level | unlocks for study | study cost (wood / stone / silver) | study time at that level |
 |---|---|---|---|
 | 1 | Swordsman | 400 / 500 / 300 | 45m27s |
 | 2 | Scout | 560 / 480 / 480 | 24m48s |
@@ -563,7 +564,7 @@ Town Hall, Warehouse → Deposit, Hiding place → Vault):
 | Farm | Farm | 45/40/30 | 0 | 1.3/1.32/1.29/1.0 | 5 | 1,200 |
 | Woodcutter | Timber camp | 50/60/40 | 5 | 1.25/1.275/1.245/1.155 | 6 | 900 |
 | Stone Mine | Clay pit | 65/50/40 | 10 | 1.27/1.265/1.24/1.14 | 6 | 900 |
-| Iron Mine | Iron mine | 75/65/70 | 10 | 1.252/1.275/1.24/1.17 | 6 | 1,080 |
+| Silver Mine | Iron mine | 75/65/70 | 10 | 1.252/1.275/1.24/1.17 | 6 | 1,080 |
 | Deposit | Warehouse | 60/50/40 | 0 | 1.265/1.27/1.245/1.15 | 6 | 1,020 |
 | Town Hall | Headquarters | 90/80/70 | 5 | 1.26/1.275/1.26/1.17 | 10 | 900 |
 | Barracks | Barracks | 200/170/90 | 7 | 1.26/1.28/1.26/1.17 | 16 | 1,800 |

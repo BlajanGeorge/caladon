@@ -1,16 +1,16 @@
 import type { CityResources } from '../api/worlds'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
-import ironUrl from '@assets/sprites/hud-iron.png'
+import silverUrl from '@assets/sprites/hud-silver.png'
 import populationUrl from '@assets/sprites/hud-population.png'
 
-type ResourceKey = 'wood' | 'stone' | 'iron'
-const RESOURCE_KEYS: ResourceKey[] = ['wood', 'stone', 'iron']
+type ResourceKey = 'wood' | 'stone' | 'silver'
+const RESOURCE_KEYS: ResourceKey[] = ['wood', 'stone', 'silver']
 
 const ICONS: Record<ResourceKey | 'population', { src: string; label: string }> = {
   wood: { src: woodUrl, label: 'Wood' },
   stone: { src: stoneUrl, label: 'Stone' },
-  iron: { src: ironUrl, label: 'Iron' },
+  silver: { src: silverUrl, label: 'Silver' },
   population: { src: populationUrl, label: 'Population' },
 }
 
@@ -23,7 +23,7 @@ interface Props {
 }
 
 /**
- * Wood / Stone / Iron / Population for the HUD top bar. Every number is shown exactly as the
+ * Wood / Stone / Silver / Population for the HUD top bar. Every number is shown exactly as the
  * server returned it; the values only change when the owner re-fetches (once a minute, or after
  * an action). No local ticking.
  */

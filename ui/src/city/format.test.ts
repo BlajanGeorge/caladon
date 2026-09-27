@@ -21,17 +21,17 @@ describe('secondsUntil', () => {
 })
 
 describe('affordability', () => {
-  const stocks = { wood: 100, stone: 100, iron: 100 }
+  const stocks = { wood: 100, stone: 100, silver: 100 }
   it('names the short resources, then population', () => {
-    expect(affordability(stocks, 5, { wood: 63, stone: 77, iron: 50 }, 1)).toEqual({ ok: true, reason: '' })
-    expect(affordability(stocks, 5, { wood: 150, stone: 77, iron: 250 }, 1).reason).toBe('Not enough wood, iron')
-    expect(affordability(stocks, 0, { wood: 10, stone: 10, iron: 10 }, 1).reason).toBe('Not enough population')
-    expect(affordability(stocks, 5, { wood: 50, stone: 30, iron: 10 }, 1, 3).reason).toBe('Not enough wood')
+    expect(affordability(stocks, 5, { wood: 63, stone: 77, silver: 50 }, 1)).toEqual({ ok: true, reason: '' })
+    expect(affordability(stocks, 5, { wood: 150, stone: 77, silver: 250 }, 1).reason).toBe('Not enough wood, silver')
+    expect(affordability(stocks, 0, { wood: 10, stone: 10, silver: 10 }, 1).reason).toBe('Not enough population')
+    expect(affordability(stocks, 5, { wood: 50, stone: 30, silver: 10 }, 1, 3).reason).toBe('Not enough wood')
   })
   it('maxAffordable takes the tightest of the four limits', () => {
-    expect(maxAffordable(stocks, 5, { wood: 50, stone: 30, iron: 10 }, 1)).toBe(2)
-    expect(maxAffordable(stocks, 1, { wood: 10, stone: 10, iron: 10 }, 1)).toBe(1)
-    expect(maxAffordable(stocks, 100, { wood: 0, stone: 0, iron: 0 }, 0)).toBe(0)
+    expect(maxAffordable(stocks, 5, { wood: 50, stone: 30, silver: 10 }, 1)).toBe(2)
+    expect(maxAffordable(stocks, 1, { wood: 10, stone: 10, silver: 10 }, 1)).toBe(1)
+    expect(maxAffordable(stocks, 100, { wood: 0, stone: 0, silver: 0 }, 0)).toBe(0)
   })
 })
 

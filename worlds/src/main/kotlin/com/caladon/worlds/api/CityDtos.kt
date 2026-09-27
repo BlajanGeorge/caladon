@@ -11,7 +11,7 @@ data class ResourceStockResponse(val stock: Long, val ratePerHour: Long)
 data class CityResourcesResponse(
     val wood: ResourceStockResponse,
     val stone: ResourceStockResponse,
-    val iron: ResourceStockResponse,
+    val silver: ResourceStockResponse,
     /** Max stock of each resource (Deposit level). */
     val capacity: Long,
     /** The instant the stocks are settled to. */
@@ -115,7 +115,7 @@ data class RecruitRequest(val unit: Unit, val count: Int)
 
 data class StudyRequest(val unit: Unit)
 
-data class CostResponse(val wood: Long, val stone: Long, val iron: Long)
+data class CostResponse(val wood: Long, val stone: Long, val silver: Long)
 
 data class EffectResponse(val value: Long, val unit: String)
 

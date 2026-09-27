@@ -282,7 +282,7 @@ class WorldApiTest : ApiTestBase() {
         val row = cityResourcesRepository.findById(cityId).orElseThrow()
         assertThat(row.wood).isEqualTo(500)
         assertThat(row.stone).isEqualTo(500)
-        assertThat(row.iron).isEqualTo(500)
+        assertThat(row.silver).isEqualTo(500)
         assertThat(row.population).isEqualTo(240)
 
         get("/api/v1/worlds/$id/cities/$cityId", playerToken).andExpect {
@@ -304,7 +304,7 @@ class WorldApiTest : ApiTestBase() {
             status { isOk() }
             jsonPath("$.resources.wood.stock") { value(502) }
             jsonPath("$.resources.stone.stock") { value(502) }
-            jsonPath("$.resources.iron.stock") { value(502) }
+            jsonPath("$.resources.silver.stock") { value(502) }
             jsonPath("$.resources.serverTime") { value(clock.instant().toString()) }
         }
         val row2 = cityResourcesRepository.findById(cityId).orElseThrow()

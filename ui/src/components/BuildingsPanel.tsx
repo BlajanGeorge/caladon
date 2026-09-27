@@ -12,7 +12,7 @@ interface Props {
 
 /** Every building with its level and effect, the next level's price, and the build queue. */
 export function BuildingsPanel({ detail, buildings, now, busy, onUpgrade, onCancel }: Props) {
-  const stocks = { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, iron: detail.resources.iron.stock }
+  const stocks = { wood: detail.resources.wood.stock, stone: detail.resources.stone.stock, silver: detail.resources.silver.stock }
   const queueFull = detail.buildQueue.length >= detail.buildQueueSlots
 
   return (
@@ -57,7 +57,7 @@ export function BuildingsPanel({ detail, buildings, now, busy, onUpgrade, onCanc
                 <td className="b-next">
                   {n ? (
                     <>
-                      <span className="cost">{n.cost.wood.toLocaleString()} <i>wood</i> · {n.cost.stone.toLocaleString()} <i>stone</i> · {n.cost.iron.toLocaleString()} <i>iron</i> · {n.popCost} <i>pop</i></span>
+                      <span className="cost">{n.cost.wood.toLocaleString()} <i>wood</i> · {n.cost.stone.toLocaleString()} <i>stone</i> · {n.cost.silver.toLocaleString()} <i>silver</i> · {n.popCost} <i>pop</i></span>
                       <span className="muted"> → {n.effect.value.toLocaleString()} {n.effect.unit}, {formatDuration(n.buildTimeSeconds)}, +{n.points - b.points} pts</span>
                     </>
                   ) : <span className="muted">—</span>}

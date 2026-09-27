@@ -1,12 +1,12 @@
 package com.caladon.worlds.rules
 
 /** Resource cost of one building level or one unit. */
-data class Cost(val wood: Long, val stone: Long, val iron: Long) {
-    operator fun times(n: Long) = Cost(wood * n, stone * n, iron * n)
-    operator fun plus(o: Cost) = Cost(wood + o.wood, stone + o.stone, iron + o.iron)
+data class Cost(val wood: Long, val stone: Long, val silver: Long) {
+    operator fun times(n: Long) = Cost(wood * n, stone * n, silver * n)
+    operator fun plus(o: Cost) = Cost(wood + o.wood, stone + o.stone, silver + o.silver)
 
     /** Half of it, rounded down: what a cancelled study gives back. */
-    fun half() = Cost(wood / 2, stone / 2, iron / 2)
+    fun half() = Cost(wood / 2, stone / 2, silver / 2)
     companion object { val ZERO = Cost(0, 0, 0) }
 }
 
@@ -39,7 +39,7 @@ enum class Building(
     FARM("Farm", 30, true, Cost(45, 40, 30), Triple(1.30, 1.32, 1.29), 0.0, 1.0, 5.0, 1200.0, emptyList()),
     WOODCUTTER("Woodcutter", 30, true, Cost(50, 60, 40), Triple(1.25, 1.275, 1.245), 5.0, 1.155, 6.0, 900.0, emptyList()),
     STONE_MINE("Stone Mine", 30, true, Cost(65, 50, 40), Triple(1.27, 1.265, 1.24), 10.0, 1.14, 6.0, 900.0, emptyList()),
-    IRON_MINE("Iron Mine", 30, true, Cost(75, 65, 70), Triple(1.252, 1.275, 1.24), 10.0, 1.17, 6.0, 1080.0, emptyList()),
+    SILVER_MINE("Silver Mine", 30, true, Cost(75, 65, 70), Triple(1.252, 1.275, 1.24), 10.0, 1.17, 6.0, 1080.0, emptyList()),
     DEPOSIT("Deposit", 30, true, Cost(60, 50, 40), Triple(1.265, 1.27, 1.245), 0.0, 1.15, 6.0, 1020.0, emptyList()),
     TOWN_HALL("Town Hall", 30, true, Cost(90, 80, 70), Triple(1.26, 1.275, 1.26), 5.0, 1.17, 10.0, 900.0, emptyList()),
     BARRACKS(
@@ -70,7 +70,7 @@ enum class Building(
                 "it is the only source of people."
             WOODCUTTER -> "Fells and saws timber. Every level raises how much wood the city produces."
             STONE_MINE -> "Cuts and dresses stone. Every level raises how much stone the city produces."
-            IRON_MINE -> "Digs and smelts iron ore. Every level raises how much iron the city produces."
+            SILVER_MINE -> "Digs and refines silver ore. Every level raises how much silver the city produces."
             DEPOSIT -> "Stores what the city produces. Every level raises how much of each resource can be held; " +
                 "anything produced above that is lost."
             VAULT -> "Hides resources underground. Every level raises how much of each resource an attacker " +
@@ -88,7 +88,7 @@ enum class Building(
     val effectLabel: String
         get() = when (this) {
             FARM -> "Population"
-            WOODCUTTER, STONE_MINE, IRON_MINE -> "Production"
+            WOODCUTTER, STONE_MINE, SILVER_MINE -> "Production"
             DEPOSIT -> "Capacity"
             VAULT -> "Protected"
             WALL -> "Defence"
