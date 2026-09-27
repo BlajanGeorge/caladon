@@ -340,6 +340,15 @@ input { font: inherit; cursor: text; }
   font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
 }
 .cq-list li:not(.running) b { font-weight: 400; color: #6b5a3c; }
+/* A building's name in the Town Hall's list is the way into its own window. */
+.study-name.as-link {
+  padding: 0; text-align: left; background: none; border: none; font: inherit;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.study-name.as-link:hover { color: #fff3d4; text-decoration: underline; }
+/* The Cave's Store button carries the silver it moves. */
+.send-go .confirm-yes img { width: 18px; height: 18px; vertical-align: -4px; margin-right: 6px; }
+
 /* Sending troops: the errand and the field on one line, then how many of each unit goes. */
 /* Narrower than the studies and buildings windows: its rows are short. */
 .b-info.studies.send { width: 620px; }

@@ -12,6 +12,7 @@ import { RecruitWindow } from './RecruitWindow'
 import { BuildingsWindow } from './BuildingsWindow'
 import { CityQueues } from './CityQueues'
 import { SendWindow } from './SendWindow'
+import { CaveWindow } from './CaveWindow'
 import groundUrl from '@assets/sprites/city-ground.png'
 
 /**
@@ -49,25 +50,27 @@ interface Props {
   movements: Movements | null
   onRecall: (movementId: number) => void
   onSend: (kind: MovementKind, x: number, y: number, units: Partial<Record<UnitType, number>>) => void
+  onStoreSilver: (amount: number) => void
 }
 
 /**
  * The city view: the picture fills the whole view with the side panel floating over it, which holds the city's name, its resources and its troops. Plot labels (later:
  * building sprites) live inside the picture box, so their percentage anchors stay on the plots.
  */
-export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend }: Props) {
+export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
   const [hover, setHover] = useState<string | null>(null)
   // One window at a time: a building's own, or the Academy's studies.
   const [window_, setWindow] = useState<
-    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | null
+    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | { kind: 'cave' } | null
   >(null)
   const open = window_?.kind === 'building' ? window_.type : null
   const studies = window_?.kind === 'studies'
   const recruiting = window_?.kind === 'recruit'
   const building = window_?.kind === 'buildings'
   const sending = window_?.kind === 'send'
+  const cave = window_?.kind === 'cave'
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -184,6 +187,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
             open === 'ACADEMY' && units ? { label: 'Studies', onClick: () => setWindow({ kind: 'studies' }) }
               : open === 'BARRACKS' && units ? { label: 'Train troops', onClick: () => setWindow({ kind: 'recruit' }) }
               : open === 'TOWN_HALL' && buildings ? { label: 'Buildings', onClick: () => setWindow({ kind: 'buildings' }) }
+              : open === 'CAVE' ? { label: 'Store silver', onClick: () => setWindow({ kind: 'cave' }) }
               : undefined
           }
         />
@@ -195,9 +199,13 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           detail={detail}
           busy={busy}
           onUpgrade={onUpgrade}
+          onOpen={(type) => setWindow({ kind: 'building', type })}
           onCancel={onCancelBuild}
           onClose={() => setWindow(null)}
         />
+      )}
+      {cave && (
+        <CaveWindow detail={detail} busy={busy} onStore={onStoreSilver} onClose={() => setWindow(null)} />
       )}
       {sending && units && (
         <SendWindow units={units} detail={detail} busy={busy} onSend={onSend} onClose={() => setWindow(null)} />

@@ -1007,13 +1007,19 @@ becomes what it is in Grepolis: a payment.
 the Deposit like the other two; it was called iron until espionage needed a coin to be paid in. Only the
 names changed: every stock, rate and cost is the same number it was.
 
-**The Cave** (`CAVE`) is a new building holding a **silver balance of its own**, separate from the city's
-stock. Silver is moved into it from the stock at any time, instantly, up to the level's capacity, and it
-is never moved back out except by spending it. The balance does two things and nothing else: it **pays
-for this city's spying** and it **defends against being spied on**. Its level sets the capacity only.
-Suggested numbers, from the same Tribal Wars formulas as every other building: max level 20, cost base
-around the Vault's, capacity 600 at level 1 growing by 1.2294934 per level, points as usual, and a Town
-Hall level 5 requirement so it is a mid-game decision.
+**The Cave** (`CAVE`, built, `V109`) holds a **silver balance of its own**, separate from the city's
+stock, in `city_resources.cave_silver`. Silver is moved into it from the stock at any time, instantly, up
+to the level's capacity (`POST …/cities/{id}/cave {amount}`, returning the city detail; errors
+`REQUIREMENTS_NOT_MET` with no Cave, `NOT_ENOUGH_RESOURCES`, `CAVE_FULL` with what is over, and
+`VALIDATION_ERROR` for a non-positive amount). It never comes back out except by being spent. The balance
+does two things and nothing else: it **pays for this city's spying** and it **defends against being spied
+on**; the level sets the capacity only. Max level 20, cost 80/120/60 growing at 1.26/1.27/1.26, capacity
+**600 silver at level 1** on the Deposit's 1.2294934 curve (30,405 at 20), 7 points at level 1, and Town
+Hall 5 with Silver Mine 5 to build it, Town Hall 10 from level 10.
+
+Until the city picture has a plot for it, the Cave — like the Wall — is reached from the **Town Hall's
+window**: every building's name there opens that building's own window, which for the Cave carries the
+silver and the field that moves more in.
 
 **A spy mission** is a movement of kind `ESPIONAGE` that carries an amount of silver instead of troops:
 
@@ -1039,8 +1045,7 @@ and an unread mark in the top bar. Battle reports belong in the same place when 
 becomes empty; nothing else shifts), and its medallion stops being drawn.
 
 **Open, deliberately.** The city picture has nine plots and the Wall already has none; the Cave makes
-eleven buildings for nine plots, so until a wider picture exists the Cave lives in the Town Hall's list
-and on a plain label rather than having art of its own.
+eleven buildings for nine plots. Where it is drawn is not decided.
 
 ### Later, not designed here
 

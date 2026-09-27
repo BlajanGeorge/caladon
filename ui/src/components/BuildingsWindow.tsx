@@ -18,6 +18,8 @@ interface Props {
   detail: CityDetail | null
   busy: boolean
   onUpgrade: (building: BuildingType) => void
+  /** Opens that building's own window: the only way in for the ones with no plot in the picture. */
+  onOpen: (building: BuildingType) => void
   onCancel: (orderId: number) => void
   onClose: () => void
 }
@@ -42,7 +44,7 @@ function stateOf(b: BuildingView, detail: CityDetail | null): State {
  * takes, and the build queue underneath. Ordering and cancelling work exactly as in the Academy and the
  * Barracks: half of a cancelled build's resources come back, and all of its population.
  */
-export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgrade, onCancel, onClose }: Props) {
+export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgrade, onOpen, onCancel, onClose }: Props) {
   const queue = detail?.buildQueue ?? []
   const tail = queue.at(-1)?.id
   const [confirming, setConfirming] = useState<number | null>(null)
@@ -65,14 +67,16 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
           const gain = describeGain(b.type, b)
           return (
             <li key={b.type} className={state}>
-              <img className="study-icon" src={BUILDING_ICONS[b.type]} alt="" />
-              <span className="study-name">
+              {BUILDING_ICONS[b.type]
+                ? <img className="study-icon" src={BUILDING_ICONS[b.type]} alt="" />
+                : <span className="study-icon" aria-hidden="true" />}
+              <button type="button" className="study-name as-link" onClick={() => onOpen(b.type)} title={`What the ${b.name} does`}>
                 {b.name}
                 <em>
                   Level {b.level} of {b.maxLevel}
                   {b.queued > 0 ? ` · ${b.queued} ordered` : ''}
                 </em>
-              </span>
+              </button>
               {next ? (
                 <span className="study-cost">
                   <span><img src={woodUrl} alt="Wood" />{next.cost.wood.toLocaleString()}</span>
@@ -123,7 +127,7 @@ export function BuildingsWindow({ buildings, townHallLevel, detail, busy, onUpgr
               return (
                 <li key={o.id} className={i === 0 ? 'first' : undefined}>
                   <span className="rq-pos">{i + 1}</span>
-                  <img src={BUILDING_ICONS[o.building]} alt="" />
+                  {BUILDING_ICONS[o.building] ? <img src={BUILDING_ICONS[o.building]} alt="" /> : null}
                   <span className="rq-name">{o.name} <em>level {o.targetLevel}</em></span>
                   <span className="study-cost">
                     <span><img src={woodUrl} alt="Wood" />{back.wood.toLocaleString()}</span>

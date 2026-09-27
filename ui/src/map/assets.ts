@@ -178,7 +178,7 @@ export async function loadSprites(ctx: CanvasRenderingContext2D): Promise<Sprite
 }
 
 /**
- * Points thresholds per tier. A fully built city is 9,876 points (see docs/BUILDINGS-PROPOSAL.md);
+ * Points thresholds per tier. A fully built city is 10,100 points (see docs/BUILDINGS-PROPOSAL.md);
  * everything at level 10 ≈ 450, at 15 ≈ 1,100, at 20 ≈ 2,650, at 25 ≈ 5,300.
  * t1 < 300 (village) · t2 300–999 (town) · t3 1,000–2,499 (city) · t4 2,500–5,999 (large city) · t5 ≥ 6,000 (capital).
  */

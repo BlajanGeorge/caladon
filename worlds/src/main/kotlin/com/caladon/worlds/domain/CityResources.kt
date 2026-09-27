@@ -27,6 +27,9 @@ class CityResources(
 
     @Column(nullable = false)
     var population: Int,
+
+    /** The Cave's own silver: moved in from the stock, and never out except by being spent on spying. */
+    @Column(name = "cave_silver", nullable = false) var caveSilver: Long = 0,
 ) {
     fun stock(resource: Resource): Long = when (resource) {
         Resource.WOOD -> wood

@@ -61,6 +61,11 @@ enum class Building(
         "Vault", 10, false, Cost(50, 60, 50), Triple(1.25, 1.25, 1.25), 2.0, 1.17, 5.0, 1800.0,
         listOf(Requirement(TOWN_HALL, 5), Requirement(DEPOSIT, 5)),
         mapOf(5 to listOf(Requirement(DEPOSIT, 10))),
+    ),
+    CAVE(
+        "Cave", 20, false, Cost(80, 120, 60), Triple(1.26, 1.27, 1.26), 3.0, 1.17, 7.0, 2400.0,
+        listOf(Requirement(TOWN_HALL, 5), Requirement(SILVER_MINE, 5)),
+        mapOf(10 to listOf(Requirement(TOWN_HALL, 10))),
     );
 
     /** One line on what the building is for, shown in the city. */
@@ -73,6 +78,8 @@ enum class Building(
             SILVER_MINE -> "Digs and refines silver ore. Every level raises how much silver the city produces."
             DEPOSIT -> "Stores what the city produces. Every level raises how much of each resource can be held; " +
                 "anything produced above that is lost."
+            CAVE -> "Holds silver out of sight. What it holds pays for this city's spying and is what " +
+                "another city's spies must outbid to learn anything here."
             VAULT -> "Hides resources underground. Every level raises how much of each resource an attacker " +
                 "cannot take."
             TOWN_HALL -> "The seat of the city. Its level speeds up construction, lengthens the build queue and " +
@@ -88,6 +95,7 @@ enum class Building(
     val effectLabel: String
         get() = when (this) {
             FARM -> "Population"
+            CAVE -> "Silver held"
             WOODCUTTER, STONE_MINE, SILVER_MINE -> "Production"
             DEPOSIT -> "Capacity"
             VAULT -> "Protected"

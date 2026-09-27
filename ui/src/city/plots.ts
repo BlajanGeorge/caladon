@@ -23,7 +23,8 @@ export interface Plot {
   box: [number, number, number, number]
 }
 
-export const PLOTS: Record<Exclude<BuildingType, 'WALL'>, Plot> = {
+/** The picture has nine plots; the Wall and the Cave have none yet and are reached from the Town Hall. */
+export const PLOTS: Record<Exclude<BuildingType, 'WALL' | 'CAVE'>, Plot> = {
   TOWN_HALL: { anchor: [1017, 640], box: [857, 434, 1181, 640] },
   DEPOSIT: { anchor: [587, 534], box: [498, 434, 682, 534] },
   VAULT: { anchor: [1162, 859], box: [1069, 741, 1251, 859] },

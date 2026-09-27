@@ -33,6 +33,7 @@ B = [
  ('ACADEMY',    'Academy',    20, False, (220, 180, 240),  20, (1.26, 1.275, 1.26, 1.17),   19, 6000,  'Town Hall 8, Farm 6, Barracks 5',    'studies unit types; level gates what can be studied'),
  ('WALL',       'Wall',       20, False, (50, 100, 20),    5,  (1.26, 1.275, 1.26, 1.17),    8, 3600,  'Town Hall 5',                        'defence bonus'),
  ('VAULT',      'Vault',      10, False, (50, 60, 50),     2,  (1.25, 1.25, 1.25, 1.17),     5, 1800,  'Town Hall 5, Deposit 5',             'hides resources'),
+ ('CAVE',       'Cave',       20, False, (80, 120, 60),    3,  (1.26, 1.27, 1.26, 1.17),     7, 2400,  'Town Hall 5, Silver Mine 5',         'holds the silver that pays for spying and defends against it'),
 ]
 # Conditions that apply at higher levels of a building, on top of the Town Hall step rule.
 HIGHER = {
@@ -40,12 +41,15 @@ HIGHER = {
     'ACADEMY':  [(10, 'Barracks 10'), (15, 'Barracks 15')],
     'WALL':     [(10, 'Stone Mine 10'), (15, 'Stone Mine 15')],
     'VAULT':    [(5, 'Deposit 10')],
+    'CAVE':     [(10, 'Town Hall 10')],
 }
 def hall_needed(L): return 5 * ((L - 1) // 5)   # Town Hall step rule: levels 6-10 need TH 5, 11-15 need TH 10, ...
 def gain(b, L): return points(b, L) - points(b, L - 1)
 TW_NAME = {'FARM': 'Farm', 'WOODCUTTER': 'Timber camp', 'STONE_MINE': 'Clay pit', 'SILVER_MINE': 'Iron mine', 'DEPOSIT': 'Warehouse',
            'TOWN_HALL': 'Headquarters', 'BARRACKS': 'Barracks', 'ACADEMY': 'Smithy (numbers)',
-           'WALL': 'Wall', 'VAULT': 'Hiding place'}
+           'WALL': 'Wall', 'VAULT': 'Hiding place',
+           # Tribal Wars has no Cave; the numbers are ours, on the same curves.
+           'CAVE': '— (Grepolis)'}
 
 def cost(b, L):
     (w, s, i), (fw, fs, fi, _) = b[4], b[6]
@@ -74,7 +78,9 @@ def effect(b, L):
     if c == 'ACADEMY': return f'{round(100 * 1.1 ** (-L))}% study time'
     if c == 'WALL': return f'+{round(100 * (1.037 ** L - 1))}% defence'
     if c == 'VAULT': return f'{hide(L):,} per resource'
+    if c == 'CAVE': return f'{cave(L):,} silver'
     return ''
+def cave(L): return 0 if L <= 0 else r(600 * 1.2294934 ** (L - 1))   # the Deposit's curve, from 600
 def fmt_cost(c): return f'{c[0]:,} / {c[1]:,} / {c[2]:,}'
 
 out = []
@@ -151,7 +157,8 @@ P('- **No Market.** There is no trade between cities in Caladon; resources are e
 P('  plunder only.')
 P('- Skipped on purpose: Smithy, Stable, Workshop (folded into Barracks + Academy), Rally Point, Statue/Paladin')
 P('  (hero system), Church/Temple (faith), Watchtower (can come later as an optional 20-level building),')
-P("  Harbour/Lighthouse (naval), Cave (silver-specific), Agora (UI, not a building), Grepolis's special buildings.")
+P("  Harbour/Lighthouse (naval), Agora (UI, not a building), Grepolis's special buildings. Its Cave we did")
+P("  take, for espionage.")
 P('')
 P('### Unit gating (Barracks level × Academy study)')
 P('')

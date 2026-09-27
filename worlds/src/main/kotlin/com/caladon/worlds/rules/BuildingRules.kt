@@ -14,6 +14,7 @@ object BuildingRules {
     /** Farm population at max level = FARM_MAX_MULT × FARM_L1. */
     const val FARM_MAX_MULT = 100.0
     const val VAULT_L1 = 150.0
+    const val CAVE_L1 = 600.0
     /** Tribal Wars uses table values for the last Vault levels instead of the 4/3 curve. */
     private val VAULT_TABLE = mapOf(8 to 1125L, 9 to 1500L, 10 to 2000L)
 
@@ -45,6 +46,9 @@ object BuildingRules {
 
     /** Max stock per resource at Deposit [level]. */
     fun capacity(level: Int): Long = Tw.curve(CAPACITY_L1, CAPACITY_GROWTH, level)
+
+    /** Silver the Cave holds at [level]: 600 at level 1, on the Deposit's curve, 0 without one. */
+    fun caveSilver(level: Int): Long = if (level <= 0) 0 else Tw.curve(CAVE_L1, CAPACITY_GROWTH, level)
 
     /** Population the Farm provides in total at [level]: `floor(240 × 100^((L−1)/29))`. */
     fun farmPop(level: Int): Long = if (level <= 0) 0 else floor(FARM_L1 * FARM_MAX_MULT.pow((level - 1) / 29.0)).toLong()
@@ -100,6 +104,7 @@ object BuildingRules {
         Building.ACADEMY -> Effect(Tw.round(100 * studyFactor(level)), "% study time")
         Building.WALL -> Effect(Tw.round(100 * (wallFactor(level) - 1)), "% defence")
         Building.VAULT -> Effect(vault(level), "hidden per resource")
+        Building.CAVE -> Effect(caveSilver(level), "silver")
     }
 
     data class Effect(val value: Long, val unit: String)

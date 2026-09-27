@@ -34,7 +34,9 @@ class BuildingRulesTest {
         assertThat(BuildingRules.points(Building.WOODCUTTER, 30)).isEqualTo(1187)
         assertThat(BuildingRules.points(Building.VAULT, 10)).isEqualTo(26)
         assertThat(Building.FOUNDED.sumOf { BuildingRules.points(it, 1) }).isEqualTo(39)
-        assertThat(Building.entries.sumOf { BuildingRules.points(it, it.maxLevel) }).isEqualTo(9876)
+        // Every building at its highest level, which is what the map's point thresholds are cut from.
+        assertThat(Building.entries.sumOf { BuildingRules.points(it, it.maxLevel) }).isEqualTo(10100)
+        assertThat(BuildingRules.points(Building.CAVE, 20)).isEqualTo(224)
     }
 
     @Test

@@ -30,6 +30,9 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class NotEnoughUnits(details: Map<String, String>) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_UNITS", details)
     class MovementNotFound : WorldException(HttpStatus.NOT_FOUND, "MOVEMENT_NOT_FOUND")
     class AlreadyArrived : WorldException(HttpStatus.CONFLICT, "ALREADY_ARRIVED")
+    /** details: silver over what the Cave can still hold. */
+    class CaveFull(over: String) : WorldException(HttpStatus.CONFLICT, "CAVE_FULL", mapOf("silver" to over))
+    class InvalidAmount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("amount" to "must be positive"))
     class InvalidCount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("count" to "must be between 1 and 10000"))
     class InvalidViewport(details: Map<String, String>) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", details)
 }

@@ -18,6 +18,10 @@ data class CityResourcesResponse(
     val serverTime: Instant,
 )
 
+data class CaveResponse(val silver: Long, val capacity: Long)
+
+data class StoreSilverRequest(val amount: Long)
+
 data class CityBuildingResponse(val type: Building, val name: String, val level: Int, val points: Long)
 
 data class BuildOrderResponse(
@@ -37,6 +41,8 @@ data class CityDetailResponse(
     val resources: CityResourcesResponse,
     /** Remaining free population. */
     val population: Int,
+    /** The Cave's silver and what it can hold; both 0 until a Cave is built. */
+    val cave: CaveResponse,
     /** Every building type, level 0 when not built. */
     val buildings: List<CityBuildingResponse>,
     /** The build queue, first entry in progress. */

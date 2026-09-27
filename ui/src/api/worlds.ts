@@ -61,7 +61,7 @@ export interface CityResources {
 
 export type BuildingType =
   | 'FARM' | 'WOODCUTTER' | 'STONE_MINE' | 'SILVER_MINE' | 'DEPOSIT' | 'TOWN_HALL'
-  | 'BARRACKS' | 'ACADEMY' | 'WALL' | 'VAULT'
+  | 'BARRACKS' | 'ACADEMY' | 'WALL' | 'VAULT' | 'CAVE'
 
 export type UnitType =
   | 'SPEARMAN' | 'SWORDSMAN' | 'SCOUT' | 'AXEMAN' | 'ARCHER' | 'LIGHT_CAV' | 'RAM' | 'HEAVY_CAV' | 'CATAPULT' | 'NOBLEMAN'
@@ -136,6 +136,8 @@ export interface CityDetail extends OwnedCity {
   resources: CityResources
   /** Remaining free population. */
   population: number
+  /** The Cave's own silver and what it can hold; both 0 until a Cave is built. */
+  cave: { silver: number; capacity: number }
   buildings: CityBuilding[]
   buildQueue: BuildOrder[]
   buildQueueSlots: number
@@ -259,6 +261,8 @@ export const worldsApi = {
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/recruit-orders/${orderId}`, { method: 'DELETE' }),
   cancelStudy: (worldId: number, cityId: number, unit: UnitType) =>
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/study-orders/${unit}`, { method: 'DELETE' }),
+  storeSilver: (worldId: number, cityId: number, amount: number) =>
+    api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/cave`, { method: 'POST', body: { amount } }),
   movements: (worldId: number, cityId: number) => api<Movements>(`/worlds/${worldId}/cities/${cityId}/movements`),
   send: (worldId: number, cityId: number, kind: MovementKind, targetX: number, targetY: number, units: Partial<Record<UnitType, number>>) =>
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/movements`, { method: 'POST', body: { kind, targetX, targetY, units } }),

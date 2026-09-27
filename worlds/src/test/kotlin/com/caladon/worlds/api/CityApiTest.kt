@@ -226,6 +226,49 @@ class CityApiTest : ApiTestBase() {
         assertThat(sweeper.sweep()).isEqualTo(0)
     }
 
+    @Test
+    fun `silver moves into the cave, stops at what it holds, and never goes back`() {
+        val (world, cityId) = joinedCity()
+        // No Cave yet: the city detail says so, and storing is refused.
+        get("/api/v1/worlds/$world/cities/$cityId", playerToken).andExpect {
+            jsonPath("$.cave.silver") { value(0) }
+            jsonPath("$.cave.capacity") { value(0) }
+        }
+        post("/api/v1/worlds/$world/cities/$cityId/cave", playerToken, mapOf("amount" to 100)).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("REQUIREMENTS_NOT_MET") }
+        }
+
+        setLevel(cityId, Building.CAVE, 1)          // holds 600
+        post("/api/v1/worlds/$world/cities/$cityId/cave", playerToken, mapOf("amount" to 400)).andExpect {
+            status { isOk() }
+            jsonPath("$.cave.silver") { value(400) }
+            jsonPath("$.cave.capacity") { value(600) }
+            jsonPath("$.resources.silver.stock") { value(100) }   // 500 at the start, less what moved
+        }
+        // What is left in the city is not enough, and what the Cave can still hold is less again.
+        post("/api/v1/worlds/$world/cities/$cityId/cave", playerToken, mapOf("amount" to 300)).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("NOT_ENOUGH_RESOURCES") }
+            jsonPath("$.details.silver") { value("200") }
+        }
+        stock(cityId, 1000)
+        post("/api/v1/worlds/$world/cities/$cityId/cave", playerToken, mapOf("amount" to 300)).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("CAVE_FULL") }
+            jsonPath("$.details.silver") { value("100") }
+        }
+        post("/api/v1/worlds/$world/cities/$cityId/cave", playerToken, mapOf("amount" to 0)).andExpect {
+            status { isBadRequest() }
+            jsonPath("$.error") { value("VALIDATION_ERROR") }
+        }
+        post("/api/v1/worlds/$world/cities/$cityId/cave", playerToken, mapOf("amount" to 200)).andExpect {
+            status { isOk() }
+            jsonPath("$.cave.silver") { value(600) }
+            jsonPath("$.resources.silver.stock") { value(800) }
+        }
+    }
+
     // ---- army ----
 
     private fun stock(cityId: Long, amount: Long) {

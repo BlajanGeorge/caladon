@@ -1,4 +1,4 @@
-lines 590
+lines 606
 — Buildings proposal (research + numbers)
 
 **Status: accepted (design only, nothing implemented).** Companion to the *Buildings* and *Army* sections of
@@ -53,6 +53,7 @@ built by the player.
 | `ACADEMY` | Academy | 20 | no | studies unit types; level gates what can be studied | 91% study time | 19 (+4 / +16 / +101) | Town Hall 8, Farm 6, Barracks 5 |
 | `WALL` | Wall | 20 | no | defence bonus | +4% defence | 8 (+2 / +7 / +43) | Town Hall 5 |
 | `VAULT` | Vault | 10 | no | hides resources | 150 per resource | 5 (+1 / +5 / +5) | Town Hall 5, Deposit 5 |
+| `CAVE` | Cave | 20 | no | holds the silver that pays for spying and defends against it | 600 silver | 7 (+1 / +6 / +38) | Town Hall 5, Silver Mine 5 |
 
 A new city therefore starts with **39 points** (29 without Town Hall), **240 free population**,
 **30/h** of each resource, **500** of each in stock and a **1,000** cap.
@@ -72,7 +73,8 @@ Notes on the choices:
   plunder only.
 - Skipped on purpose: Smithy, Stable, Workshop (folded into Barracks + Academy), Rally Point, Statue/Paladin
   (hero system), Church/Temple (faith), Watchtower (can come later as an optional 20-level building),
-  Harbour/Lighthouse (naval), Cave (silver-specific), Agora (UI, not a building), Grepolis's special buildings.
+  Harbour/Lighthouse (naval), Agora (UI, not a building), Grepolis's special buildings. Its Cave we did
+  take, for espionage.
 
 ### Unit gating (Barracks level × Academy study)
 
@@ -121,6 +123,7 @@ Two kinds of conditions, both checked at order time:
 | Academy | Town Hall 8, Farm 6, Barracks 5 | L10: Barracks 10, L15: Barracks 15 |
 | Wall | Town Hall 5 | L10: Stone Mine 10, L15: Stone Mine 15 |
 | Vault | Town Hall 5, Deposit 5 | L5: Deposit 10 |
+| Cave | Town Hall 5, Silver Mine 5 | L10: Town Hall 10 |
 
 
 ## 3. Formulas (the knobs)
@@ -149,12 +152,12 @@ Why these knobs:
   section now says per hour; the implemented `ratePerMinute` field becomes `ratePerHour` (the settlement
   math is a unit conversion).
 - **Points ×1.2 with Tribal Wars P1 values.** A maxed mine is worth 1,187 points, a maxed Farm
-  989, a fully built city (every building at max) 9,876. The existing map
+  989, a fully built city (every building at max) 10,100. The existing map
   tier thresholds are set from these totals: t1 < 300 (village), t2 < 1 000 (town), t3 < 2 500 (city),
   t4 < 6 000 (large city), t5 ≥ 6 000 (capital) — everything at level 10 ≈ 450, 15 ≈ 1 100, 20 ≈ 2 650,
   25 ≈ 5 300.
-- **Population.** Farm 240 at level 1, 24,000 at 30; all buildings maxed use 3,002, leaving
-  20,998 for troops. Founding buildings cost no population, so a new city has all 240 free
+- **Population.** Farm 240 at level 1, 24,000 at 30; all buildings maxed use 3,061, leaving
+  20,939 for troops. Founding buildings cost no population, so a new city has all 240 free
   (Tribal Wars: 233).
 
 ## 4. Full tables — founded buildings (all 30 levels)
@@ -458,6 +461,18 @@ Same columns, sampled levels. Level 1 must be built (it is not founded).
 | 5 | 122 / 146 / 122 | 1 | 474 per resource | 10 | 36m56s |
 | 10 | 373 / 447 / 373 | 1 | 1,998 per resource | 26 | 2h11m |
 
+### Cave (`CAVE`, max 20) — requires Town Hall 5, Silver Mine 5
+
+| lvl | wood / stone / silver | pop | effect | points | build time |
+|---|---|---|---|---|---|
+| 1 | 80 / 120 / 60 | 3 | 600 silver | 7 | 4m12s |
+| 2 | 101 / 152 / 76 | 1 | 738 silver | 8 | 4m12s |
+| 3 | 127 / 194 / 95 | 0 | 907 silver | 10 | 18m04s |
+| 5 | 202 / 312 / 151 | 1 | 1,371 silver | 15 | 49m15s |
+| 10 | 640 / 1,031 / 480 | 1 | 3,852 silver | 36 | 2h54m |
+| 15 | 2,034 / 3,407 / 1,525 | 4 | 10,822 silver | 90 | 8h00m |
+| 20 | 6,458 / 11,258 / 4,844 | 8 | 30,405 silver | 224 | 20h55m |
+
 ## 7. Buildings with their own behaviour
 
 ### Deposit
@@ -571,6 +586,7 @@ Town Hall, Warehouse → Deposit, Hiding place → Vault):
 | Academy | Smithy (numbers) | 220/180/240 | 20 | 1.26/1.275/1.26/1.17 | 19 | 6,000 |
 | Wall | Wall | 50/100/20 | 5 | 1.26/1.275/1.26/1.17 | 8 | 3,600 |
 | Vault | Hiding place | 50/60/50 | 2 | 1.25/1.25/1.25/1.17 | 5 | 1,800 |
+| Cave | — (Grepolis) | 80/120/60 | 3 | 1.26/1.27/1.26/1.17 | 7 | 2,400 |
 
 Sources: Tribal Wars — `https://en157.tribalwars.net/interface.php?func=get_building_info` and the same on
 en155 (game config XML), `https://help.tribalwars.net/wiki/Points`, the per-building pages under

@@ -89,7 +89,7 @@ export function CityQueues({
           <ul className="cq-list">
             {builds.map((o, i) => (
               <li key={o.id} className={i === 0 ? 'running' : undefined}>
-                <img src={BUILDING_ICONS[o.building]} alt="" />
+                {BUILDING_ICONS[o.building] ? <img src={BUILDING_ICONS[o.building]} alt="" /> : null}
                 <span className="cq-name" title={`${o.name} level ${o.targetLevel}`}>{o.name} <em>level {o.targetLevel}</em></span>
                 <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
                 {i === builds.length - 1 ? (

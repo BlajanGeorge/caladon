@@ -5,6 +5,7 @@ import com.caladon.worlds.army.ArmyService
 import com.caladon.worlds.army.CitySupportRepository
 import com.caladon.worlds.army.MovementService
 import com.caladon.worlds.buildings.BuildingService
+import com.caladon.worlds.buildings.CaveService
 import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.resources.CityAccess
 import com.caladon.worlds.resources.CityState
@@ -32,6 +33,7 @@ class CityController(
     private val buildingService: BuildingService,
     private val armyService: ArmyService,
     private val movementService: MovementService,
+    private val caveService: CaveService,
     private val citySupportRepository: CitySupportRepository,
 ) {
     @GetMapping
@@ -93,6 +95,13 @@ class CityController(
             )
         }
     }
+
+    /** Moves silver from the city's stock into the Cave, where spying is paid from. */
+    @PostMapping("/cave")
+    fun storeSilver(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @RequestBody body: StoreSilverRequest,
+    ): CityDetailResponse = toDetail(caveService.store(worldId, cityId, user.id, user.role, body.amount))
 
     @PostMapping("/army/recruit")
     fun recruit(
@@ -162,6 +171,7 @@ class CityController(
                 capacity = state.capacity(), serverTime = state.now,
             ),
             population = state.resources.population,
+            cave = CaveResponse(state.resources.caveSilver, state.caveCapacity()),
             buildings = Building.entries.map { b ->
                 val level = state.level(b)
                 CityBuildingResponse(b, b.displayName, level, BuildingRules.points(b, level))

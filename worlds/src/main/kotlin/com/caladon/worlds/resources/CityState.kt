@@ -46,6 +46,9 @@ class CityState(
 
     fun capacity(): Long = BuildingRules.capacity(level(Building.DEPOSIT))
 
+    /** How much silver the Cave can hold at its level; 0 until one is built. */
+    fun caveCapacity(): Long = BuildingRules.caveSilver(level(Building.CAVE))
+
     /** Whole-unit settlement of the three stocks up to [instant] with the current levels. */
     fun settleTo(instant: Instant) {
         val cap = capacity()
