@@ -1,6 +1,9 @@
 package com.caladon.worlds.api
 
+import com.caladon.worlds.army.CityMovement
 import com.caladon.worlds.army.CityMovementRepository
+import com.caladon.worlds.army.MovementDirection
+import com.caladon.worlds.army.MovementKind
 import com.caladon.worlds.army.CitySupportRepository
 import com.caladon.worlds.army.CityUnit
 import com.caladon.worlds.army.CityUnitId
@@ -145,6 +148,29 @@ class MovementApiTest : ApiTestBase() {
         assertThat(incoming["units"]).isEmpty()
         assertThat(incoming["carrying"].isNull).isTrue()
         assertThat(incoming["canRecall"].asBoolean()).isFalse()
+    }
+
+    @Test
+    fun `a spy mission heading at a city is not listed there at all`() {
+        val two = twoCities()
+        // Written straight in: nothing can send one yet, and the point is what the target is shown.
+        val spy = movementRepository.save(
+            CityMovement(
+                worldId = two.world, originCityId = two.mine, targetCityId = two.theirs,
+                kind = MovementKind.ESPIONAGE, direction = MovementDirection.OUTWARD,
+                departsAt = clock.instant(), arrivesAt = clock.instant().plusSeconds(1800), carriedSilver = 1200,
+            ),
+        )
+
+        // The city it is aimed at sees nothing: a spy you can see coming is not a spy.
+        assertThat(movements(two, two.theirs, otherPlayerToken)["incoming"]).isEmpty()
+
+        // The city that sent it sees it, with the silver it carries.
+        val out = movements(two, two.mine, playerToken)["outgoing"].single()
+        assertThat(out["id"].asLong()).isEqualTo(requireNotNull(spy.id))
+        assertThat(out["kind"].asText()).isEqualTo("ESPIONAGE")
+        assertThat(out["units"]).isEmpty()
+        assertThat(out["carrying"]["silver"].asLong()).isEqualTo(1200)
     }
 
     @Test

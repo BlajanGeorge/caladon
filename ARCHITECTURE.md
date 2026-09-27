@@ -990,7 +990,9 @@ surviving attackers can carry. The carry is filled evenly across the three resou
 
 **The API.** `GET …/cities/{id}/movements` returns the two lists the panel needs: `outgoing` (this city's
 own movements, in either direction) and `incoming` (movements heading here from elsewhere). An incoming
-attack shows its arrival and nothing else — no numbers until scouting reports exist. Sending is
+attack shows its arrival and nothing else — no numbers until reports exist — and an incoming **spy
+mission is not listed at all**: a spy you can see coming is not a spy, and the target learns of one only
+from the report it gets when the attempt fails. Sending is
 `POST …/cities/{id}/movements {kind, targetX, targetY, units {UNIT: count}}`, recall is
 `DELETE …/movements/{id}`, and both return the city detail like every other mutation. Errors:
 `CITY_NOT_FOUND` (no city on that field), `SAME_CITY`, `NOT_ENOUGH_UNITS`, `NO_UNITS`,
@@ -1321,7 +1323,7 @@ a standalone preview.
   city at the other end, and the countdown. The marks are text glyphs until the three medallions are
   drawn (docs/TODO.md). Troops on the way home are greyed; an incoming attack is red, and so is the count
   in that header. Our own outward movements carry a recall button, behind the same confirmation as a
-  cancel. Everything a player watches for is there — attacks out and back, support out and back, spying
+  cancel. Arrivals never shows a spy mission aimed at us, only Marches shows our own. Everything a player watches for is there — attacks out and back, support out and back, spying
   out and back, attacks and support inbound — said by the mark, the words and the arrow rather than by a
   section each, which the bar has no width for.
 - **Sending** (`SendWindow`, opened from the *Marches* header): the errand (Attack, Support, Scout),

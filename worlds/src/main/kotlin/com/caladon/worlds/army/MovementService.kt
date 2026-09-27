@@ -58,10 +58,16 @@ class MovementService(
     fun list(worldId: Long, cityId: Long, userId: Long, role: Role): Pair<CityState, Movements> {
         val state = cityAccess.open(worldId, cityId, userId, role)
         val outgoing = movementRepository.findAllByOriginCityIdAndAppliedFalseOrderByArrivesAtAscIdAsc(cityId)
-        // Only what is actually heading here: a movement on its homeward leg is flying away from this
-        // city, back to whoever sent it, and has no business in the panel that warns about arrivals.
+        // Only what is actually heading here: a movement on its homeward leg is flying away from this city,
+        // back to whoever sent it, and has no business in the panel that warns about arrivals. A spy
+        // mission is never listed at all — a spy you can see coming is not a spy. The target learns of one
+        // only from the report it gets when the attempt fails.
         val incoming = movementRepository.findAllByTargetCityIdAndAppliedFalseOrderByArrivesAtAscIdAsc(cityId)
-            .filter { it.originCityId != cityId && it.direction == MovementDirection.OUTWARD }
+            .filter {
+                it.originCityId != cityId &&
+                    it.direction == MovementDirection.OUTWARD &&
+                    it.kind != MovementKind.ESPIONAGE
+            }
         val units = unitsOf(outgoing + incoming)
         val refs = refs((outgoing.map { it.targetCityId } + incoming.map { it.originCityId }).toSet())
         return state to Movements(
