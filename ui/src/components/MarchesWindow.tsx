@@ -77,7 +77,7 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
           {m.kind === 'ESPIONAGE' ? (
             m.direction === 'OUTWARD' && load ? (
               <div className="mw-line">
-                <span className="mw-load"><img src={silverUrl} alt="Silver" />{load.silver.toLocaleString()} paid</span>
+                <span className="mw-load"><img src={silverUrl} alt="Silver" />{load.silver.toLocaleString()} silver</span>
               </div>
             ) : null
           ) : m.units.length === 0 ? null : (
