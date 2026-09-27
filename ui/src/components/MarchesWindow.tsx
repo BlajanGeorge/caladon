@@ -8,6 +8,7 @@ import spyUrl from '@assets/sprites/hud-move-spy.png'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
 import silverUrl from '@assets/sprites/hud-silver.png'
+import goodsUrl from '@assets/sprites/hud-resources.png'
 
 interface Props {
   movements: Movements | null
@@ -39,9 +40,9 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
   const out = movements?.outgoing ?? []
   const now = useNow(out.length > 0)
   const carryOf = new Map((units ?? []).map((u) => [u.type, u.carry]))
+  const nameOf = new Map((units ?? []).map((u) => [u.type, u.name]))
 
   const rows = (list: Movement[]) => list.map((m) => {
-    const troops = m.units.reduce((n, u) => n + u.count, 0)
     // What this body could carry home, from the units' own capacity.
     const carry = m.units.reduce((n, u) => n + (carryOf.get(u.type) ?? 0) * u.count, 0)
     const load = m.carrying
@@ -67,7 +68,8 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
               {m.units.map((u) => (
                 <li key={u.type}>
                   <img src={UNIT_ICONS[u.type]} alt="" />
-                  <span>{u.count.toLocaleString()}</span>
+                  <span className="mw-unit-name">{nameOf.get(u.type) ?? u.name}</span>
+                  <span className="mw-unit-count">{u.count.toLocaleString()}</span>
                 </li>
               ))}
             </ul>
@@ -77,14 +79,15 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
           {m.kind === 'ESPIONAGE' ? (
             m.direction === 'OUTWARD' && load ? (
               <div className="mw-line">
-                <span className="mw-load"><img src={silverUrl} alt="Silver" />{load.silver.toLocaleString()} silver</span>
+                <span className="mw-load"><img src={silverUrl} alt="Silver" />silver {load.silver.toLocaleString()}</span>
               </div>
             ) : null
           ) : m.units.length === 0 ? null : (
             <div className="mw-line">
-              <span className="mw-quiet">{troops.toLocaleString()} troops</span>
               {m.direction === 'OUTWARD' && m.kind === 'ATTACK' && (
-                <span className="mw-quiet">can carry {carry.toLocaleString()}</span>
+                <span className="mw-load" title="What they can carry home">
+                  <img src={goodsUrl} alt="Resources" />{carry.toLocaleString()}
+                </span>
               )}
               {m.direction === 'HOMEWARD' && (
                 carrying > 0 ? (
