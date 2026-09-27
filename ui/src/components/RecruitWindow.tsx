@@ -55,9 +55,8 @@ export function RecruitWindow({ units, barracksLevel, detail, busy, onRecruit, o
               <span className="study-name">
                 {u.name}
                 <em>
-                  {u.academyLevel === null
-                    ? `Barracks level ${u.barracksLevel}`
-                    : `Barracks level ${u.barracksLevel} · Academy level ${u.academyLevel}`}
+                  {/* Only what recruiting needs: whether the type is studied shows in its own column. */}
+                  {`Barracks level ${u.barracksLevel}`}
                 </em>
               </span>
               <span className="study-cost">

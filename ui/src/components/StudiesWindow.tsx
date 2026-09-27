@@ -65,9 +65,8 @@ export function StudiesWindow({ units, academyLevel, detail, busy, onStudy, onCa
               <img className="study-icon" src={UNIT_ICONS[type]} alt="" />
               <span className="study-name">
                 {u.name}
-                <em>
-                  {u.academyLevel === null ? `Barracks level ${u.barracksLevel}` : `Academy level ${u.academyLevel} · Barracks level ${u.barracksLevel}`}
-                </em>
+                {/* Only what the study itself needs: the Barracks gates recruiting, not studying. */}
+                <em>{u.academyLevel === null ? 'No study needed' : `Academy level ${u.academyLevel}`}</em>
               </span>
               {c && (
                 <span className="study-cost">

@@ -969,6 +969,10 @@ on arrival and delete the row when the troops come home or die.
 - **Study queue** (`V105`): one study at a time, each starting when the last queued one completes,
   study time fixed at order time with the Academy level then; a type can be queued once
   (`ALREADY_STUDIED`). `applied` marks completions the sweeper has processed.
+- Each window states only its own building's requirement under a unit: the Academy's level in the
+  Studies window, the Barracks' level in the Barracks. A type that still needs studying shows as "Not
+  studied" where the Barracks would show its play button, and the Academy level it wants is in the
+  Studies window, which is where it is acted on.
 - Endpoints: `GET …/army` (every type: count, stats, cost, `recruitSeconds`, `studied`,
   `studyCompletesAt`, `studyCost`, `studySeconds`, `studyBlockedBy`, `blockedBy`, `recruitable`),
   `POST …/army/recruit {unit, count}` (1–10 000), `POST …/army/study {unit}`,
