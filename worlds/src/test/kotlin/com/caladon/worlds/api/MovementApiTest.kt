@@ -175,6 +175,26 @@ class MovementApiTest : ApiTestBase() {
     }
 
     @Test
+    fun `an incoming attack is only made out in the last quarter of its flight`() {
+        val two = twoCities()
+        give(two.mine, Unit.SPEARMAN, 10)
+        send(two, "ATTACK", mapOf("SPEARMAN" to 10)).andExpect { status { isOk() } }   // 5400 s away
+
+        // Three quarters of the way: still nothing but an arrival time.
+        jump(4049)
+        val far = movements(two, two.theirs, otherPlayerToken)["incoming"].single()
+        assertThat(far["units"]).isEmpty()
+        assertThat(far["carrying"].isNull).isTrue()
+
+        // Past that line the city makes out what is coming.
+        jump(2)
+        val near = movements(two, two.theirs, otherPlayerToken)["incoming"].single()
+        assertThat(near["units"].single()["type"].asText()).isEqualTo("SPEARMAN")
+        assertThat(near["units"].single()["count"].asInt()).isEqualTo(10)
+        assertThat(near["carrying"].isNull).isFalse()
+    }
+
+    @Test
     fun `support arrives, stands in the host city and is listed by both`() {
         val two = twoCities()
         give(two.mine, Unit.SPEARMAN, 10)

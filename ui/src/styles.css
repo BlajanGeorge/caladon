@@ -413,6 +413,9 @@ input { font: inherit; cursor: text; }
 .cq-list li.back { color: #6b5a3c; }
 /* An attack heading here, and the count of what is coming. */
 .cq-list li.alarm .cq-name, .cq-list li.alarm b { color: #8c2f24; font-weight: 700; }
+/* The same warning in the Arrivals window: a red edge down the row. */
+.mw-list li.alarm { border-color: rgba(178,58,46,.55); background: rgba(60,14,10,.35); }
+.mw-list li.alarm .mw-clock { color: #e8a08f; }
 .cq-head em.alarm { background: rgba(140,58,46,.28); color: #6b2f26; }
 
 /* Cancel on the tail of a queue, straight from the bar. The placeholder holds its column on the rows

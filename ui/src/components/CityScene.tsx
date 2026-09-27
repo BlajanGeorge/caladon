@@ -13,6 +13,7 @@ import { BuildingsWindow } from './BuildingsWindow'
 import { CityQueues } from './CityQueues'
 import { SendWindow } from './SendWindow'
 import { MarchesWindow } from './MarchesWindow'
+import { ArrivalsWindow } from './ArrivalsWindow'
 import { CaveWindow } from './CaveWindow'
 import groundUrl from '@assets/sprites/city-ground.png'
 
@@ -71,7 +72,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
   const [hover, setHover] = useState<string | null>(null)
   // One window at a time: a building's own, or the Academy's studies.
   const [window_, setWindow] = useState<
-    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | { kind: 'cave' } | { kind: 'marches' } | null
+    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | { kind: 'cave' } | { kind: 'marches' } | { kind: 'arrivals' } | null
   >(null)
   const open = window_?.kind === 'building' ? window_.type : null
   const studies = window_?.kind === 'studies'
@@ -80,6 +81,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
   const sending = window_?.kind === 'send'
   const cave = window_?.kind === 'cave'
   const marches = window_?.kind === 'marches'
+  const arrivals = window_?.kind === 'arrivals'
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -228,6 +230,9 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           onClose={() => setWindow(null)}
         />
       )}
+      {arrivals && (
+        <ArrivalsWindow movements={movements} units={units} onClose={() => setWindow(null)} />
+      )}
       {cave && (
         <CaveWindow detail={detail} busy={busy} onStore={onStoreSilver} onClose={() => setWindow(null)} />
       )}
@@ -269,6 +274,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         onCancelStudy={onCancelStudy}
         onRecall={onRecall}
         onOpenMarches={() => setWindow({ kind: 'marches' })}
+        onOpenArrivals={() => setWindow({ kind: 'arrivals' })}
         windowOpen={window_ !== null}
         onCloseWindows={() => setWindow(null)}
         onOpenBuildings={() => setWindow({ kind: 'buildings' })}

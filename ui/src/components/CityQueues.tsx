@@ -62,8 +62,9 @@ interface Props {
   onOpenBuildings: () => void
   onOpenRecruit: () => void
   onOpenStudies: () => void
-  /** Opens the window listing everything on the road. */
+  /** Opens the window listing everything on the road, and the one listing what is heading here. */
   onOpenMarches: () => void
+  onOpenArrivals: () => void
   /** True while a window of the scene is open: only one thing is asked at a time. */
   windowOpen: boolean
   /** Closes whatever window the scene has open. */
@@ -80,7 +81,7 @@ interface Props {
  */
 export function CityQueues({
   detail, units, movements, style, busy, onOpenBuildings, onOpenRecruit, onOpenStudies,
-  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenMarches, windowOpen, onCloseWindows,
+  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenMarches, onOpenArrivals, windowOpen, onCloseWindows,
 }: Props) {
   const builds = detail?.buildQueue ?? []
   const troops = detail?.recruitQueue ?? []
@@ -264,9 +265,10 @@ export function CityQueues({
       </section>
 
       <section className="cq-section">
-        <div className="cq-head as-label">
+        <button type="button" className="cq-head" onClick={onOpenArrivals} title="Everything heading here, in full">
           Arrivals{incoming.length > 0 ? <em className={incoming.some((m) => m.kind === 'ATTACK') ? 'alarm' : undefined}>{incoming.length}</em> : null}
-        </div>
+          <span className="cq-go" aria-hidden="true"><i>In full</i>›</span>
+        </button>
         {incoming.length === 0 ? (
           <p className="cq-empty">Nothing is arriving</p>
         ) : (

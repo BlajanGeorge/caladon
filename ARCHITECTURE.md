@@ -995,7 +995,8 @@ surviving attackers can carry. The carry is filled evenly across the three resou
 
 **The API.** `GET …/cities/{id}/movements` returns the two lists the panel needs: `outgoing` (this city's
 own movements, in either direction) and `incoming` (movements heading here from elsewhere). An incoming
-attack shows its arrival and nothing else — no numbers until reports exist — and an incoming **spy
+attack shows only its arrival for the first three quarters of its flight; in the **last quarter** the
+city makes out what is coming, and its units and what they could carry away are sent. An incoming **spy
 mission is not listed at all**: a spy you can see coming is not a spy, and the target learns of one only
 from the report it gets when the attempt fails. Sending is
 `POST …/cities/{id}/movements {kind, targetX, targetY, units {UNIT: count}}`, recall is
@@ -1327,7 +1328,9 @@ a standalone preview.
   full — "Attacking player1's city", "Coming home from player1's city", "Support coming from ana's city"
   — drawn by the view above the row, never the browser's own `title`, and **without coordinates**: the
   city's name is what a player recognises. Troops on the way home are greyed; an incoming attack is red, and so is the count
-  in that header. Our own outward movements carry a recall button, behind the same confirmation as a
+  in that header, and its own header opens **`ArrivalsWindow`**, the same list for what is heading here —
+  an attack still far off says only that something is coming. Our own outward movements carry a recall
+  button, behind the same confirmation as a
   cancel, and **only one question is on screen at a time**: asking from the bar closes whatever window
   was open, and opening a window takes the bar's question away. The header opens **`MarchesWindow`**, which lists **this city's own** movements in full. A row leads
   with the errand and an arrow for the leg (`Attack →`, `Spying ←`), then the city **and its player**,

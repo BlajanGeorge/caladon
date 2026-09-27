@@ -73,17 +73,17 @@ class MovementService(
         val units = unitsOf(outgoing + incoming)
         val refs = refs((outgoing.map { it.targetCityId } + incoming.map { it.originCityId }).toSet())
         return state to Movements(
-            outgoing = outgoing.map { view(it, refs[it.targetCityId], units[it.id], own = true) },
-            incoming = incoming.map { view(it, refs[it.originCityId], units[it.id], own = false) },
+            outgoing = outgoing.map { view(it, refs[it.targetCityId], units[it.id], own = true, now = state.now) },
+            incoming = incoming.map { view(it, refs[it.originCityId], units[it.id], own = false, now = state.now) },
         )
     }
 
     /**
-     * An incoming attack shows its arrival and nothing else: the defender learns what hit it only once
-     * reports exist. Support is a friend's, so it is shown in full.
+     * An incoming attack shows only its arrival until it is nearly here: close enough to see, the city
+     * makes out what is coming. Support is a friend's, so it is shown the whole way.
      */
-    private fun view(m: CityMovement, other: CityRef?, units: Map<Unit, Int>?, own: Boolean): MovementView {
-        val hidden = !own && m.kind != MovementKind.SUPPORT
+    private fun view(m: CityMovement, other: CityRef?, units: Map<Unit, Int>?, own: Boolean, now: Instant): MovementView {
+        val hidden = !own && m.kind != MovementKind.SUPPORT && !nearlyHere(m, now)
         return MovementView(
             id = requireNotNull(m.id), kind = m.kind, direction = m.direction,
             otherCityName = other?.name ?: "", otherPlayerName = other?.player ?: "", x = other?.x ?: 0, y = other?.y ?: 0,
@@ -343,6 +343,17 @@ class MovementService(
             .mapValues { (_, rows) -> rows.associate { it.id.unit to it.count } }
     }
 
+    /**
+     * True for the last [SIGHTED] of an incoming movement's flight: before that the city can only see
+     * that something is on its way, not what.
+     */
+    private fun nearlyHere(m: CityMovement, now: Instant): Boolean {
+        val whole = Duration.between(m.departsAt, m.arrivesAt)
+        if (whole.isZero || whole.isNegative) return true
+        val left = Duration.between(now, m.arrivesAt)
+        return left <= Duration.ofMillis((whole.toMillis() * SIGHTED).toLong())
+    }
+
     private data class CityRef(val name: String, val x: Int, val y: Int, val player: String)
 
     /** The other end of a movement, as a player reads it: whose city it is, not where it is. */
@@ -361,6 +372,9 @@ class MovementService(
     }
 
     private companion object {
+        /** The share of its flight an attack is in sight for: the last quarter. */
+        const val SIGHTED = 0.25
+
         /** One pass processes a chain of legs (out, home, and a recall in between); a bound, never reached. */
         const val MAX_ARRIVALS = 64
         val processing: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
