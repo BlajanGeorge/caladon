@@ -390,8 +390,11 @@ input { font: inherit; cursor: text; }
 .b-info {
   position: absolute; left: 22px; top: 22px; z-index: 5; width: 290px;
   padding: 16px 18px 18px;
-  background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
-  box-shadow: var(--overlay-shadow); color: var(--overlay-text);
+  /* Nearly opaque, unlike the map's small overlays: these windows fall across the bottom bar, and the
+     queues showing through made them hard to read. */
+  background: rgba(20, 22, 26, .94);
+  border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .6); color: var(--overlay-text);
 }
 .b-info h3 {
   margin: 0 22px 2px 0;
