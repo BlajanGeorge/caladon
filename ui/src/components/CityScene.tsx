@@ -163,7 +163,8 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
               onMouseLeave={() => setHover((h) => (h === type ? null : h))}
               onClick={() => setWindow({ kind: 'building', type })}
             >
-              {name}{level !== undefined ? ` ${level}` : ''}
+              {/* An unbuilt plot says what could stand there, not that it is at level 0. */}
+              {name}{level ? ` ${level}` : ''}
             </span>
           )
         })}
