@@ -29,6 +29,11 @@ const SPRITE_WIDTH = 195
 const SPRITE_BASE = 0.74
 /** Nudge across the plot, as a fraction of its width: positive moves the building right. */
 const SPRITE_SHIFT = 0.06
+/**
+ * Height of the bar along the bottom, which runs the full width of the view; the side panel stops above
+ * it. Kept in step with `.city-queues` in the stylesheet.
+ */
+const QUEUE_BAR_H = 150
 /** Width of the side panel that holds resources and troops, and its inset from the screen edge. */
 const PANEL_W = 352
 const PANEL_INSET = 14
@@ -238,7 +243,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         units={units}
         movements={movements}
         busy={busy}
-        style={{ left: PANEL_INSET, right: PANEL_W + PANEL_INSET * 2, bottom: PANEL_INSET }}
+        style={{ left: PANEL_INSET, right: PANEL_INSET, bottom: PANEL_INSET }}
         onCancelBuild={onCancelBuild}
         onCancelRecruit={onCancelRecruit}
         onCancelStudy={onCancelStudy}
@@ -249,7 +254,11 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         onOpenStudies={() => setWindow({ kind: 'studies' })}
       />
 
-      <aside className="city-panel" style={{ width: PANEL_W }} aria-label="City information">
+      <aside
+        className="city-panel"
+        style={{ width: PANEL_W, maxHeight: `calc(100% - ${QUEUE_BAR_H + PANEL_INSET * 3}px)` }}
+        aria-label="City information"
+      >
         <div className="cp-head">
           <span className="cp-name">{shown?.name ?? 'Your city'}</span>
           <span className="cp-meta">{shown ? `${shown.points.toLocaleString()} points` : '…'}</span>

@@ -233,7 +233,8 @@ input { font: inherit; cursor: text; }
   background: url('@assets/sprites/panel-parchment.png') center / cover, #b59c72;
   padding: 16px 18px 20px;
   box-shadow: 0 8px 22px rgba(0,0,0,.55);
-  color: #2c2216; max-height: calc(100% - 28px); overflow-y: auto; scrollbar-gutter: stable;
+  /* The height is set by the scene, which keeps the panel clear of the bar along the bottom. */
+  color: #2c2216; overflow-y: auto; scrollbar-gutter: stable;
 }
 .cp-head { display: flex; flex-direction: column; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid rgba(90,70,40,.45); }
 .city-panel > * { flex-shrink: 0; }

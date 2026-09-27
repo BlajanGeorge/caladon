@@ -1293,8 +1293,9 @@ a standalone preview.
   login, register, the lobby and the map. Pure helpers in `ui/src/city/format.ts`
   (durations, requirements, affordability) are unit-tested. Resource numbers still never tick; only
   queue countdowns do.
-- **The bottom bar** (`CityQueues`): what the city is working on, in the side panel's frame, spanning the
-  bottom of the scene and stopping clear of that panel. Three sections today, each mirroring one queue:
+- **The bottom bar** (`CityQueues`): what the city is working on, in the side panel's frame, running the
+  **full width** of the scene along the bottom; the side panel stops 14 px above it and scrolls instead of
+  reaching down behind it. Three sections today, each mirroring one queue:
   **Construction**, **Training**, **Studies**. The first entry of a section is the one running and is
   printed heavier; the rest wait behind it. Every entry carries a small picture of what it is — the unit's
   medallion, or the building's icon from `BUILDING_ICONS` — counts down per second, and the header carries
