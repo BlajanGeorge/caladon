@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { CityDetail } from '../api/worlds'
-import silverUrl from '@assets/sprites/hud-silver.png'
 
 interface Props {
   detail: CityDetail | null
@@ -60,12 +59,12 @@ export function CaveWindow({ detail, busy, onStore, onClose }: Props) {
         />
         <button
           type="button"
-          className="study-go"
+          className="cave-max"
           disabled={most === 0}
-          title="Move everything that fits"
+          title={`Move everything that fits: ${most.toLocaleString()} silver`}
           onClick={() => setTyped(String(most))}
         >
-          all
+          Max
         </button>
         <button
           type="button"
@@ -73,7 +72,6 @@ export function CaveWindow({ detail, busy, onStore, onClose }: Props) {
           disabled={busy || refusal !== null || amount === 0}
           onClick={() => { onStore(amount); setTyped('') }}
         >
-          <img src={silverUrl} alt="" />
           Store
         </button>
         </div>

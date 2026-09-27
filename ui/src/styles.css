@@ -361,15 +361,25 @@ input { font: inherit; cursor: text; }
 .b-info.cave { width: 330px; }
 .cave-go { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(122,102,54,.4); }
 .cave-go .send-why { display: block; margin-bottom: 8px; font-size: 12px; color: var(--overlay-muted); }
-.cave-row { display: flex; align-items: center; gap: 8px; }
-.cave-row .recruit-count { flex: 1; }
+/* The field, Max and Store are one line of controls, so they are one height. */
+.cave-row { display: flex; align-items: stretch; gap: 8px; }
+.cave-row > * { height: 34px; box-sizing: border-box; }
+.cave-row .recruit-count { flex: 1; padding: 0 10px; }
 /* Scoped past .b-info-action, which is a full-width block on its own. */
 .cave-row .cave-store {
-  margin-top: 0; width: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 14px; letter-spacing: .12em;
+  margin-top: 0; width: auto; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 16px; letter-spacing: .12em;
 }
-.cave-row .cave-store img { width: 18px; height: 18px; display: block; }
 .cave-row .cave-store:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
+/* Fills the field with everything that fits: quiet, the same height as the field beside it. */
+.cave-max {
+  flex: 0 0 auto; padding: 0 14px; font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  color: var(--overlay-muted); background: rgba(10,11,13,.6);
+  border: var(--overlay-border); border-radius: 6px;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.cave-max:hover:not(:disabled) { color: var(--overlay-text); background: rgba(122,102,54,.3); }
+.cave-max:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 
 /* Sending troops: the errand and the field on one line, then how many of each unit goes. */
 /* Narrower than the studies and buildings windows: its rows are short. */
