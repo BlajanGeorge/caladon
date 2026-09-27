@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import {
-  worldsApi, type BuildingType, type BuildingView, type CityDetail, type CityResources, type OwnedCity, type UnitType, type UnitView,
+  worldsApi, type BuildingType, type BuildingView, type CityDetail, type CityResources, type Movements, type OwnedCity,
+  type MovementKind, type UnitType, type UnitView,
 } from '../api/worlds'
 import { ArmyPanel } from '../components/ArmyPanel'
 import { BuildingsPanel } from '../components/BuildingsPanel'
@@ -36,6 +37,7 @@ const SHOW_PANELS: boolean = false
 const EXPECTED = new Set([
   'NOT_ENOUGH_RESOURCES', 'NOT_ENOUGH_POPULATION', 'REQUIREMENTS_NOT_MET', 'QUEUE_FULL', 'MAX_LEVEL',
   'NOT_STUDIED', 'ALREADY_STUDIED', 'ORDER_NOT_FOUND', 'NOT_LAST_IN_QUEUE',
+  'SAME_CITY', 'NOT_ENOUGH_UNITS', 'NO_UNITS', 'SCOUTS_ONLY', 'MOVEMENT_NOT_FOUND', 'ALREADY_ARRIVED',
 ])
 
 /** City view: the HUD top bar with the resource strip, the city card, the buildings and army panels. */
@@ -49,6 +51,7 @@ export function CityPage() {
   const [detail, setDetail] = useState<CityDetail | null>(null)
   const [buildings, setBuildings] = useState<BuildingView[] | null>(null)
   const [army, setArmy] = useState<UnitView[] | null>(null)
+  const [movements, setMovements] = useState<Movements | null>(null)
   const [busy, setBusy] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const hasQueue = (detail?.buildQueue.length ?? 0) > 0 || (detail?.recruitQueue.length ?? 0) > 0 || (detail?.studyQueue.length ?? 0) > 0
@@ -82,10 +85,13 @@ export function CityPage() {
     const schedule = (ms: number) => { timer = window.setTimeout(tick, ms) }
     const tick = () => {
       timer = null
-      Promise.all([worldsApi.cityDetail(worldId, city.id), worldsApi.buildings(worldId, city.id), worldsApi.army(worldId, city.id)])
-        .then(([d, b, a]) => {
+      Promise.all([
+        worldsApi.cityDetail(worldId, city.id), worldsApi.buildings(worldId, city.id),
+        worldsApi.army(worldId, city.id), worldsApi.movements(worldId, city.id),
+      ])
+        .then(([d, b, a, m]) => {
           if (cancelled) return
-          setDetail(d); setBuildings(b); setArmy(a)
+          setDetail(d); setBuildings(b); setArmy(a); setMovements(m)
           if (running) schedule(pollIntervalMs(d.resources))
         })
         .catch((err) => {
@@ -122,8 +128,10 @@ export function CityPage() {
     try {
       const d = await run()
       setDetail(d)
-      const [b, a] = await Promise.all([worldsApi.buildings(worldId, city.id), worldsApi.army(worldId, city.id)])
-      setBuildings(b); setArmy(a)
+      const [b, a, m] = await Promise.all([
+        worldsApi.buildings(worldId, city.id), worldsApi.army(worldId, city.id), worldsApi.movements(worldId, city.id),
+      ])
+      setBuildings(b); setArmy(a); setMovements(m)
     } catch (err) {
       if (err instanceof ApiError && EXPECTED.has(err.code)) {
         // The view was out of date; pull the city again so the buttons match what the server allows.
@@ -142,6 +150,9 @@ export function CityPage() {
   const onStudy = (u: UnitType) => act(() => worldsApi.study(worldId, city!.id, u))
   const onCancelRecruit = (orderId: number) => act(() => worldsApi.cancelRecruit(worldId, city!.id, orderId))
   const onCancelStudy = (u: UnitType) => act(() => worldsApi.cancelStudy(worldId, city!.id, u))
+  const onRecall = (movementId: number) => act(() => worldsApi.recall(worldId, city!.id, movementId))
+  const onSend = (kind: MovementKind, x: number, y: number, units: Partial<Record<UnitType, number>>) =>
+    act(() => worldsApi.send(worldId, city!.id, kind, x, y, units))
 
   const shown = detail ?? city
 
@@ -149,7 +160,7 @@ export function CityPage() {
     <div className="city-shell">
       <MapTopBar worldName={worldName} worldId={worldId} city={city} showWorldButton />
       <main className="city-body">
-        <CityScene buildings={buildings} city={city} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} onUpgrade={onUpgrade} onCancelBuild={onCancelBuild} />
+        <CityScene buildings={buildings} city={city} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} onUpgrade={onUpgrade} onCancelBuild={onCancelBuild} movements={movements} onRecall={onRecall} onSend={onSend} />
         {/* City card, buildings and army panels are hidden for now: only the picture is shown.
             The data still loads so the information panel and the scene labels work. */}
         {SHOW_PANELS && (

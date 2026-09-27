@@ -202,6 +202,43 @@ export interface UnitView {
   recruitable: boolean
 }
 
+
+export type MovementKind = 'ATTACK' | 'SUPPORT' | 'SCOUT'
+export type MovementDirection = 'OUTWARD' | 'HOMEWARD'
+
+export interface MovementUnit {
+  type: UnitType
+  name: string
+  count: number
+}
+
+/** One body of troops on the road, on its way out or on its way home. */
+export interface Movement {
+  id: number
+  kind: MovementKind
+  direction: MovementDirection
+  /** The city at the other end: the target on the way out, the origin on the way home. */
+  otherCityName: string
+  x: number
+  y: number
+  departsAt: string
+  arrivesAt: string
+  /** Empty for an attack or a scouting run coming at us: we learn nothing until it lands. */
+  units: MovementUnit[]
+  /** What a homeward leg is carrying; null when there is nothing or we may not see it. */
+  carrying: Cost | null
+  /** True only for our own movements still on the way out. */
+  canRecall: boolean
+}
+
+export interface Movements {
+  serverTime: string
+  /** This city's own movements, out and back. */
+  outgoing: Movement[]
+  /** Movements heading here from somewhere else. */
+  incoming: Movement[]
+}
+
 export const worldsApi = {
   list: () => api<PlayableWorld[]>('/worlds'),
   mine: () => api<{ id: number; name: string }[]>('/worlds/mine'),
@@ -222,6 +259,11 @@ export const worldsApi = {
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/recruit-orders/${orderId}`, { method: 'DELETE' }),
   cancelStudy: (worldId: number, cityId: number, unit: UnitType) =>
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/study-orders/${unit}`, { method: 'DELETE' }),
+  movements: (worldId: number, cityId: number) => api<Movements>(`/worlds/${worldId}/cities/${cityId}/movements`),
+  send: (worldId: number, cityId: number, kind: MovementKind, targetX: number, targetY: number, units: Partial<Record<UnitType, number>>) =>
+    api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/movements`, { method: 'POST', body: { kind, targetX, targetY, units } }),
+  recall: (worldId: number, cityId: number, movementId: number) =>
+    api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/movements/${movementId}`, { method: 'DELETE' }),
   map: (worldId: number, startX: number, startY: number, endX: number, endY: number) =>
     api<MapResponse>(`/worlds/${worldId}/map?startX=${startX}&startY=${startY}&endX=${endX}&endY=${endY}`),
 }

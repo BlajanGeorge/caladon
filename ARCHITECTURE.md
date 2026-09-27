@@ -933,11 +933,120 @@ An attacker who wins can take, per resource, at most `stock − vault(level)`, f
 capacity of the surviving attackers. The Vault protects 150 per resource at level 1 and 2 000 at 10 —
 early-game protection; a level-20 Deposit holds 50 000.
 
+### Movements
+
+**Status: designed here, implemented as the first cut.** Troops leave a city, spend real time on the
+road, do one thing on arrival and come home. Everything the city is waiting for — its own troops out and
+foreign troops inbound — is one row of `city_movement`.
+
+**Two kinds**, each with an `OUTWARD` and a `HOMEWARD` leg (espionage is not a movement of troops and is
+designed separately, under *Espionage and the Cave*):
+
+| kind      | on arrival at the target                                                     |
+|-----------|------------------------------------------------------------------------------|
+| `ATTACK`  | combat; the survivors turn around with whatever they could carry              |
+| `SUPPORT` | the troops stay: a `city_support` row, owner = origin, host = target          |
+
+**One row per movement, not per leg.** `origin_city_id` is always the city that sent it and
+`target_city_id` the other end, whichever way it is flying; `direction` says which. So a movement keeps
+its id when it turns around, and `incoming` for a city means movements whose target is that city **and
+which are still on their way out**: something flying home is leaving, not arriving.
+
+**Travel time.** The distance is the straight line between the two cities in fields,
+`sqrt(dx² + dy²)`. The movement travels at its **slowest** unit's speed (minutes per field, from the unit
+table), so one Ram slows a cavalry raid to a crawl: `seconds = round(distance × slowest.speed × 60 /
+WORLD_SPEED)`. The homeward leg takes exactly as long as the outward one, recomputed from the survivors,
+who may be faster than what set out. A movement to the city's own coordinates is refused.
+
+**Sending.** The units leave `city_unit` at once and are held by the movement, so they cannot defend, be
+sent twice, or be counted at home. Their **population stays spent** by the origin the whole time: troops
+on the road are still the city's troops, and troops that die free no population on either side. Sending
+needs the units to be at home (not already out, not supporting elsewhere) and at least one unit.
+
+**Recall.** An outward movement can be turned around at any time before it arrives; it becomes a homeward
+leg whose remaining time is the time it has already flown, so a recall a minute after sending is home a
+minute later. Support already standing in another city is recalled the same way, from either end: the
+owner may call it home, and the host may send it away. Both create a homeward movement from the host.
+
+**Arrival** is processed exactly like a build order: the row carries `arrives_at`, whoever touches either
+city advances it, and a sweeper catches the rest. The two cities are locked in id order, always, so two
+movements crossing cannot deadlock. A homeward leg credits the units back into `city_unit` and the
+plunder into the resources, **capped by the Deposit** — anything over the cap is lost, as it is for
+production.
+
+**Combat (first cut, to be tuned).** The attacker's power is the sum of the attack
+values of the units it brought. The defender's power is the sum, over every unit standing in the city
+(its own and any support), of the defence value that matches what is attacking: the attack is split into
+infantry, cavalry and archer shares by the attacking power, and each share meets `defence`,
+`defenceCavalry` or `defenceArcher` respectively. The Wall multiplies the defence by
+`BuildingRules.wallFactor` (`1.037^level`), the same number its own panel reports — there is one Wall
+formula in the game. The side with more power wins and **a tie goes to the defender**; the loser loses
+everything, and the winner loses the fraction
+`(loser / winner)^1.5` of each of its unit types, rounded down. Rams and catapults do no damage to the
+Wall or to buildings yet, and a Nobleman does not lower loyalty yet: both wait for their own feature.
+
+**Plunder.** A winning attacker takes, per resource, at most `stock − vault(level)`, and no more than the
+surviving attackers can carry. The carry is filled evenly across the three resources.
+
+**The API.** `GET …/cities/{id}/movements` returns the two lists the panel needs: `outgoing` (this city's
+own movements, in either direction) and `incoming` (movements heading here from elsewhere). An incoming
+attack shows its arrival and nothing else — no numbers until scouting reports exist. Sending is
+`POST …/cities/{id}/movements {kind, targetX, targetY, units {UNIT: count}}`, recall is
+`DELETE …/movements/{id}`, and both return the city detail like every other mutation. Errors:
+`CITY_NOT_FOUND` (no city on that field), `SAME_CITY`, `NOT_ENOUGH_UNITS`, `NO_UNITS`,
+`MOVEMENT_NOT_FOUND`, `ALREADY_ARRIVED`. Recalling support standing elsewhere uses the same `DELETE`
+with the **other city's** id, so either end can end it.
+
+### Espionage and the Cave
+
+**Status: designed, not implemented.** Spying is not done with a unit. A scout who cannot fight has no
+place in an army, and one scout per run is not an army anyway, so the Scout unit goes and espionage
+becomes what it is in Grepolis: a payment.
+
+**Silver.** The third resource is renamed **iron → silver** everywhere (the resource, the `IRON_MINE`
+building becomes the `SILVER_MINE`, every cost, the API field, the icon). It is the ordinary third
+resource, produced by its mine and held by the Deposit like the other two.
+
+**The Cave** (`CAVE`) is a new building holding a **silver balance of its own**, separate from the city's
+stock. Silver is moved into it from the stock at any time, instantly, up to the level's capacity, and it
+is never moved back out except by spending it. The balance does two things and nothing else: it **pays
+for this city's spying** and it **defends against being spied on**. Its level sets the capacity only.
+Suggested numbers, from the same Tribal Wars formulas as every other building: max level 20, cost base
+around the Vault's, capacity 600 at level 1 growing by 1.2294934 per level, points as usual, and a Town
+Hall level 5 requirement so it is a mid-game decision.
+
+**A spy mission** is a movement of kind `ESPIONAGE` that carries an amount of silver instead of troops:
+
+- It costs the silver **at once**, out of the Cave, and it is gone whatever happens: the silver bought
+  the attempt, not the outcome.
+- It travels by the same distance rule as troops, at a fixed spy speed (proposed: 6 minutes per field,
+  faster than any unit), and it comes home empty over the same time.
+- **Only one mission per target city at a time.** A second is refused while the first is anywhere on the
+  road, out or back, which is what the homeward leg is for: it is a cooldown, nothing comes back with it.
+- On arrival, the silver committed meets the target's Cave balance:
+  - **more than the Cave holds → it succeeds.** The spy sends home a report: the target's resources, its
+    building levels, and the troops standing in it. The target learns nothing.
+  - **not more → it fails.** Both sides get a report: the spy learns only that it failed, the target
+    learns it was spied on and by whom. The target's silver is not spent (open: Grepolis burns some of
+    the defender's silver too; we can add that when we tune).
+
+**Reports** are a feature this needs and the game does not have yet: a `report` table owned by a player
+(world, city, kind, the other city, when, read or not) carrying what was seen, a list to read them in,
+and an unread mark in the top bar. Battle reports belong in the same place when combat is tuned.
+
+**What the Scout unit leaves behind.** Removing it takes a migration for the rows that exist
+(`city_unit`, `city_study`, `city_recruit_order`), its place on the Academy ladder (level 2 simply
+becomes empty; nothing else shifts), and its medallion stops being drawn.
+
+**Open, deliberately.** The city picture has nine plots and the Wall already has none; the Cave makes
+eleven buildings for nine plots, so until a wider picture exists the Cave lives in the Town Hall's list
+and on a plain label rather than having art of its own.
+
 ### Later, not designed here
 
-Combat resolution (how attack and the three defence values meet, the Wall's role, rams and catapults),
-movement and arrival times, the Nobleman's conquest mechanics (loyalty, nobles per city, Tribal Wars'
-coin cost per noble), reports.
+The Nobleman's conquest mechanics (loyalty, nobles per city, Tribal Wars' coin cost per noble), scouting
+**reports** and battle reports, rams and catapults doing damage, and the combat numbers above being tuned
+against Tribal Wars rather than merely plausible.
 
 ### Persistence
 
@@ -1198,12 +1307,21 @@ a standalone preview.
   each building, made from its top-tier art by `docs/building_icons.py` — the whole sprite scaled to fit a
   square, never cropped, so it stays legible at 22 px. Used by the bottom bar and the Town Hall's window,
   as the unit medallions are used for troops. Re-run the script after replacing any `b-*-3.png`.
+- **Movements in the bar**: two more sections, **On the road** (this city's own movements, out and back)
+  and **Coming here** (anything heading this way). A row carries a mark for the kind — swords for an
+  attack, a cross for support, a ring for scouting, each in its own tone — an arrow for the leg, the city
+  at the other end, and the countdown to arrival. Troops on the way home are greyed; an incoming attack is
+  red, and so is the count in that header. Our own outward movements carry a recall button, behind the
+  same confirmation as a cancel. The seven things a player watches for (attacks out and back, support out
+  and back, scouts out and back, attacks and support inbound) are all there: the kind and the arrow say
+  which, rather than a section each, which the bar has no width for.
+- **Sending** (`SendWindow`, opened from the *On the road* header): the errand (Attack, Support, Scout),
+  the target field typed as `x|y`, and a count per unit type with an "all" button, over the troops at
+  home. Every rule the server enforces is stated beside the button before it can be pressed: no troops
+  chosen, no field, this city, scouts only, or no scouts alone on an attack.
 - **Sections the bar still needs** (each waits for the movement feature, none of them exist yet):
-  **attacks incoming** (with arrival and, once scouted, what is coming), **attacks outgoing**,
-  **support incoming** and **support leaving**, **scouts out**, **troops on their way home** (the return
-  leg of every one of those, carrying plunder), and **conquest** runs with a Nobleman. Two more that are
-  easy to forget: a **recall** of support already standing in another city, and the **arrival of plunder**
-  as distinct from the troops that carry it, if we ever split them. Once there are more than about five,
-  the bar wants tabs or a single "Movements" section rather than a section each.
+  what an **incoming attack** is bringing (needs scouting reports), **conquest** runs with a Nobleman
+  (needs loyalty), and the **recall of support** already standing in another city from the bar rather
+  than from the target city.
 - Admin panel: not built (deferred in the spec).
 

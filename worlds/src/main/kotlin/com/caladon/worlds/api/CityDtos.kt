@@ -1,5 +1,7 @@
 package com.caladon.worlds.api
 
+import com.caladon.worlds.army.MovementDirection
+import com.caladon.worlds.army.MovementKind
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.Unit
 import java.time.Instant
@@ -147,3 +149,34 @@ data class BuildingViewResponse(
     /** The next orderable level (current + queued + 1); absent at max level. */
     val next: NextLevelResponse?,
 )
+
+/** The movement panel: everything the city has on the road and everything heading for it. */
+data class MovementsResponse(
+    val serverTime: Instant,
+    /** Movements starting from this city, outward and homeward. */
+    val outgoing: List<MovementResponse>,
+    /** Movements heading for this city from elsewhere. */
+    val incoming: List<MovementResponse>,
+)
+
+data class MovementResponse(
+    val id: Long,
+    val kind: MovementKind,
+    val direction: MovementDirection,
+    /** The other end of the movement: the target when outgoing, the origin when incoming. */
+    val otherCityName: String,
+    val x: Int,
+    val y: Int,
+    val departsAt: Instant,
+    val arrivesAt: Instant,
+    /** Empty for an incoming attack or scouting run: the defender learns nothing until reports exist. */
+    val units: List<MovementUnitResponse>,
+    /** Null where the units are hidden. */
+    val carrying: CostResponse?,
+    /** True only for the player's own outward movements. */
+    val canRecall: Boolean,
+)
+
+data class MovementUnitResponse(val type: Unit, val name: String, val count: Int)
+
+data class SendMovementRequest(val kind: MovementKind, val targetX: Int, val targetY: Int, val units: Map<Unit, Int>)

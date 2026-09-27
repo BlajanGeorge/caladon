@@ -330,8 +330,8 @@ input { font: inherit; cursor: text; }
   /* Keeps the countdowns off the scrollbar. */
   padding-right: 10px;
 }
-.cq-list li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #3a2e1e; }
-.cq-list img { width: 22px; height: 22px; display: block; flex: 0 0 22px; }
+.cq-list li { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3a2e1e; }
+.cq-list img { width: 20px; height: 20px; display: block; flex: 0 0 20px; }
 .cq-list .cq-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cq-list .cq-name em { font-style: normal; color: #6b5a3c; margin-left: 8px; }
 /* The entry actually being worked on, as against the ones waiting behind it. */
@@ -340,10 +340,52 @@ input { font: inherit; cursor: text; }
   font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
 }
 .cq-list li:not(.running) b { font-weight: 400; color: #6b5a3c; }
+/* Sending troops: the errand and the field on one line, then how many of each unit goes. */
+/* Narrower than the studies and buildings windows: its rows are short. */
+.b-info.studies.send { width: 620px; }
+.send-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.send-kinds { display: flex; gap: 6px; }
+.send-kind {
+  padding: 6px 12px; font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  color: var(--overlay-text); background: rgba(122,102,54,.22);
+  border: var(--overlay-border); border-radius: 7px;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.send-kind:hover { background: rgba(160,132,68,.38); }
+.send-kind.on { background: rgba(199,154,68,.55); color: #22242a; }
+.send-target { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--overlay-muted); }
+.send-field { width: 96px; text-align: left; }
+.send-list .study-action { min-width: 120px; gap: 6px; }
+.send-list .study-go { width: 34px; font-size: 11px; }
+/* The reason it cannot go yet, beside the button that would send it. */
+.send-go {
+  display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(122,102,54,.4);
+}
+.send-why { flex: 1; font-size: 12px; color: var(--overlay-muted); }
+.send-go .confirm-yes { flex: 0 0 auto; padding: 8px 16px; }
+
+/* Movements: the two sections that are not queues, so their headers open nothing and read as labels. */
+.cq-head.as-label { cursor: default; color: #4a3a22; }
+.cq-head.as-label:hover { color: #4a3a22; }
+/* What kind of movement it is: swords for an attack, a cross for support, a ring for scouting. */
+.cq-mark {
+  flex: 0 0 16px; width: 16px; height: 16px; display: grid; place-items: center;
+  font-size: 11px; line-height: 1; border-radius: 4px; background: rgba(70,54,28,.18);
+}
+.cq-mark.attack { color: #8c2f24; }
+.cq-mark.support { color: #3f6b3a; }
+.cq-mark.scout { color: #3a5a7a; }
+/* Troops on their way home are done with their errand: lighter than the ones still going out. */
+.cq-list li.back { color: #6b5a3c; }
+/* An attack heading here, and the count of what is coming. */
+.cq-list li.alarm .cq-name, .cq-list li.alarm b { color: #8c2f24; font-weight: 700; }
+.cq-head em.alarm { background: rgba(140,58,46,.28); color: #6b2f26; }
+
 /* Cancel on the tail of a queue, straight from the bar. The placeholder holds its column on the rows
    above, so the countdowns stay in line. */
 .cq-cancel {
-  flex: 0 0 18px; width: 18px; height: 18px; padding: 0; line-height: 1; font-size: 13px;
+  flex: 0 0 16px; width: 16px; height: 16px; padding: 0; line-height: 1; font-size: 12px;
   color: #6b2f26; background: rgba(140,58,46,.18);
   border: 1px solid rgba(110,52,40,.45); border-radius: 5px;
   cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;

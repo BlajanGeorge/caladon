@@ -24,6 +24,12 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class NotLastInQueue : WorldException(HttpStatus.CONFLICT, "NOT_LAST_IN_QUEUE")
     class AlreadyStudied : WorldException(HttpStatus.CONFLICT, "ALREADY_STUDIED")
     class NotStudied : WorldException(HttpStatus.CONFLICT, "NOT_STUDIED")
+    class SameCity : WorldException(HttpStatus.CONFLICT, "SAME_CITY")
+    class NoUnits : WorldException(HttpStatus.CONFLICT, "NO_UNITS")
+    /** details: unit → how many are missing. */
+    class NotEnoughUnits(details: Map<String, String>) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_UNITS", details)
+    class MovementNotFound : WorldException(HttpStatus.NOT_FOUND, "MOVEMENT_NOT_FOUND")
+    class AlreadyArrived : WorldException(HttpStatus.CONFLICT, "ALREADY_ARRIVED")
     class InvalidCount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("count" to "must be between 1 and 10000"))
     class InvalidViewport(details: Map<String, String>) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", details)
 }

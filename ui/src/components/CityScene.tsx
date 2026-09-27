@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
-import type { BuildingType, BuildingView, CityDetail, OwnedCity, UnitType, UnitView } from '../api/worlds'
+import type {
+  BuildingType, BuildingView, CityDetail, MovementKind, Movements, OwnedCity, UnitType, UnitView,
+} from '../api/worlds'
 import { ResourceStrip } from './ResourceStrip'
 import { GROUND_INSETS, GROUND_PAINTED, GROUND_SIZE, PLOTS, anchorPercent } from '../city/plots'
 import { UNIT_ICONS, UNIT_ORDER } from '../city/unitIcons'
@@ -9,6 +11,7 @@ import { StudiesWindow } from './StudiesWindow'
 import { RecruitWindow } from './RecruitWindow'
 import { BuildingsWindow } from './BuildingsWindow'
 import { CityQueues } from './CityQueues'
+import { SendWindow } from './SendWindow'
 import groundUrl from '@assets/sprites/city-ground.png'
 
 /**
@@ -42,24 +45,29 @@ interface Props {
   onCancelRecruit: (orderId: number) => void
   onUpgrade: (building: BuildingType) => void
   onCancelBuild: (orderId: number) => void
+  /** Troops on the road, for the bar along the bottom. */
+  movements: Movements | null
+  onRecall: (movementId: number) => void
+  onSend: (kind: MovementKind, x: number, y: number, units: Partial<Record<UnitType, number>>) => void
 }
 
 /**
  * The city view: the picture fills the whole view with the side panel floating over it, which holds the city's name, its resources and its troops. Plot labels (later:
  * building sprites) live inside the picture box, so their percentage anchors stay on the plots.
  */
-export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild }: Props) {
+export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
   const [hover, setHover] = useState<string | null>(null)
   // One window at a time: a building's own, or the Academy's studies.
   const [window_, setWindow] = useState<
-    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | null
+    { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | null
   >(null)
   const open = window_?.kind === 'building' ? window_.type : null
   const studies = window_?.kind === 'studies'
   const recruiting = window_?.kind === 'recruit'
   const building = window_?.kind === 'buildings'
+  const sending = window_?.kind === 'send'
 
   useLayoutEffect(() => {
     const el = ref.current
@@ -191,6 +199,9 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           onClose={() => setWindow(null)}
         />
       )}
+      {sending && units && (
+        <SendWindow units={units} detail={detail} busy={busy} onSend={onSend} onClose={() => setWindow(null)} />
+      )}
       {recruiting && units && (
         <RecruitWindow
           units={units}
@@ -217,11 +228,14 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
       <CityQueues
         detail={detail}
         units={units}
+        movements={movements}
         busy={busy}
         style={{ left: PANEL_INSET, right: PANEL_W + PANEL_INSET * 2, bottom: PANEL_INSET }}
         onCancelBuild={onCancelBuild}
         onCancelRecruit={onCancelRecruit}
         onCancelStudy={onCancelStudy}
+        onRecall={onRecall}
+        onOpenSend={() => setWindow({ kind: 'send' })}
         onOpenBuildings={() => setWindow({ kind: 'buildings' })}
         onOpenRecruit={() => setWindow({ kind: 'recruit' })}
         onOpenStudies={() => setWindow({ kind: 'studies' })}

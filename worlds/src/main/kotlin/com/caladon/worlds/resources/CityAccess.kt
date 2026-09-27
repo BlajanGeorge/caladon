@@ -2,6 +2,7 @@ package com.caladon.worlds.resources
 
 import com.caladon.users.domain.Role
 import com.caladon.worlds.army.CityRecruitOrderRepository
+import com.caladon.worlds.army.MovementService
 import com.caladon.worlds.army.CityStudyRepository
 import com.caladon.worlds.army.CityUnitRepository
 import com.caladon.worlds.buildings.CityBuildOrderRepository
@@ -17,6 +18,7 @@ import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
 import com.caladon.worlds.rules.UnitRules
 import com.caladon.worlds.service.WorldException
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 import java.time.Clock
 import java.time.Instant
@@ -38,6 +40,8 @@ class CityAccess(
     private val cityUnitRepository: CityUnitRepository,
     private val recruitOrderRepository: CityRecruitOrderRepository,
     private val studyRepository: CityStudyRepository,
+    /** Asked for only when a city is advanced: the movements need this class back. */
+    private val movements: ObjectProvider<MovementService>,
     private val clock: Clock,
 ) {
     fun open(worldId: Long, cityId: Long, userId: Long, role: Role): CityState {
@@ -64,6 +68,16 @@ class CityAccess(
             studies = studyRepository.findAllByIdCityIdOrderByCompletesAtAsc(cityId).associateBy { it.id.unit }.toMutableMap(),
             now = clock.instant(),
         )
+    }
+
+    /**
+     * The other end of a movement: loaded and advanced with no ownership check, the caller holding both
+     * city locks (see [MovementService.processArrivals]).
+     */
+    fun advanceForMovement(cityId: Long): CityState? {
+        val city = cityRepository.findById(cityId).orElse(null) ?: return null
+        val res = cityResourcesRepository.findById(cityId).orElse(null) ?: return null
+        return load(city, res).also { advance(it) }
     }
 
     /** For the sweeper: the caller already holds the city row lock; loads the city and advances it. */
@@ -112,6 +126,7 @@ class CityAccess(
         }
         state.settleTo(now)
         for (s in state.studies.values) if (!s.applied && !s.completesAt.isAfter(now)) { s.applied = true; studyRepository.save(s) }
+        movements.getObject().processArrivals(state)
     }
 
     private fun recruitSeconds(u: com.caladon.worlds.rules.Unit, barracks: Int): Long =

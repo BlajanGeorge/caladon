@@ -26,7 +26,7 @@ class CitySweeper(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    /** Advances every city with a due build or recruit order. Returns how many cities were advanced. */
+    /** Advances every city with a due order or a due movement. Returns how many cities were advanced. */
     fun sweep(): Int {
         val now = clock.instant()
         val due = jdbc.queryForList(
@@ -36,6 +36,10 @@ class CitySweeper(
             SELECT city_id FROM city_recruit_order WHERE next_completes_at <= :now
             UNION
             SELECT city_id FROM city_study WHERE completes_at <= :now AND NOT applied
+            UNION
+            SELECT origin_city_id FROM city_movement WHERE arrives_at <= :now AND NOT applied
+            UNION
+            SELECT target_city_id FROM city_movement WHERE arrives_at <= :now AND NOT applied
             """,
             mapOf("now" to java.sql.Timestamp.from(now)),
             Long::class.java,

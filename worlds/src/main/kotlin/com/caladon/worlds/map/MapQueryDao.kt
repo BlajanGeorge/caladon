@@ -57,6 +57,15 @@ class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
         params(worldId, v),
     ) { rs, _ -> Tile(rs.getInt("x"), rs.getInt("y")) }
 
+    /** The city standing on a field, if any: what a movement is sent to. */
+    fun cityIdAt(worldId: Long, x: Int, y: Int): Long? = jdbc.query(
+        """
+        SELECT c.id FROM city c JOIN city_slot s ON s.id = c.slot_id
+        WHERE c.world_id = :worldId AND s.x = :x AND s.y = :y
+        """,
+        mapOf("worldId" to worldId, "x" to x, "y" to y),
+    ) { rs, _ -> rs.getLong("id") }.firstOrNull()
+
     fun citiesOwnedBy(worldId: Long, userId: Long): List<OwnedCity> = jdbc.query(
         """
         SELECT c.id, s.x, s.y, c.name, c.points

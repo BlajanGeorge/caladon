@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react'
-import type { CityDetail, UnitType, UnitView } from '../api/worlds'
+import type { CityDetail, Movement, Movements, UnitType, UnitView } from '../api/worlds'
 import { UNIT_ICONS } from '../city/unitIcons'
 import { BUILDING_ICONS } from '../city/buildingIcons'
 import { formatDuration, secondsUntil } from '../city/format'
@@ -16,22 +16,40 @@ type Confirm = {
   back: { wood: number; stone: number; iron: number; pop: number } | null
   keep: string
   go: string
-} & ({ kind: 'build'; id: number } | { kind: 'recruit'; id: number } | { kind: 'study'; unit: UnitType })
+} & (
+  | { kind: 'build'; id: number }
+  | { kind: 'recruit'; id: number }
+  | { kind: 'study'; unit: UnitType }
+  | { kind: 'recall'; id: number }
+)
+
+/** How each kind of movement is marked in the bar, and what it is called. */
+const KIND: Record<Movement['kind'], { mark: string; out: string; back: string }> = {
+  ATTACK: { mark: '⚔', out: 'Attacking', back: 'Returning from the attack' },
+  SUPPORT: { mark: '✚', out: 'Going to support', back: 'Support coming home' },
+  SCOUT: { mark: '◎', out: 'Scouting', back: 'Scouts coming home' },
+}
 
 interface Props {
   detail: CityDetail | null
   /** Every unit type, for what a cancelled study or training gives back. */
   units: UnitView[] | null
+  /** Troops on the road, ours and anyone else's heading here. */
+  movements: Movements | null
   /** Where the bar sits: the scene keeps it clear of the side panel. */
   style?: CSSProperties
   busy: boolean
   onCancelBuild: (orderId: number) => void
   onCancelRecruit: (orderId: number) => void
   onCancelStudy: (unit: UnitType) => void
+  /** Turns an outward movement around. */
+  onRecall: (movementId: number) => void
   /** Opens the window that owns a section's queue. */
   onOpenBuildings: () => void
   onOpenRecruit: () => void
   onOpenStudies: () => void
+  /** Opens the window that sends troops out. */
+  onOpenSend: () => void
 }
 
 /**
@@ -43,13 +61,15 @@ interface Props {
  * their way, and troops on their way home — each as another section of the same bar.
  */
 export function CityQueues({
-  detail, units, style, busy, onOpenBuildings, onOpenRecruit, onOpenStudies,
-  onCancelBuild, onCancelRecruit, onCancelStudy,
+  detail, units, movements, style, busy, onOpenBuildings, onOpenRecruit, onOpenStudies,
+  onCancelBuild, onCancelRecruit, onCancelStudy, onRecall, onOpenSend,
 }: Props) {
   const builds = detail?.buildQueue ?? []
   const troops = detail?.recruitQueue ?? []
   const studies = detail?.studyQueue ?? []
-  const working = builds.length + troops.length + studies.length > 0
+  const outgoing = movements?.outgoing ?? []
+  const incoming = movements?.incoming ?? []
+  const working = builds.length + troops.length + studies.length + outgoing.length + incoming.length > 0
   const now = useNow(working)
   // Only the tail of a queue can go, the rule the server enforces, and never without being asked first.
   const [confirming, setConfirming] = useState<Confirm | null>(null)
@@ -166,6 +186,62 @@ export function CityQueues({
         )}
       </section>
 
+      <section className="cq-section">
+        <button type="button" className="cq-head" onClick={onOpenSend} title="Send troops somewhere">
+          On the road{outgoing.length > 0 ? <em>{outgoing.length}</em> : null}
+          <span className="cq-go" aria-hidden="true"><i>Send troops</i>›</span>
+        </button>
+        {outgoing.length === 0 ? (
+          <p className="cq-empty">Nobody is out</p>
+        ) : (
+          <ul className="cq-list">
+            {outgoing.map((m) => (
+              <li key={m.id} className={m.direction === 'HOMEWARD' ? 'back' : 'running'}>
+                <span className={`cq-mark ${m.kind.toLowerCase()}`} aria-hidden="true">{KIND[m.kind].mark}</span>
+                <span className="cq-name" title={`${m.direction === 'OUTWARD' ? KIND[m.kind].out : KIND[m.kind].back}: ${m.otherCityName} (${m.x}|${m.y})`}>
+                  {m.direction === 'OUTWARD' ? '→' : '←'} {m.otherCityName}
+                </span>
+                <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
+                {m.canRecall ? (
+                  <button
+                    type="button" className="cq-cancel" disabled={busy}
+                    title="Turn them around" aria-label={`Recall the troops sent to ${m.otherCityName}`}
+                    onClick={() => setConfirming({
+                      kind: 'recall', id: m.id,
+                      title: 'Turn them around?',
+                      text: `The troops on their way to ${m.otherCityName} turn back now. They take as long to come home as they have been flying.`,
+                      back: null, keep: 'Let them go on', go: 'Turn them around',
+                    })}
+                  >×</button>
+                ) : <span className="cq-cancel placeholder" aria-hidden="true" />}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="cq-section">
+        <div className="cq-head as-label">
+          Coming here{incoming.length > 0 ? <em className={incoming.some((m) => m.kind === 'ATTACK') ? 'alarm' : undefined}>{incoming.length}</em> : null}
+        </div>
+        {incoming.length === 0 ? (
+          <p className="cq-empty">Nothing is coming</p>
+        ) : (
+          <ul className="cq-list">
+            {incoming.map((m) => (
+              <li key={m.id} className={m.kind === 'ATTACK' ? 'alarm' : undefined}>
+                <span className={`cq-mark ${m.kind.toLowerCase()}`} aria-hidden="true">{KIND[m.kind].mark}</span>
+                <span className="cq-name" title={`${KIND[m.kind].out} from ${m.otherCityName} (${m.x}|${m.y})`}>
+                  {m.otherCityName}
+                </span>
+                <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
+                <span className="cq-cancel placeholder" aria-hidden="true" />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       {confirming && (
         <div className="confirm floating">
           <div className="confirm-box" role="alertdialog" aria-label={confirming.title}>
@@ -190,6 +266,7 @@ export function CityQueues({
                   setConfirming(null)
                   if (c.kind === 'build') onCancelBuild(c.id)
                   else if (c.kind === 'recruit') onCancelRecruit(c.id)
+                  else if (c.kind === 'recall') onRecall(c.id)
                   else onCancelStudy(c.unit)
                 }}
               >

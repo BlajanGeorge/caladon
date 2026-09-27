@@ -3,6 +3,7 @@ package com.caladon.worlds.api
 import com.caladon.users.security.AuthenticatedUser
 import com.caladon.worlds.army.ArmyService
 import com.caladon.worlds.army.CitySupportRepository
+import com.caladon.worlds.army.MovementService
 import com.caladon.worlds.buildings.BuildingService
 import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.resources.CityAccess
@@ -30,6 +31,7 @@ class CityController(
     private val cityAccess: CityAccess,
     private val buildingService: BuildingService,
     private val armyService: ArmyService,
+    private val movementService: MovementService,
     private val citySupportRepository: CitySupportRepository,
 ) {
     @GetMapping
@@ -115,6 +117,40 @@ class CityController(
         @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
         @PathVariable orderId: Long,
     ): CityDetailResponse = toDetail(armyService.cancel(worldId, cityId, user.id, user.role, orderId))
+
+    @GetMapping("/movements")
+    fun movements(@AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long): MovementsResponse {
+        val (state, movements) = movementService.list(worldId, cityId, user.id, user.role)
+        return MovementsResponse(
+            serverTime = state.now,
+            outgoing = movements.outgoing.map(::toMovement),
+            incoming = movements.incoming.map(::toMovement),
+        )
+    }
+
+    @PostMapping("/movements")
+    fun send(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @RequestBody request: SendMovementRequest,
+    ): CityDetailResponse = toDetail(
+        movementService.send(
+            worldId, cityId, user.id, user.role, request.kind, request.targetX, request.targetY, request.units,
+        ),
+    )
+
+    @DeleteMapping("/movements/{id}")
+    fun recall(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @PathVariable id: Long,
+    ): CityDetailResponse = toDetail(movementService.recall(worldId, cityId, user.id, user.role, id))
+
+    private fun toMovement(v: MovementService.MovementView) = MovementResponse(
+        id = v.id, kind = v.kind, direction = v.direction, otherCityName = v.otherCityName, x = v.x, y = v.y,
+        departsAt = v.departsAt, arrivesAt = v.arrivesAt,
+        units = v.units.map { MovementUnitResponse(it.unit, it.unit.displayName, it.count) },
+        carrying = v.carrying?.let { CostResponse(it.first, it.second, it.third) },
+        canRecall = v.canRecall,
+    )
 
     private fun toDetail(state: CityState): CityDetailResponse {
         val (x, y) = cityAccess.coordinates(state)
