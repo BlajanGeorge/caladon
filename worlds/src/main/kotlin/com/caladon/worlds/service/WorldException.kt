@@ -33,6 +33,7 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     /** details: silver over what the Cave can still hold. */
     class CaveFull(over: String) : WorldException(HttpStatus.CONFLICT, "CAVE_FULL", mapOf("silver" to over))
     class InvalidAmount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("amount" to "must be positive"))
+    class InvalidBoard(board: String) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("board" to board))
     class InvalidCount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("count" to "must be between 1 and 10000"))
     class InvalidViewport(details: Map<String, String>) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", details)
 }

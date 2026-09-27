@@ -47,7 +47,7 @@ data class MapResponse(
  * earned — the population they have killed attacking and defending.
  */
 data class StandingResponse(
-    val rank: Int,
+    val rank: Long,
     val playerId: Long,
     val player: String,
     val cities: Int,
@@ -55,4 +55,17 @@ data class StandingResponse(
     val attackPoints: Long,
     val defencePoints: Long,
     val battlePoints: Long,
+)
+
+/**
+ * One page of a board. [next] continues an endless scroll exactly where this page stopped and is null at
+ * the end; [me] is the caller's own standing wherever it falls.
+ */
+data class RankingResponse(
+    val board: String,
+    val total: Long,
+    val limit: Int,
+    val next: String?,
+    val me: StandingResponse?,
+    val rows: List<StandingResponse>,
 )

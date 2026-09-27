@@ -1142,9 +1142,33 @@ is the point. A battle awards them once, on arrival:
 
 A player who loses their last city keeps the battle points they earned.
 
-`GET /api/v1/worlds/{id}/ranking?limit=50` returns the standings, best first: by points, then by battle
-points, then by name so the order never wobbles. Each row is `rank`, `playerId`, `player`, `cities`,
-`points`, `attackPoints`, `defencePoints`, `battlePoints`. The caller must have joined the world.
+**The board.** `GET /api/v1/worlds/{id}/ranking` returns one page, best first. It is the same table
+whichever way it is ordered — every row carries all the figures — and `board` chooses the order:
+`points` (the default), `battle`, `attack`, `defence`. The tie-break is the **player id**, so the order
+is total and no two rows ever compare equal.
+
+| parameter | meaning |
+|-----------|---------|
+| `board`   | `points` \| `battle` \| `attack` \| `defence`; anything else is `400 VALIDATION_ERROR` |
+| `limit`   | rows per page, **100** by default, clamped to 1–100 (the UI offers 10, 50, 100) |
+| `after`   | a cursor from the previous page's `next`: continues a scroll **exactly** |
+| `page`    | an ordinary 1-based page number, for a pager |
+| `q`       | searches by player name: contained in it, or close to it (see below) |
+
+Paging comes in two kinds on purpose. `after` is a keyset cursor carrying the figure and the player id
+of the last row shown, so an endless scroll can neither skip a player nor repeat one. `page` is offset
+paging, which can drop or repeat a player when the board moves under it — fine for a page you jump to
+deliberately, and the reason the scroll does not use it.
+
+A search matches a name that **contains** what was typed, case-insensitively, or is **close enough to
+it**: `pg_trgm`'s trigram similarity at its own 0.3 threshold, so "ann" still finds "ana" (`V111` adds the
+extension and a GIN index on the nickname). A search never changes a rank either: a player found by `q`
+keeps the rank they hold in the whole world, which is the number the searcher is after.
+
+The response is `{ board, total, limit, next, me, rows }`. `next` is null at the end of the board. **`me`
+is the caller's own standing** wherever it falls, so a player never has to page to find themselves. Each
+row is `rank`, `playerId`, `player`, `cities`, `points`, `attackPoints`, `defencePoints`, `battlePoints`.
+The caller must have joined the world.
 
 ---
 

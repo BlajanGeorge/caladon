@@ -3,6 +3,7 @@ package com.caladon.worlds.api
 import com.caladon.users.security.AuthenticatedUser
 import com.caladon.worlds.map.Viewport
 import com.caladon.worlds.ranking.RankingService
+import com.caladon.worlds.service.WorldException
 import com.caladon.worlds.service.WorldService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,21 +20,39 @@ class WorldController(
     private val rankingService: RankingService,
 ) {
 
-    /** The world's standings, best first. Any player may read them; a world's ranking is public. */
+    /**
+     * One page of the world's standings, best first. Ordered by city points unless another `board` is
+     * asked for; `after` continues a scroll exactly, `page` jumps to a page, `q` searches by name without
+     * changing anyone's rank. Any player who has joined the world may read it.
+     */
     @GetMapping("/{id}/ranking")
     fun ranking(
         @AuthenticationPrincipal user: AuthenticatedUser,
         @PathVariable id: Long,
-        @RequestParam(defaultValue = "50") limit: Int,
-    ): List<StandingResponse> {
+        @RequestParam(defaultValue = "points") board: String,
+        @RequestParam(defaultValue = "100") limit: Int,
+        @RequestParam(required = false) after: String?,
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) q: String?,
+    ): RankingResponse {
         worldService.requirePlayable(id, user.id)
-        return rankingService.standings(id, limit.coerceIn(1, 200)).map {
-            StandingResponse(
-                rank = it.rank, playerId = it.userId, player = it.player, cities = it.cities, points = it.points,
-                attackPoints = it.attackPoints, defencePoints = it.defencePoints, battlePoints = it.battlePoints,
-            )
-        }
+        val which = RankingService.Board.entries.firstOrNull { it.name.equals(board, ignoreCase = true) }
+            ?: throw WorldException.InvalidBoard(board)
+        val result = rankingService.standings(id, which, limit, after, page, q, meUserId = user.id)
+        return RankingResponse(
+            board = result.board.name.lowercase(),
+            total = result.total,
+            limit = result.limit,
+            next = result.next,
+            me = result.me?.let(::toStanding),
+            rows = result.rows.map(::toStanding),
+        )
     }
+
+    private fun toStanding(s: RankingService.Standing) = StandingResponse(
+        rank = s.rank, playerId = s.playerId, player = s.player, cities = s.cities, points = s.points,
+        attackPoints = s.attackPoints, defencePoints = s.defencePoints, battlePoints = s.battlePoints,
+    )
 
     /** PLAYABLE worlds only; `joined` tells the UI whether to show "Play" or "Join". */
     @GetMapping

@@ -22,6 +22,7 @@ class RankingApiTest : ApiTestBase() {
 
     @Autowired lateinit var cityUnitRepository: CityUnitRepository
     @Autowired lateinit var sweeper: CitySweeper
+    @Autowired lateinit var rankingService: com.caladon.worlds.ranking.RankingService
 
     private fun place(cityId: Long, x: Int, y: Int) {
         val city = cityRepository.findById(cityId).orElseThrow()
@@ -54,16 +55,17 @@ class RankingApiTest : ApiTestBase() {
 
         get("/api/v1/worlds/$world/ranking", playerToken).andExpect {
             status { isOk() }
-            jsonPath("$.length()") { value(2) }
-            // Both founded a city worth the same 39 points, so the tie breaks on the name.
-            jsonPath("$[0].rank") { value(1) }
-            jsonPath("$[0].player") { value("ana") }
-            jsonPath("$[0].cities") { value(1) }
-            jsonPath("$[0].points") { value(39) }
-            jsonPath("$[0].attackPoints") { value(0) }
-            jsonPath("$[0].defencePoints") { value(0) }
-            jsonPath("$[0].battlePoints") { value(0) }
-            jsonPath("$[1].player") { value("george") }
+            jsonPath("$.total") { value(2) }
+            jsonPath("$.rows.length()") { value(2) }
+            // Both founded a city worth the same 39 points, so the tie breaks on the player id.
+            jsonPath("$.rows[0].rank") { value(1) }
+            jsonPath("$.rows[0].player") { value("george") }
+            jsonPath("$.rows[0].cities") { value(1) }
+            jsonPath("$.rows[0].points") { value(39) }
+            jsonPath("$.rows[0].attackPoints") { value(0) }
+            jsonPath("$.rows[0].defencePoints") { value(0) }
+            jsonPath("$.rows[0].battlePoints") { value(0) }
+            jsonPath("$.rows[1].player") { value("ana") }
         }
     }
 
@@ -95,7 +97,7 @@ class RankingApiTest : ApiTestBase() {
         jump(5401)
         sweeper.sweep()
 
-        val standings = json(get("/api/v1/worlds/$world/ranking", playerToken).andExpect { status { isOk() } })
+        val standings = json(get("/api/v1/worlds/$world/ranking", playerToken).andExpect { status { isOk() } })["rows"]
         val by = standings.associateBy { it["player"].asText() }
 
         // The attacker killed 50 spearmen, one population each, and lost 8 axemen.
@@ -107,6 +109,87 @@ class RankingApiTest : ApiTestBase() {
         assertThat(by.values.sumOf { it["defencePoints"].asLong() }).isEqualTo(8)
         assertThat(by.getValue("george")["battlePoints"].asLong()).isEqualTo(50)
     }
+
+    @Test
+    fun `boards, paging and search`() {
+        val world = createPlayableWorld()
+        val mine = json(post("/api/v1/worlds/$world/join", playerToken).andExpect { status { isOk() } })["startCity"]["id"].asLong()
+        post("/api/v1/worlds/$world/join", otherPlayerToken).andExpect { status { isOk() } }
+        post("/api/v1/worlds/$world/join", adminToken).andExpect { status { isOk() } }
+
+        // Points come from the cities, so raising one moves the board at once.
+        val city = cityRepository.findById(mine).orElseThrow()
+        city.points = 500
+        cityRepository.saveAndFlush(city)
+        // Battle points are their own board, and george has none.
+        rankingService.award(world, userId("ana@caladon.test"), attack = 120)
+        rankingService.award(world, userId("admin@caladon.test"), defence = 300)
+
+        get("/api/v1/worlds/$world/ranking", playerToken).andExpect {
+            status { isOk() }
+            jsonPath("$.board") { value("points") }
+            jsonPath("$.total") { value(3) }
+            jsonPath("$.limit") { value(100) }
+            jsonPath("$.next") { doesNotExist() }
+            jsonPath("$.rows[0].player") { value("george") }     // 500 points
+            jsonPath("$.rows[0].rank") { value(1) }
+            jsonPath("$.me.player") { value("george") }
+            jsonPath("$.me.rank") { value(1) }
+        }
+        get("/api/v1/worlds/$world/ranking?board=battle", playerToken).andExpect {
+            jsonPath("$.board") { value("battle") }
+            jsonPath("$.rows[0].player") { value("admin") }      // 300 defending
+            jsonPath("$.rows[1].player") { value("ana") }        // 120 attacking
+            jsonPath("$.rows[2].player") { value("george") }
+            jsonPath("$.me.rank") { value(3) }
+        }
+        get("/api/v1/worlds/$world/ranking?board=attack", playerToken).andExpect {
+            jsonPath("$.rows[0].player") { value("ana") }
+        }
+        get("/api/v1/worlds/$world/ranking?board=defence", playerToken).andExpect {
+            jsonPath("$.rows[0].player") { value("admin") }
+        }
+        get("/api/v1/worlds/$world/ranking?board=nonsense", playerToken).andExpect {
+            status { isBadRequest() }
+            jsonPath("$.error") { value("VALIDATION_ERROR") }
+        }
+
+        // A scroll of one row at a time walks the whole board, losing nobody and repeating nobody.
+        val seen = mutableListOf<String>()
+        var next: String? = null
+        repeat(4) {
+            val url = "/api/v1/worlds/$world/ranking?limit=1" + (next?.let { "&after=$it" } ?: "")
+            val body = json(get(url, playerToken).andExpect { status { isOk() } })
+            body["rows"].forEach { seen += it["player"].asText() }
+            next = body["next"].takeIf { !it.isNull }?.asText()
+        }
+        assertThat(seen).containsExactly("george", "admin", "ana")
+        assertThat(next).isNull()
+
+        // Page numbers walk it too.
+        assertThat(json(get("/api/v1/worlds/$world/ranking?limit=2&page=2", playerToken)
+            .andExpect { status { isOk() } })["rows"].map { it["player"].asText() }).containsExactly("ana")
+
+        // Searching keeps the rank the player holds in the whole world.
+        get("/api/v1/worlds/$world/ranking?q=AN", playerToken).andExpect {
+            jsonPath("$.total") { value(1) }
+            jsonPath("$.rows.length()") { value(1) }
+            jsonPath("$.rows[0].player") { value("ana") }
+            jsonPath("$.rows[0].rank") { value(3) }
+        }
+        // A typo still finds her: trigram similarity, not just a substring.
+        get("/api/v1/worlds/$world/ranking?q=ann", playerToken).andExpect {
+            jsonPath("$.rows.length()") { value(1) }
+            jsonPath("$.rows[0].player") { value("ana") }
+        }
+        // Something nothing resembles finds nobody.
+        get("/api/v1/worlds/$world/ranking?q=zzzz", playerToken).andExpect {
+            jsonPath("$.total") { value(0) }
+            jsonPath("$.rows.length()") { value(0) }
+        }
+    }
+
+    private fun userId(email: String): Long = requireNotNull(userRepository.findByEmailIgnoreCase(email)).id!!
 
     @Test
     fun `the ranking of a world the player has not joined is refused`() {
