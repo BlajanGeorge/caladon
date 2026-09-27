@@ -323,7 +323,7 @@ input { font: inherit; cursor: text; }
   min-width: 16px; padding: 1px 5px; border-radius: 8px;
   background: rgba(70,54,28,.28); color: #3a2e1e;
 }
-.cq-empty { margin: 4px 0 0; font-size: 12px; color: #6b5a3c; }
+.cq-empty { margin: 4px 0 0; font-size: 12px; color: #6b5a3c; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 .cq-list {
   list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px;
   /* Takes the height left by the header and scrolls inside it, so a full queue cannot stretch the bar. */
@@ -331,7 +331,10 @@ input { font: inherit; cursor: text; }
   /* Keeps the countdowns off the scrollbar. */
   padding-right: 10px;
 }
-.cq-list li { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3a2e1e; }
+.cq-list li {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3a2e1e;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, default;
+}
 .cq-list img { width: 20px; height: 20px; display: block; flex: 0 0 20px; }
 .cq-list .cq-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cq-list .cq-name em { font-style: normal; color: #6b5a3c; margin-left: 8px; }
@@ -375,8 +378,9 @@ input { font: inherit; cursor: text; }
 .send-why { flex: 1; font-size: 12px; color: var(--overlay-muted); }
 .send-go .confirm-yes { flex: 0 0 auto; padding: 8px 16px; }
 
-/* Movements: the two sections that are not queues, so their headers open nothing and read as labels. */
-.cq-head.as-label { cursor: default; color: #4a3a22; }
+/* Movements: the section that is not a queue, so its header opens nothing and reads as a label. It keeps
+   the gauntlet: a plain `default` here would drop back to the system arrow mid-screen. */
+.cq-head.as-label { cursor: url('@assets/sprites/cursor-point.png') 1 0, default; color: #4a3a22; }
 .cq-head.as-label:hover { color: #4a3a22; }
 /* What kind of movement it is: swords for an attack, a cross for support, a ring for scouting. */
 .cq-mark {
