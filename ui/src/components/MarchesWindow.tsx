@@ -96,7 +96,7 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
                   >
                     <img src={goodsUrl} alt="Resources" />{carrying.toLocaleString()}
                   </span>
-                ) : <span className="mw-quiet">carrying nothing</span>
+                ) : null
               )}
             </div>
           )}
