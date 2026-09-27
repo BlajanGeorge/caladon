@@ -21,14 +21,14 @@ export function CaveWindow({ detail, busy, onStore, onClose }: Props) {
   const most = Math.max(0, Math.min(stock, capacity - held))
   const amount = Math.max(0, Math.min(Math.floor(Number(typed) || 0), most))
 
+  // Only the things the player cannot see for themselves; an empty field says enough on its own.
   const refusal =
     capacity === 0 ? 'Build a Cave first'
       : most === 0 ? (held >= capacity ? 'The Cave is full' : 'No silver to move')
-      : amount === 0 ? 'Enter how much'
       : null
 
   return (
-    <div className="b-info" role="dialog" aria-label="Cave">
+    <div className="b-info cave" role="dialog" aria-label="Cave">
       <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
       <h3>Cave</h3>
       <p className="b-info-level">{held.toLocaleString()} of {capacity.toLocaleString()} silver</p>
@@ -44,8 +44,11 @@ export function CaveWindow({ detail, busy, onStore, onClose }: Props) {
         <dd>{Math.max(0, capacity - held).toLocaleString()} silver</dd>
       </dl>
 
-      <div className="send-go">
-        <span className="send-why">{refusal ?? `Move ${amount.toLocaleString()} silver in`}</span>
+      <div className="cave-go">
+        {(refusal || amount > 0) && (
+          <span className="send-why">{refusal ?? `Move ${amount.toLocaleString()} silver in`}</span>
+        )}
+        <div className="cave-row">
         <input
           className="recruit-count"
           inputMode="numeric"
@@ -66,13 +69,14 @@ export function CaveWindow({ detail, busy, onStore, onClose }: Props) {
         </button>
         <button
           type="button"
-          className="confirm-yes"
-          disabled={busy || refusal !== null}
+          className="b-info-action cave-store"
+          disabled={busy || refusal !== null || amount === 0}
           onClick={() => { onStore(amount); setTyped('') }}
         >
           <img src={silverUrl} alt="" />
           Store
         </button>
+        </div>
       </div>
     </div>
   )

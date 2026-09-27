@@ -356,8 +356,20 @@ input { font: inherit; cursor: text; }
   cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }
 .study-name.as-link:hover { color: #fff3d4; text-decoration: underline; }
-/* The Cave's Store button carries the silver it moves. */
-.send-go .confirm-yes img { width: 18px; height: 18px; vertical-align: -4px; margin-right: 6px; }
+/* The Cave's line: the field, "all", then Store in the same gold as every other window's action, with
+   the one thing worth saying above them. */
+.b-info.cave { width: 330px; }
+.cave-go { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(122,102,54,.4); }
+.cave-go .send-why { display: block; margin-bottom: 8px; font-size: 12px; color: var(--overlay-muted); }
+.cave-row { display: flex; align-items: center; gap: 8px; }
+.cave-row .recruit-count { flex: 1; }
+/* Scoped past .b-info-action, which is a full-width block on its own. */
+.cave-row .cave-store {
+  margin-top: 0; width: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; letter-spacing: .12em;
+}
+.cave-row .cave-store img { width: 18px; height: 18px; display: block; }
+.cave-row .cave-store:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 
 /* Sending troops: the errand and the field on one line, then how many of each unit goes. */
 /* Narrower than the studies and buildings windows: its rows are short. */
