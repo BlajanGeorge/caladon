@@ -94,9 +94,9 @@ const SPRITES: Partial<Record<BuildingType, [BuildingArt, BuildingArt, BuildingA
   // The Cave is a hole in the ground: it looks the same however deep it goes, so all three tiers are the
   // one picture.
   CAVE: [
-    { src: cave, footprint: 0.4995, scale: 0.62, slide: -0.06 },
-    { src: cave, footprint: 0.4995, scale: 0.62, slide: -0.06 },
-    { src: cave, footprint: 0.4995, scale: 0.62, slide: -0.06 },
+    { src: cave, footprint: 0.4995, scale: 0.48, slide: -0.06 },
+    { src: cave, footprint: 0.4995, scale: 0.48, slide: -0.06 },
+    { src: cave, footprint: 0.4995, scale: 0.48, slide: -0.06 },
   ],
   VAULT: [
     { src: vault1, footprint: 0.4855, scale: 0.6, slide: 0.1, drop: 0.12 },
