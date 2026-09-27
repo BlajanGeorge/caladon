@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react'
 import type { CityDetail, Movement, Movements, UnitType, UnitView } from '../api/worlds'
 import { UNIT_ICONS } from '../city/unitIcons'
 import { BUILDING_ICONS } from '../city/buildingIcons'
@@ -27,13 +27,21 @@ type Confirm = {
 )
 
 /**
- * The medallion for each errand and what each leg of it is called. `ESPIONAGE` is listed ready for the
- * feature; the server cannot send one yet.
+ * The medallion for each errand, and how a row reads in words when hovered. `ESPIONAGE` is listed ready
+ * for the feature; the server cannot send one yet.
  */
-const KIND: Record<Movement['kind'], { mark: string; out: string; back: string; label: string }> = {
-  ATTACK: { mark: attackUrl, out: 'Attack', back: 'From attack', label: 'attack' },
-  SUPPORT: { mark: supportUrl, out: 'Support', back: 'From support', label: 'support' },
-  ESPIONAGE: { mark: spyUrl, out: 'Spying', back: 'From spying', label: 'spying' },
+const KIND: Record<Movement['kind'], { mark: string; going: string; arriving: string }> = {
+  ATTACK: { mark: attackUrl, going: 'Attacking', arriving: 'Attack coming from' },
+  SUPPORT: { mark: supportUrl, going: 'Supporting', arriving: 'Support coming from' },
+  ESPIONAGE: { mark: spyUrl, going: 'Spying on', arriving: 'Spies coming from' },
+}
+
+/** No coordinates: the city's name is what a player recognises, the field number is not. */
+function saysWhat(m: Movement, own: boolean): string {
+  if (!own) return `${KIND[m.kind].arriving} ${m.otherCityName}`
+  return m.direction === 'OUTWARD'
+    ? `${KIND[m.kind].going} ${m.otherCityName}`
+    : `Coming home from ${m.otherCityName}`
 }
 
 interface Props {
@@ -80,6 +88,23 @@ export function CityQueues({
   // Only the tail of a queue can go, the rule the server enforces, and never without being asked first.
   const [confirming, setConfirming] = useState<Confirm | null>(null)
   const byType = new Map((units ?? []).map((u) => [u.type, u]))
+  // The bar's own tooltip: a native `title` waits a second and is easy to miss, and every row here
+  // ellipsises, which is exactly when the whole text is wanted.
+  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
+  const tipRef = useRef<HTMLDivElement>(null)
+  const rowTip = (text: string) => ({
+    onMouseEnter: (e: ReactMouseEvent<HTMLElement>) => {
+      const r = e.currentTarget.getBoundingClientRect()
+      setTip({ text, x: r.left, y: r.top })
+    },
+    onMouseLeave: () => setTip(null),
+  })
+  // Keep it on screen: the bar sits at the bottom, so the tip goes above the row and inside the edges.
+  useLayoutEffect(() => {
+    const el = tipRef.current
+    if (!tip || !el) return
+    el.style.left = `${Math.max(8, Math.min(tip.x, window.innerWidth - el.offsetWidth - 8))}px`
+  }, [tip])
   const half = (n: number) => Math.floor(n / 2)
 
   return (
@@ -94,9 +119,9 @@ export function CityQueues({
         ) : (
           <ul className="cq-list">
             {builds.map((o, i) => (
-              <li key={o.id} className={i === 0 ? 'running' : undefined}>
+              <li key={o.id} className={i === 0 ? 'running' : undefined} {...rowTip(`${o.name} to level ${o.targetLevel}`)}>
                 {BUILDING_ICONS[o.building] ? <img src={BUILDING_ICONS[o.building]} alt="" /> : null}
-                <span className="cq-name" title={`${o.name} level ${o.targetLevel}`}>{o.name} <em>level {o.targetLevel}</em></span>
+                <span className="cq-name">{o.name} <em>level {o.targetLevel}</em></span>
                 <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
                 {i === builds.length - 1 ? (
                   <button
@@ -127,9 +152,9 @@ export function CityQueues({
         ) : (
           <ul className="cq-list">
             {troops.map((o, i) => (
-              <li key={o.id} className={i === 0 ? 'running' : undefined}>
+              <li key={o.id} className={i === 0 ? 'running' : undefined} {...rowTip(`${o.remaining.toLocaleString()} ${o.name} left of ${o.count.toLocaleString()}`)}>
                 <img src={UNIT_ICONS[o.unit]} alt="" />
-                <span className="cq-name" title={`${o.remaining.toLocaleString()} × ${o.name}`}>{o.remaining.toLocaleString()} × {o.name}</span>
+                <span className="cq-name">{o.remaining.toLocaleString()} × {o.name}</span>
                 <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
                 {i === troops.length - 1 && byType.has(o.unit) ? (() => {
                   const u = byType.get(o.unit)!
@@ -166,9 +191,9 @@ export function CityQueues({
         ) : (
           <ul className="cq-list">
             {studies.map((o, i) => (
-              <li key={o.unit} className={i === 0 ? 'running' : undefined}>
+              <li key={o.unit} className={i === 0 ? 'running' : undefined} {...rowTip(`Studying the ${o.name}`)}>
                 <img src={UNIT_ICONS[o.unit]} alt="" />
-                <span className="cq-name" title={o.name}>{o.name}</span>
+                <span className="cq-name">{o.name}</span>
                 <b>{formatDuration(secondsUntil(o.completesAt, now))}</b>
                 {i === studies.length - 1 ? (
                   <button
@@ -202,9 +227,13 @@ export function CityQueues({
         ) : (
           <ul className="cq-list">
             {outgoing.map((m) => (
-              <li key={m.id} className={m.direction === 'HOMEWARD' ? 'back' : 'running'}>
+              <li
+                key={m.id}
+                className={m.direction === 'HOMEWARD' ? 'back' : 'running'}
+                {...rowTip(saysWhat(m, true))}
+              >
                 <img className="cq-mark" src={KIND[m.kind].mark} alt="" />
-                <span className="cq-name" title={`${m.direction === 'OUTWARD' ? KIND[m.kind].out : KIND[m.kind].back}: ${m.otherCityName} (${m.x}|${m.y})`}>
+                <span className="cq-name">
                   <i className="way">{m.direction === 'OUTWARD' ? '→' : '←'}</i> {m.otherCityName}
                 </span>
                 <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
@@ -235,9 +264,13 @@ export function CityQueues({
         ) : (
           <ul className="cq-list">
             {incoming.map((m) => (
-              <li key={m.id} className={m.kind === 'ATTACK' ? 'alarm' : undefined}>
+              <li
+                key={m.id}
+                className={m.kind === 'ATTACK' ? 'alarm' : undefined}
+                {...rowTip(saysWhat(m, false))}
+              >
                 <img className="cq-mark" src={KIND[m.kind].mark} alt="" />
-                <span className="cq-name" title={`${KIND[m.kind].label} from ${m.otherCityName} (${m.x}|${m.y})`}>
+                <span className="cq-name">
                   <i className="way">←</i> {m.otherCityName}
                 </span>
                 <b>{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
@@ -247,6 +280,10 @@ export function CityQueues({
           </ul>
         )}
       </section>
+
+      {tip && (
+        <div className="cq-tip" ref={tipRef} style={{ left: tip.x, top: tip.y }} role="tooltip">{tip.text}</div>
+      )}
 
       {confirming && (
         <div className="confirm floating">

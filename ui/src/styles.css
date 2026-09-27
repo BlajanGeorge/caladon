@@ -426,6 +426,14 @@ input { font: inherit; cursor: text; }
 .cq-cancel:hover:not(:disabled) { background: rgba(178,58,46,.34); color: #4d211a; }
 .cq-cancel:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 .cq-cancel.placeholder { visibility: hidden; }
+/* The bar's tooltip, drawn above the row it belongs to and kept inside the screen. */
+.cq-tip {
+  position: fixed; z-index: 30; transform: translateY(-115%);
+  max-width: 420px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+  font-size: 12px; line-height: 1.3; color: #f0e6c8;
+  background: rgba(20, 22, 26, .92); border: var(--overlay-border);
+  box-shadow: 0 4px 14px rgba(0,0,0,.5); pointer-events: none;
+}
 /* The bar is too short to hold a dialog, so its confirmation covers the view instead. */
 .confirm.floating { position: fixed; inset: 0; z-index: 40; border-radius: 0; }
 

@@ -1318,8 +1318,10 @@ a standalone preview.
   **Arrivals** (anything heading this way), named to sit beside Construction, Training and Studies. A row
   carries a medallion for the errand, in the style of the unit ones — crossed swords for an attack, a
   shield for support, a hood for spying, each with its own gem — an arrow for the leg, the city at the other end, and the countdown. No words
-  name the errand: the medallion and the arrow already say it twice, and hovering the row gives the
-  sentence in full. Troops on the way home are greyed; an incoming attack is red, and so is the count
+  name the errand: the medallion and the arrow already say it twice. Hovering a row gives the sentence in
+  full — "Attacking player1's city", "Coming home from player1's city", "Support coming from ana's city"
+  — drawn by the view above the row, never the browser's own `title`, and **without coordinates**: the
+  city's name is what a player recognises. Troops on the way home are greyed; an incoming attack is red, and so is the count
   in that header. Our own outward movements carry a recall button, behind the same confirmation as a
   cancel. Arrivals never shows a spy mission aimed at us, only Marches shows our own. Everything a player watches for is there — attacks out and back, support out and back, spying
   out and back, attacks and support inbound — said by the mark, the words and the arrow rather than by a
