@@ -465,10 +465,10 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-muted); white-space: nowrap;
 }
 .mw-way { font-style: normal; font-size: 14px; font-weight: 700; color: #c79a44; }
-/* A grid, not a ragged wrap: an army of ten types then reads as tidy columns with its counts aligned. */
+/* One unit type per line, counts aligned down the column. */
 .mw-units {
   list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 3px 14px;
+  display: flex; flex-direction: column; gap: 2px; max-width: 300px;
 }
 .mw-units li { display: flex; align-items: center; gap: 5px; padding: 0; background: none; border: none; min-width: 0; }
 .mw-units img { flex: 0 0 22px; width: 22px; height: 22px; display: block; }
@@ -476,8 +476,18 @@ input { font: inherit; cursor: text; }
 .mw-unit-count { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
 .mw-line { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; }
 .mw-quiet { color: var(--overlay-muted); }
+/* Opens the rest of a long army, and folds it back. */
+.mw-more {
+  align-self: flex-start; padding: 2px 8px; margin-top: 2px;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  color: var(--overlay-muted); background: rgba(122,102,54,.18);
+  border: 1px solid rgba(122,102,54,.4); border-radius: 6px;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.mw-more:hover { color: var(--overlay-text); background: rgba(160,132,68,.34); }
 .mw-load { display: inline-flex; align-items: center; gap: 4px; color: var(--overlay-text); font-variant-numeric: tabular-nums; }
-.mw-load img { width: 18px; height: 18px; display: block; margin-left: 6px; }
+/* The same size as a unit's medallion, so a row of goods sits level with a row of troops. */
+.mw-load img { width: 22px; height: 22px; display: block; margin-left: 6px; }
 .mw-load img:first-child { margin-left: 0; }
 /* The recall column is one width whether or not a row can be recalled, so the countdowns line up. */
 .mw-nogo, .mw-list .cave-max { flex: 0 0 76px; }

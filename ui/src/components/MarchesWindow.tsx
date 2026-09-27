@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Movement, Movements, UnitView } from '../api/worlds'
 import { UNIT_ICONS } from '../city/unitIcons'
 import { formatDuration, secondsUntil } from '../city/format'
@@ -17,6 +18,9 @@ interface Props {
   onClose: () => void
 }
 
+/** Unit types listed before a march has to be opened to see the rest. */
+const SHOWN = 3
+
 const MARK: Record<Movement['kind'], string> = {
   ATTACK: attackUrl,
   SUPPORT: supportUrl,
@@ -35,6 +39,8 @@ const ERRAND: Record<Movement['kind'], string> = {
  * which spy went where and with how much silver. Troops are not sent from here — that is the Barracks.
  */
 export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Props) {
+  // A march of every unit type would be ten lines, so only the first few show until it is opened.
+  const [opened, setOpened] = useState<number[]>([])
   const out = movements?.outgoing ?? []
   const now = useNow(out.length > 0)
   const carryOf = new Map((units ?? []).map((u) => [u.type, u.carry]))
@@ -61,17 +67,33 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
             <b className="mw-clock">{formatDuration(secondsUntil(m.arrivesAt, now))}</b>
           </div>
 
-          {m.units.length > 0 && (
-            <ul className="mw-units">
-              {m.units.map((u) => (
-                <li key={u.type}>
-                  <img src={UNIT_ICONS[u.type]} alt="" />
-                  <span className="mw-unit-name">{nameOf.get(u.type) ?? u.name}</span>
-                  <span className="mw-unit-count">{u.count.toLocaleString()}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          {m.units.length > 0 && (() => {
+            const open = opened.includes(m.id)
+            const shown = open ? m.units : m.units.slice(0, SHOWN)
+            const hidden = m.units.length - shown.length
+            return (
+              <>
+                <ul className="mw-units">
+                  {shown.map((u) => (
+                    <li key={u.type}>
+                      <img src={UNIT_ICONS[u.type]} alt="" />
+                      <span className="mw-unit-name">{nameOf.get(u.type) ?? u.name}</span>
+                      <span className="mw-unit-count">{u.count.toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+                {(hidden > 0 || open) && (
+                  <button
+                    type="button"
+                    className="mw-more"
+                    onClick={() => setOpened((ids) => (open ? ids.filter((id) => id !== m.id) : [...ids, m.id]))}
+                  >
+                    {open ? 'Show fewer' : `${hidden} more`}
+                  </button>
+                )}
+              </>
+            )
+          })()}
 
           {/* Only numbers under the head: the errand and its direction are said above. */}
           {m.kind === 'ESPIONAGE' ? (
