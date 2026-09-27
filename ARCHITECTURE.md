@@ -1019,8 +1019,9 @@ on**; the level sets the capacity only. Max level 20, cost 80/120/60 growing at 
 **600 silver at level 1** on the Deposit's 1.2294934 curve (30,405 at 20), 7 points at level 1, and Town
 Hall 5 with Silver Mine 5 to build it, Town Hall 10 from level 10.
 
-The Cave stands where the dirt road running north out of the city fades into the grass, under the
-treeline: one picture at every level, since a hole in the ground looks the same however deep it goes. It
+The Cave stands where the dirt road running north out of the city ends, under the treeline: one picture
+at every level, since a hole in the ground looks the same however deep it goes. Its hover label hangs
+**below** the plot — above it there is no picture left to draw on. It
 is also reached from the **Town Hall's window**, where every building's name opens that building's own
 window — the only way in for the Wall, which still has no plot.
 

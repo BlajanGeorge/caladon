@@ -26,7 +26,7 @@ export interface Plot {
 /** The picture has ten plots; only the Wall has none and is reached from the Town Hall's window. */
 export const PLOTS: Record<Exclude<BuildingType, 'WALL'>, Plot> = {
   // Where the dirt road running north out of the city fades into the grass, under the treeline.
-  CAVE: { anchor: [995, 230], box: [880, 85, 1110, 255] },
+  CAVE: { anchor: [995, 205], box: [880, 60, 1110, 230] },
   TOWN_HALL: { anchor: [1017, 640], box: [857, 434, 1181, 640] },
   DEPOSIT: { anchor: [587, 534], box: [498, 434, 682, 534] },
   VAULT: { anchor: [1162, 859], box: [1069, 741, 1251, 859] },

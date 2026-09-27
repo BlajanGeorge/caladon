@@ -27,6 +27,8 @@ const SPRITE_WIDTH = 195
  * in it.
  */
 const SPRITE_BASE = 0.74
+/** Above this line in the picture, a plot's hover label would leave the view, so it hangs below. */
+const TIP_ABOVE_FROM = 300
 /** Nudge across the plot, as a fraction of its width: positive moves the building right. */
 const SPRITE_SHIFT = 0.06
 /**
@@ -175,10 +177,15 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
           const plot = PLOTS[hover as keyof typeof PLOTS]
           const label = hover.toLowerCase().replace('_', ' ')
           return (
-            <span className="plot-tip" style={{
-              left: `${(100 * (plot.box[0] + plot.box[2]) / 2) / GROUND_SIZE.width}%`,
-              top: `${(100 * plot.box[1]) / GROUND_SIZE.height}%`,
-            }}>
+            <span
+              // A plot near the top of the picture has no room above it, so its label hangs under the
+              // plot instead of over it and stays on screen.
+              className={'plot-tip' + (plot.box[1] < TIP_ABOVE_FROM ? ' below' : '')}
+              style={{
+                left: `${(100 * (plot.box[0] + plot.box[2]) / 2) / GROUND_SIZE.width}%`,
+                top: `${(100 * (plot.box[1] < TIP_ABOVE_FROM ? plot.box[3] : plot.box[1])) / GROUND_SIZE.height}%`,
+              }}
+            >
               <b>{label}</b>{view ? <em>level {view.level}</em> : null}
             </span>
           )

@@ -607,6 +607,7 @@ input { font: inherit; cursor: text; }
   padding: 6px 12px; border-radius: var(--overlay-radius);
   background: var(--overlay-bg); border: var(--overlay-border); box-shadow: var(--overlay-shadow);
 }
+.city-scene .plot-tip.below { transform: translate(-50%, 15%); }
 .city-scene .plot-tip b {
   font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .04em;
   text-transform: capitalize; color: var(--overlay-text);
