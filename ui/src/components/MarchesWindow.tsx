@@ -5,8 +5,6 @@ import { useNow } from '../city/useNow'
 import attackUrl from '@assets/sprites/hud-move-attack.png'
 import supportUrl from '@assets/sprites/hud-move-support.png'
 import spyUrl from '@assets/sprites/hud-move-spy.png'
-import woodUrl from '@assets/sprites/hud-wood.png'
-import stoneUrl from '@assets/sprites/hud-stone.png'
 import silverUrl from '@assets/sprites/hud-silver.png'
 import goodsUrl from '@assets/sprites/hud-resources.png'
 
@@ -91,10 +89,12 @@ export function MarchesWindow({ movements, units, busy, onRecall, onClose }: Pro
               )}
               {m.direction === 'HOMEWARD' && (
                 carrying > 0 ? (
-                  <span className="mw-load">
-                    <img src={woodUrl} alt="Wood" />{load!.wood.toLocaleString()}
-                    <img src={stoneUrl} alt="Stone" />{load!.stone.toLocaleString()}
-                    <img src={silverUrl} alt="Silver" />{load!.silver.toLocaleString()}
+                  // One mark for goods, as on the way out; the three amounts are a hover away.
+                  <span
+                    className="mw-load"
+                    title={`${load!.wood.toLocaleString()} wood, ${load!.stone.toLocaleString()} stone, ${load!.silver.toLocaleString()} silver`}
+                  >
+                    <img src={goodsUrl} alt="Resources" />{carrying.toLocaleString()}
                   </span>
                 ) : <span className="mw-quiet">carrying nothing</span>
               )}
