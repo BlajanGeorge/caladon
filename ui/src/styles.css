@@ -850,6 +850,9 @@ input { font: inherit; cursor: text; }
   flex: 1; min-width: 0; padding: 14px 16px; border-radius: 10px;
   background: rgba(10,11,13,.45); border: 1px solid rgba(122,102,54,.28); min-height: 220px;
 }
+/* The heading and the date on one line, the date pushed to the right. */
+.rp-detail-head { display: flex; align-items: baseline; gap: 14px; }
+.rp-detail-when { margin-left: auto; font-size: 12px; color: var(--overlay-muted); white-space: nowrap; }
 .rp-detail h3 {
   margin: 0 0 2px; font-family: "Cinzel", Georgia, serif; font-size: 17px; color: var(--overlay-text);
 }

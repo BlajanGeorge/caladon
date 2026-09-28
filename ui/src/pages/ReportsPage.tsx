@@ -302,9 +302,11 @@ export function ReportsPage() {
             <div className="rp-detail">
               {open ? (
                 <>
-                  <h3>{open.summary}</h3>
-                  {/* Only when it happened: the city and the player are named in the report itself. */}
-                  <p className="b-info-level">{when(open.createdAt)}</p>
+                  {/* The heading, with when it happened off to the right of it. */}
+                  <div className="rp-detail-head">
+                    <h3>{open.summary}</h3>
+                    <span className="rp-detail-when">{when(open.createdAt)}</span>
+                  </div>
                   <Body report={open} />
                 </>
               ) : (
