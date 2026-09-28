@@ -190,7 +190,7 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-text); background: var(--overlay-bg);
 }
 .map-panel {
-  position: absolute; top: 16px; right: 16px; width: 270px;
+  position: absolute; top: 16px; right: 16px; width: 300px;
   background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
   box-shadow: var(--overlay-shadow); padding: 14px 16px 16px; color: var(--overlay-text);
 }
@@ -912,8 +912,12 @@ input { font: inherit; cursor: text; }
 .rp-cost img { width: 22px; height: 22px; display: block; }
 .rp-cost b { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
 
-/* What may be sent to the field a player picked on the map. */
-.map-errands { display: flex; gap: 6px; margin-top: 12px; }
+/* What may be sent to the field a player picked on the map, each behind its own medallion. */
+.map-errands { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.map-errands .send-kind {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; font-size: 11px;
+}
+.map-errands .send-kind img { width: 18px; height: 18px; display: block; }
 /* A window opened from the map floats over it, centred rather than pinned to a city's plot. */
 .map-window { left: 50%; top: 80px; transform: translateX(-50%); }
 .b-info.studies.map-window { left: 50%; transform: translateX(-50%); }

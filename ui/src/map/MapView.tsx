@@ -4,6 +4,9 @@ import { worldsApi, type MapResponse, type OwnedCity } from '../api/worlds'
 import { useToast } from '../components/Toast'
 import { loadSprites } from './assets'
 import recenterUrl from '@assets/sprites/ctl-recenter.png'
+import attackUrl from '@assets/sprites/hud-move-attack.png'
+import supportUrl from '@assets/sprites/hud-move-support.png'
+import spyUrl from '@assets/sprites/hud-move-spy.png'
 import goUrl from '@assets/sprites/ctl-go.png'
 import { clampCamera, needsRefetch, parseCoordinate, TILE, VISIBLE_PAD, visibleRect, windowFor, type Rect } from './camera'
 import { MapCache, type Entity } from './MapCache'
@@ -216,6 +219,13 @@ export function MapView({ worldId, home }: Props) {
   )
 }
 
+/** The medallions the bar and the reports use, so an errand looks the same wherever it is started. */
+const ERRAND_MARK: Record<Action['kind'], string> = {
+  ATTACK: attackUrl,
+  SUPPORT: supportUrl,
+  ESPIONAGE: spyUrl,
+}
+
 function describe(entity: Entity): string {
   switch (entity.kind) {
     case 'city': return `${entity.city.name} (${entity.city.x}, ${entity.city.y})`
@@ -241,6 +251,7 @@ function InfoPanel(
           className="send-kind"
           onClick={() => onAct({ kind, x, y, name })}
         >
+          <img src={ERRAND_MARK[kind]} alt="" />
           {kind === 'ATTACK' ? 'Attack' : kind === 'SUPPORT' ? 'Support' : 'Spy'}
         </button>
       ))}
