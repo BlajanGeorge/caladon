@@ -160,6 +160,8 @@ export interface CityDetail extends OwnedCity {
   studyQueueSlots: number
   /** How fast the world runs; a march's length is worked out from it. */
   worldSpeed: number
+  /** Minutes per field a spy travels. */
+  spySpeed: number
 }
 
 export interface NextLevel {

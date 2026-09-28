@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { worldsApi, type CityDetail, type MovementKind, type UnitType, type UnitView } from '../api/worlds'
 import { SendWindow } from '../components/SendWindow'
+import { formatDuration } from '../city/format'
 import silverUrl from '@assets/sprites/hud-silver.png'
 
 /** What the map was asked to do, and where. */
@@ -54,45 +55,69 @@ export function MapActions({ worldId, cityId, action, onDone, onClose, onError }
   if (action.kind === 'ESPIONAGE') {
     const held = detail?.cave.silver ?? 0
     const spend = Math.max(0, Math.min(Math.floor(Number(silver) || 0), held))
-    const refusal = held === 0 ? 'No silver in the Cave to pay a spy' : spend === 0 ? 'Enter how much silver to spend' : null
+    // The same shape as sending troops: what it costs above, what it will take below, one gold button.
+    const away = detail ? Math.hypot(action.x - detail.x, action.y - detail.y) : 0
+    const travel = away > 0 && detail ? Math.round((away * detail.spySpeed * 60) / (detail.worldSpeed || 1)) : 0
+    const refusal = held === 0 ? 'No silver in the Cave to pay a spy' : null
     return (
-      <div className="b-info cave map-window" role="dialog" aria-label="Send a spy">
+      <div className="b-info studies send map-window" role="dialog" aria-label="Spy">
         <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
-        <h3>Send a spy</h3>
-        <p className="b-info-level">To {action.name}</p>
-        <p className="b-info-desc">
-          The silver is spent whatever happens. Outbid what their Cave holds and your spy comes home with
-          what it saw; fall short and they learn who tried.
-        </p>
-        <dl className="b-info-now">
-          <dt>In your Cave</dt>
-          <dd>{held.toLocaleString()} silver</dd>
-        </dl>
-        <div className="cave-go">
-          {refusal && <span className="send-why">{refusal}</span>}
-          <div className="cave-row">
-            <input
-              className="recruit-count"
-              inputMode="numeric"
-              placeholder={String(held)}
-              value={silver}
-              disabled={held === 0}
-              onChange={(e) => setSilver(e.target.value.replace(/\D/g, ''))}
-              aria-label="Silver to spend"
-            />
-            <button type="button" className="cave-max" disabled={held === 0} onClick={() => setSilver(String(held))}>
-              Max
-            </button>
-            <button
-              type="button"
-              className="b-info-action cave-store"
-              disabled={busy || refusal !== null}
-              onClick={() => void run(() => worldsApi.spy(worldId, cityId, action.x, action.y, spend))}
-            >
-              <img src={silverUrl} alt="" />
-              Spy
-            </button>
-          </div>
+        <h3>Spy</h3>
+        <p className="b-info-level">{detail ? `From ${detail.name}` : 'From this city'}</p>
+
+        <div className="send-head">
+          <span className="send-target">Target <b className="send-there">{action.name}</b></span>
+        </div>
+
+        <ul className="study-list send-list">
+          <li className={held === 0 ? 'blocked' : 'ready'}>
+            <img className="study-icon" src={silverUrl} alt="" />
+            <span className="study-name send-name">
+              Silver
+              <b>{held.toLocaleString()}</b>
+            </span>
+            <span className="study-action">
+              <input
+                className="recruit-count"
+                inputMode="numeric"
+                placeholder="0"
+                disabled={held === 0}
+                value={silver}
+                onChange={(e) => setSilver(e.target.value.replace(/\D/g, ''))}
+                aria-label="Silver to spend"
+              />
+              <button
+                type="button"
+                className="cave-max"
+                disabled={held === 0}
+                title={`Spend everything the Cave holds: ${held.toLocaleString()}`}
+                onClick={() => setSilver(String(held))}
+              >
+                Max
+              </button>
+            </span>
+          </li>
+        </ul>
+
+        <div className="send-go">
+          {refusal ? (
+            <span className="send-why">{refusal}</span>
+          ) : spend === 0 ? (
+            <span className="send-why" />
+          ) : (
+            <span className="send-why send-facts">
+              <span><i>Travel time</i><b>{formatDuration(travel)}</b></span>
+              <span><i>Silver spent</i><b>{spend.toLocaleString()}</b></span>
+            </span>
+          )}
+          <button
+            type="button"
+            className="b-info-action send-off"
+            disabled={busy || spend === 0 || refusal !== null}
+            onClick={() => void run(() => worldsApi.spy(worldId, cityId, action.x, action.y, spend))}
+          >
+            Send
+          </button>
         </div>
       </div>
     )

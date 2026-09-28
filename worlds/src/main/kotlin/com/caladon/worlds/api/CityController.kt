@@ -12,6 +12,7 @@ import com.caladon.worlds.resources.ResourceConstants
 import com.caladon.worlds.resources.CityState
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
+import com.caladon.worlds.rules.MovementRules
 import com.caladon.worlds.rules.Unit
 import com.caladon.worlds.rules.UnitRules
 import org.springframework.web.bind.annotation.RequestBody
@@ -202,6 +203,7 @@ class CityController(
             studyQueue = state.studyQueue().mapIndexed { i, s -> StudyOrderResponse(s.id.unit, s.id.unit.displayName, i + 1, s.orderedAt, s.completesAt) },
             studyQueueSlots = BuildingRules.studySlots(state.level(Building.ACADEMY)),
             worldSpeed = ResourceConstants.WORLD_SPEED,
+            spySpeed = MovementRules.SPY_SPEED,
         )
     }
 

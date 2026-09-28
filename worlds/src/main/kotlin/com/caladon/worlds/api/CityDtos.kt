@@ -63,6 +63,8 @@ data class CityDetailResponse(
     val studyQueueSlots: Int,
     /** How fast this world runs: the client needs it to work out a march's length before sending one. */
     val worldSpeed: Double,
+    /** Minutes per field a spy travels, for the same reason. */
+    val spySpeed: Int,
 )
 
 /**
