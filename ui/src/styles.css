@@ -190,7 +190,7 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-text); background: var(--overlay-bg);
 }
 .map-panel {
-  position: absolute; top: 16px; right: 16px; width: 300px;
+  position: absolute; top: 16px; right: 16px; width: 330px;
   background: var(--overlay-bg); border: var(--overlay-border); border-radius: var(--overlay-radius);
   box-shadow: var(--overlay-shadow); padding: 14px 16px 16px; color: var(--overlay-text);
 }
@@ -914,8 +914,10 @@ input { font: inherit; cursor: text; }
 
 /* What may be sent to the field a player picked on the map, each behind its own medallion. */
 .map-errands { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+/* One width for all of them: sized to their words, "Spy" came out narrower than "Support". */
 .map-errands .send-kind {
-  display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; font-size: 11px;
+  flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 5px 9px; font-size: 11px;
 }
 .map-errands .send-kind img { width: 18px; height: 18px; display: block; }
 /* A window opened from the map floats over it, centred rather than pinned to a city's plot. */
