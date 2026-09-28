@@ -1,6 +1,7 @@
 package com.caladon.worlds.army
 
 import com.caladon.users.domain.Role
+import com.caladon.worlds.domain.BarbarianVillage
 import com.caladon.worlds.map.MapQueryDao
 import com.caladon.worlds.ranking.RankingService
 import com.caladon.worlds.report.BattlePayload
@@ -15,10 +16,12 @@ import com.caladon.worlds.report.SidePayload
 import com.caladon.worlds.report.UnitCountPayload
 import com.caladon.worlds.report.UnitTallyPayload
 import com.caladon.worlds.report.WallPayload
+import com.caladon.worlds.repository.BarbarianVillageRepository
 import com.caladon.worlds.repository.CityRepository
 import com.caladon.worlds.repository.CitySlotRepository
 import com.caladon.worlds.resources.CityAccess
 import com.caladon.worlds.resources.CityState
+import com.caladon.worlds.rules.BarbarianRules
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
 import com.caladon.worlds.rules.Cost
@@ -41,6 +44,7 @@ class MovementService(
     private val cityAccess: CityAccess,
     private val cityRepository: CityRepository,
     private val citySlotRepository: CitySlotRepository,
+    private val barbarianVillageRepository: BarbarianVillageRepository,
     private val cityUnitRepository: CityUnitRepository,
     private val citySupportRepository: CitySupportRepository,
     private val movementRepository: CityMovementRepository,
@@ -86,9 +90,10 @@ class MovementService(
                     it.kind != MovementKind.ESPIONAGE
             }
         val units = unitsOf(outgoing + incoming)
-        val refs = refs((outgoing.map { it.targetCityId } + incoming.map { it.originCityId }).toSet())
+        val refs = refs((outgoing.mapNotNull { it.targetCityId } + incoming.map { it.originCityId }).toSet())
+        val villages = villageRefs(outgoing.mapNotNull { it.targetBarbarianId }.toSet())
         return state to Movements(
-            outgoing = outgoing.map { view(it, refs[it.targetCityId], units[it.id], own = true, now = state.now) },
+            outgoing = outgoing.map { view(it, other(it, refs, villages), units[it.id], own = true, now = state.now) },
             incoming = incoming.map { view(it, refs[it.originCityId], units[it.id], own = false, now = state.now) },
         )
     }
@@ -114,8 +119,9 @@ class MovementService(
     // ---- sending ----
 
     /**
-     * Sends [units] of the city to the city on `(targetX, targetY)`. The units leave `city_unit` at once;
-     * their population stays spent by the origin, on the road as at home.
+     * Sends [units] of the city at whatever stands on `(targetX, targetY)`: another city, or a barbarian
+     * village, which only an attack may be aimed at. The units leave `city_unit` at once; their
+     * population stays spent by the origin, on the road as at home.
      */
     @Transactional
     fun send(
@@ -125,7 +131,10 @@ class MovementService(
         val state = cityAccess.open(worldId, cityId, userId, role)
         val wanted = units.filterValues { it > 0 }
         if (wanted.isEmpty()) throw WorldException.NoUnits()
-        val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY) ?: throw WorldException.CityNotFound()
+        val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY)
+        val villageId = if (targetId == null) mapQueryDao.barbarianIdAt(worldId, targetX, targetY) else null
+        if (targetId == null && villageId == null) throw WorldException.CityNotFound()
+        if (villageId != null && kind != MovementKind.ATTACK) throw WorldException.NoOneThere()
         if (targetId == state.cityId) throw WorldException.SameCity()
         val short = wanted.mapNotNull { (u, n) ->
             val home = state.units[u]?.count ?: 0
@@ -139,12 +148,16 @@ class MovementService(
             cityUnitRepository.save(row)
         }
         val (x, y) = cityAccess.coordinates(state)
-        val target = requireNotNull(refs(setOf(targetId))[targetId])
-        val seconds = MovementRules.travelSeconds(MovementRules.distance(x, y, target.x, target.y), MovementRules.slowestSpeed(wanted))
+        val target = targetId?.let { requireNotNull(refs(setOf(it))[it]) }
+        val seconds = MovementRules.travelSeconds(
+            MovementRules.distance(x, y, target?.x ?: targetX, target?.y ?: targetY),
+            MovementRules.slowestSpeed(wanted),
+        )
         val movement = movementRepository.save(
             CityMovement(
-                worldId = worldId, originCityId = cityId, targetCityId = targetId, kind = kind,
-                direction = MovementDirection.OUTWARD, departsAt = state.now, arrivesAt = state.now.plusSeconds(seconds),
+                worldId = worldId, originCityId = cityId, targetCityId = targetId, targetBarbarianId = villageId,
+                kind = kind, direction = MovementDirection.OUTWARD,
+                departsAt = state.now, arrivesAt = state.now.plusSeconds(seconds),
             ),
         )
         writeUnits(requireNotNull(movement.id), wanted)
@@ -160,7 +173,11 @@ class MovementService(
     fun spy(worldId: Long, cityId: Long, userId: Long, role: Role, targetX: Int, targetY: Int, silver: Long): CityState {
         if (silver <= 0) throw WorldException.InvalidAmount()
         val state = cityAccess.open(worldId, cityId, userId, role)
-        val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY) ?: throw WorldException.CityNotFound()
+        val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY) ?: run {
+            // Nothing to learn at a village: it has no buildings, no stocks worth a mission and no Cave.
+            if (mapQueryDao.barbarianIdAt(worldId, targetX, targetY) != null) throw WorldException.NoOneThere()
+            throw WorldException.CityNotFound()
+        }
         if (targetId == state.cityId) throw WorldException.SameCity()
         if (state.level(Building.CAVE) < 1) throw WorldException.RequirementsNotMet(mapOf(Building.CAVE.name to "1"))
         if (state.resources.caveSilver < silver) {
@@ -258,7 +275,14 @@ class MovementService(
     }
 
     private fun apply(m: CityMovement, state: CityState) {
-        val otherId = if (m.originCityId == state.cityId) m.targetCityId else m.originCityId
+        val villageId = m.targetBarbarianId
+        if (villageId != null) {
+            // A village is nobody's city: there is no second state to advance, and the raider is always
+            // the city being touched, whichever way the movement is flying.
+            if (m.direction == MovementDirection.HOMEWARD) arriveHome(m, state) else arriveRaid(m, villageId, state)
+            return
+        }
+        val otherId = if (m.originCityId == state.cityId) requireNotNull(m.targetCityId) else m.originCityId
         lockInIdOrder(state.cityId, otherId)
         val other = cityAccess.advanceForMovement(otherId)
         val origin = if (m.originCityId == state.cityId) state else other
@@ -374,6 +398,115 @@ class MovementService(
     }
 
     /**
+     * A raid on a barbarian village (ARCHITECTURE.md → Raiding barbarians): the store is brought up to
+     * date first, then whatever hardening the village has been left too long to keep falls away, and only
+     * then do the militia meet the attack. The dead militia free nothing: nobody paid for them.
+     */
+    private fun arriveRaid(m: CityMovement, villageId: Long, origin: CityState) {
+        val village = barbarianVillageRepository.findWithLockById(villageId)
+        if (village == null) {
+            m.applied = true
+            return
+        }
+        settleStore(village, origin.now)
+        fallBack(village, origin.now)
+
+        val attackers = unitsOf(m)
+        val militia = BarbarianRules.militia(village.level)
+        val raid = BarbarianRules.resolve(attackers, militia)
+        val survivors = raid.attackerLeft.filterValues { it > 0 }
+        val attackerFreed = attackers.entries.sumOf { (u, n) -> u.population.toLong() * (n - (survivors[u] ?: 0)) }
+        origin.resources.population += attackerFreed.toInt()
+        writeUnits(requireNotNull(m.id), survivors)
+
+        // A militiaman is worth one population, so a raid earns something and far less than a battle.
+        val militiaKilled = (militia - raid.militiaLeft).toLong()
+        rankingService.award(origin.city.worldId, origin.city.ownerUserId, attack = militiaKilled)
+
+        var taken: Triple<Long, Long, Long>? = null
+        if (raid.attackerWon && survivors.isNotEmpty()) {
+            val plundered = BarbarianRules.plunder(storeOf(village), origin.capacity(), MovementRules.carry(survivors))
+            village.wood -= plundered.first
+            village.stone -= plundered.second
+            village.silver -= plundered.third
+            m.carriedWood = plundered.first
+            m.carriedStone = plundered.second
+            m.carriedSilver = plundered.third
+            taken = plundered.takeIf { it.first + it.second + it.third > 0 }
+            // Taken once, the village stands harder the next time, and the fall-back is measured from now.
+            village.level = BarbarianRules.hardened(village.level)
+            village.raidedAt = origin.now
+        }
+
+        writeRaidReport(origin, attackers, survivors, militia, raid, taken)
+        if (survivors.isEmpty()) {
+            m.applied = true
+            return
+        }
+        turnAroundTo(m, MovementRules.slowestSpeed(survivors), origin, village.x.toInt(), village.y.toInt())
+    }
+
+    private fun storeOf(v: BarbarianVillage) = BarbarianRules.Store(v.wood, v.stone, v.silver, v.settledAt)
+
+    private fun settleStore(v: BarbarianVillage, now: Instant) {
+        val settled = BarbarianRules.settle(storeOf(v), v.level, now)
+        v.wood = settled.wood
+        v.stone = settled.stone
+        v.silver = settled.silver
+        v.settledAt = settled.settledAt
+    }
+
+    /**
+     * A village nobody has bothered for a day gives back a level of its hardening, and with it the store
+     * the level entitled it to: what it holds is what its level says it holds.
+     */
+    private fun fallBack(v: BarbarianVillage, now: Instant) {
+        val fallen = BarbarianRules.fallBack(v.level, v.raidedAt, now)
+        if (fallen.level == v.level) return
+        v.level = fallen.level
+        v.raidedAt = fallen.raidedAt
+        val ceiling = BarbarianRules.ceiling(fallen.level)
+        v.wood = minOf(v.wood, ceiling)
+        v.stone = minOf(v.stone, ceiling)
+        v.silver = minOf(v.silver, ceiling)
+    }
+
+    /**
+     * The one report a raid writes, to the raider: there is nobody at the other end to tell. The militia
+     * are the defending side, a count rather than a roster, and there is no Wall behind them.
+     */
+    private fun writeRaidReport(
+        origin: CityState,
+        sent: Map<Unit, Int>,
+        survivors: Map<Unit, Int>,
+        militia: Int,
+        raid: BarbarianRules.Raid,
+        plunder: Triple<Long, Long, Long>?,
+    ) {
+        val attackerSide = SidePayload(
+            player = refs(setOf(origin.cityId))[origin.cityId]?.player ?: "", city = origin.city.name,
+            units = tallies(sent) { survivors[it] ?: 0 },
+            points = (militia - raid.militiaLeft).toLong(),
+        )
+        val defenderSide = SidePayload(
+            player = "", city = BarbarianRules.NAME,
+            units = listOf(UnitTallyPayload(MILITIA, "Militia", militia, militia - raid.militiaLeft, raid.militiaLeft)),
+            points = killed(sent, survivors),
+        )
+        reportService.write(
+            worldId = origin.city.worldId, ownerUserId = origin.city.ownerUserId, kind = ReportService.Kind.BATTLE,
+            createdAt = origin.now, subjectCity = origin.city.name, otherCity = BarbarianRules.NAME,
+            otherPlayer = null, won = raid.attackerWon, summary = "Attack on ${BarbarianRules.NAME}",
+            payload = BattlePayload(
+                role = BattleRole.ATTACKER, attacker = attackerSide,
+                defender = defenderSide.takeIf { raid.attackerWon },
+                plunder = plunder?.let { ResourcesPayload(it.first, it.second, it.third) }.takeIf { raid.attackerWon },
+                wall = null,
+            ),
+        )
+    }
+
+    /**
      * Takes the levels the siege engines knocked off the Wall, and the points with them: a level that is
      * gone is a level the city is no longer worth.
      */
@@ -460,7 +593,7 @@ class MovementService(
     private fun tallies(sent: Map<Unit, Int>, left: (Unit) -> Int): List<UnitTallyPayload> =
         Unit.entries.mapNotNull { u ->
             val out = sent[u] ?: 0
-            if (out <= 0) null else UnitTallyPayload(u, u.displayName, out, out - left(u), left(u))
+            if (out <= 0) null else UnitTallyPayload(u.name, u.displayName, out, out - left(u), left(u))
         }
 
     private fun merge(held: Collection<Map<Unit, Int>>): Map<Unit, Int> =
@@ -523,8 +656,12 @@ class MovementService(
         turnAroundAt(m, MovementRules.slowestSpeed(units), origin, target)
 
     private fun turnAroundAt(m: CityMovement, speed: Int, origin: CityState, target: CityState) {
-        val (ox, oy) = cityAccess.coordinates(origin)
         val (tx, ty) = cityAccess.coordinates(target)
+        turnAroundTo(m, speed, origin, tx, ty)
+    }
+
+    private fun turnAroundTo(m: CityMovement, speed: Int, origin: CityState, tx: Int, ty: Int) {
+        val (ox, oy) = cityAccess.coordinates(origin)
         val seconds = MovementRules.travelSeconds(MovementRules.distance(ox, oy, tx, ty), speed)
         m.direction = MovementDirection.HOMEWARD
         m.departsAt = m.arrivesAt
@@ -629,6 +766,17 @@ class MovementService(
 
     private data class CityRef(val name: String, val x: Int, val y: Int, val player: String)
 
+    /** The other end as the movement panel reads it: the target's, whichever kind of target it is. */
+    private fun other(m: CityMovement, cities: Map<Long, CityRef>, villages: Map<Long, CityRef>): CityRef? =
+        m.targetBarbarianId?.let(villages::get) ?: m.targetCityId?.let(cities::get)
+
+    /** Every village is one name and nobody's: the panel shows where it is and who holds it, which is nobody. */
+    private fun villageRefs(ids: Set<Long>): Map<Long, CityRef> {
+        if (ids.isEmpty()) return emptyMap()
+        return barbarianVillageRepository.findAllById(ids)
+            .associate { requireNotNull(it.id) to CityRef(BarbarianRules.NAME, it.x.toInt(), it.y.toInt(), "") }
+    }
+
     /** The other end of a movement, as a player reads it: whose city it is, not where it is. */
     private fun refs(cityIds: Set<Long>): Map<Long, CityRef> {
         if (cityIds.isEmpty()) return emptyMap()
@@ -647,6 +795,9 @@ class MovementService(
     private companion object {
         /** The share of its flight an attack is in sight for: the last quarter. */
         const val SIGHTED = 0.25
+
+        /** What the militia stand as in a report: a count, not a type the Barracks has ever heard of. */
+        const val MILITIA = "MILITIA"
 
         /** One pass processes a chain of legs (out, home, and a recall in between); a bound, never reached. */
         const val MAX_ARRIVALS = 64

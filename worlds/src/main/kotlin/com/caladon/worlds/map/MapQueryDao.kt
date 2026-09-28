@@ -5,18 +5,29 @@ import com.caladon.worlds.generation.Tile
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.Instant
 
 /** Range queries on `(world_id, x, y)` plus the bulk inserts used at world creation. */
 @Repository
 class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
 
     data class CityOnMap(val id: Long, val x: Int, val y: Int, val name: String, val points: Int, val owner: String)
+
+    /** A village as the map draws it: the level says how big it is and what raiding it will meet. */
+    data class BarbarianOnMap(val id: Long, val x: Int, val y: Int, val level: Int)
     data class SlotRef(val id: Long, val x: Int, val y: Int)
     data class OwnedCity(val id: Long, val x: Int, val y: Int, val name: String, val points: Int)
 
     fun insertSlots(worldId: Long, tiles: List<Tile>) = bulkInsert("city_slot", worldId, tiles)
 
-    fun insertBarbarians(worldId: Long, tiles: List<Tile>) = bulkInsert("barbarian_village", worldId, tiles)
+    /** Villages start at level 1 with their store full, settled from [now]. */
+    fun insertBarbarians(worldId: Long, tiles: List<Tile>, now: Instant) {
+        val sql = "INSERT INTO barbarian_village (world_id, x, y, settled_at) VALUES (:worldId, :x, :y, :now)"
+        val settledAt = Timestamp.from(now)
+        val batch = tiles.map { MapSqlParameterSource(mapOf("worldId" to worldId, "x" to it.x, "y" to it.y, "now" to settledAt)) }
+        batch.chunked(BATCH_SIZE).forEach { jdbc.batchUpdate(sql, it.toTypedArray()) }
+    }
 
     private fun bulkInsert(table: String, worldId: Long, tiles: List<Tile>) {
         val sql = "INSERT INTO $table (world_id, x, y) VALUES (:worldId, :x, :y)"
@@ -48,14 +59,20 @@ class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
         CityOnMap(rs.getLong("id"), rs.getInt("x"), rs.getInt("y"), rs.getString("name"), rs.getInt("points"), rs.getString("nickname"))
     }
 
-    fun barbariansIn(worldId: Long, v: Viewport): List<Tile> = jdbc.query(
+    fun barbariansIn(worldId: Long, v: Viewport): List<BarbarianOnMap> = jdbc.query(
         """
-        SELECT b.x, b.y FROM barbarian_village b
+        SELECT b.id, b.x, b.y, b.level FROM barbarian_village b
         WHERE b.world_id = :worldId AND b.x BETWEEN :ax AND :bx AND b.y BETWEEN :ay AND :by
         ORDER BY b.y, b.x
         """,
         params(worldId, v),
-    ) { rs, _ -> Tile(rs.getInt("x"), rs.getInt("y")) }
+    ) { rs, _ -> BarbarianOnMap(rs.getLong("id"), rs.getInt("x"), rs.getInt("y"), rs.getInt("level")) }
+
+    /** The village standing on a field, if any: the other thing a movement may be sent to. */
+    fun barbarianIdAt(worldId: Long, x: Int, y: Int): Long? = jdbc.query(
+        "SELECT b.id FROM barbarian_village b WHERE b.world_id = :worldId AND b.x = :x AND b.y = :y",
+        mapOf("worldId" to worldId, "x" to x, "y" to y),
+    ) { rs, _ -> rs.getLong("id") }.firstOrNull()
 
     /** The city standing on a field, if any: what a movement is sent to. */
     fun cityIdAt(worldId: Long, x: Int, y: Int): Long? = jdbc.query(

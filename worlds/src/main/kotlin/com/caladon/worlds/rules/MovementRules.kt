@@ -114,7 +114,8 @@ object MovementRules {
     fun losses(loserPower: Double, winnerPower: Double): Double =
         if (winnerPower <= 0.0) 0.0 else (loserPower / winnerPower).coerceIn(0.0, 1.0).pow(1.5)
 
-    private fun survivors(count: Int, loss: Double): Int = count - floor(count * loss).toInt()
+    /** What is left of [count] after the winner's fraction, rounded in the loser's favour. */
+    fun survivors(count: Int, loss: Double): Int = count - floor(count * loss).toInt()
 
     /**
      * What a winning attacker takes: per resource at most what the Vault does not hide, and no more in

@@ -30,6 +30,9 @@ data class TileResponse(val x: Int, val y: Int)
 
 data class CityResponse(val id: Long, val x: Int, val y: Int, val name: String, val points: Int, val owner: String)
 
+/** A barbarian village on the map: the level is what a raid will meet and how big it is drawn. */
+data class BarbarianResponse(val id: Long, val x: Int, val y: Int, val level: Int)
+
 data class MapResponse(
     val startX: Int,
     val startY: Int,
@@ -40,7 +43,7 @@ data class MapResponse(
     /** Free (unoccupied) city slots only. */
     val slots: List<TileResponse>,
     val cities: List<CityResponse>,
-    val barbarians: List<TileResponse>,
+    val barbarians: List<BarbarianResponse>,
 )
 
 

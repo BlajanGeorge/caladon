@@ -25,6 +25,8 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class AlreadyStudied : WorldException(HttpStatus.CONFLICT, "ALREADY_STUDIED")
     class NotStudied : WorldException(HttpStatus.CONFLICT, "NOT_STUDIED")
     class SameCity : WorldException(HttpStatus.CONFLICT, "SAME_CITY")
+    /** Only an attack reaches a barbarian village: there is nobody to support and nothing to learn. */
+    class NoOneThere : WorldException(HttpStatus.CONFLICT, "NO_ONE_THERE")
     class NoUnits : WorldException(HttpStatus.CONFLICT, "NO_UNITS")
     /** details: unit → how many are missing. */
     class NotEnoughUnits(details: Map<String, String>) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_UNITS", details)

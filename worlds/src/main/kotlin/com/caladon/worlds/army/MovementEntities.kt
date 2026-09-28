@@ -28,8 +28,9 @@ enum class MovementKind { ATTACK, SUPPORT, ESPIONAGE }
 enum class MovementDirection { OUTWARD, HOMEWARD }
 
 /**
- * One leg of a troop movement on the road. [originCityId] is always the home city and [targetCityId] the
- * other end, whichever way it is flying, so turning around keeps the row and its id.
+ * One leg of a troop movement on the road. [originCityId] is always the home city and the target the
+ * other end, whichever way it is flying, so turning around keeps the row and its id. The target is a
+ * city or a barbarian village: exactly one of [targetCityId] and [targetBarbarianId] is set.
  */
 @Entity
 @Table(name = "city_movement")
@@ -37,7 +38,8 @@ class CityMovement(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long? = null,
     @Column(name = "world_id", nullable = false) var worldId: Long,
     @Column(name = "origin_city_id", nullable = false) var originCityId: Long,
-    @Column(name = "target_city_id", nullable = false) var targetCityId: Long,
+    @Column(name = "target_city_id") var targetCityId: Long? = null,
+    @Column(name = "target_barbarian_id") var targetBarbarianId: Long? = null,
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 16) var kind: MovementKind,
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 16) var direction: MovementDirection,
     @Column(name = "departs_at", nullable = false) var departsAt: Instant,

@@ -324,6 +324,7 @@ class ReportApiTest : ApiTestBase() {
             status { isConflict() }
             jsonPath("$.error") { value("SAME_CITY") }
         }
+        clearField(three.world, x + 1, y + 40)
         spy(three, 100, x = x + 1, y = y + 40).andExpect {
             status { isNotFound() }
             jsonPath("$.error") { value("CITY_NOT_FOUND") }

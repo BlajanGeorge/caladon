@@ -393,6 +393,7 @@ input { font: inherit; cursor: text; }
 .send-kind.on { background: rgba(199,154,68,.55); color: #22242a; }
 .send-target { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--overlay-muted); }
 .send-field { width: 96px; text-align: left; }
+.send-there { color: var(--overlay-text); font-weight: 700; }
 .send-list .study-action { min-width: 120px; gap: 6px; }
 .send-list .study-go { width: 34px; font-size: 11px; }
 /* The reason it cannot go yet, beside the button that would send it. */
@@ -910,3 +911,9 @@ input { font: inherit; cursor: text; }
 .rp-cost { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; }
 .rp-cost img { width: 22px; height: 22px; display: block; }
 .rp-cost b { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
+
+/* What may be sent to the field a player picked on the map. */
+.map-errands { display: flex; gap: 6px; margin-top: 12px; }
+/* A window opened from the map floats over it, centred rather than pinned to a city's plot. */
+.map-window { left: 50%; top: 80px; transform: translateX(-50%); }
+.b-info.studies.map-window { left: 50%; transform: translateX(-50%); }

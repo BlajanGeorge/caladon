@@ -7,6 +7,12 @@ interface Props {
   /** The city, for the troops standing at home and for where it is on the map. */
   detail: CityDetail | null
   busy: boolean
+  /** Where it is going, when the map has already chosen; the field is then not asked for. */
+  target?: { x: number; y: number; name: string }
+  /** Which errands are open; a barbarian village can only be attacked. */
+  only?: MovementKind[]
+  /** Extra classes, so the map can float it in the middle rather than over a plot. */
+  className?: string
   onSend: (kind: MovementKind, x: number, y: number, units: Partial<Record<UnitType, number>>) => void
   onClose: () => void
 }
@@ -27,15 +33,16 @@ function parseTarget(text: string): { x: number; y: number } | null {
 }
 
 /** Sending troops somewhere: what kind of errand, which field, and how many of each unit go. */
-export function SendWindow({ units, detail, busy, onSend, onClose }: Props) {
-  const [kind, setKind] = useState<MovementKind>('ATTACK')
-  const [target, setTarget] = useState('')
+export function SendWindow({ units, detail, busy, target, only, className, onSend, onClose }: Props) {
+  const offered = KINDS.filter((k) => !only || only.includes(k.kind))
+  const [kind, setKind] = useState<MovementKind>(offered[0].kind)
+  const [typed, setTyped] = useState('')
   const [counts, setCounts] = useState<Partial<Record<UnitType, string>>>({})
   const byType = new Map(units.map((u) => [u.type, u]))
   const home = (t: UnitType) => detail?.units.find((u) => u.type === t)?.home ?? 0
   const want = (t: UnitType) => Math.max(0, Math.min(Math.floor(Number(counts[t] ?? '') || 0), home(t)))
 
-  const field = parseTarget(target)
+  const field = target ?? parseTarget(typed)
   const chosen = UNIT_ORDER.filter((t) => want(t) > 0)
   // The rules the server enforces, said before the click rather than after it.
   const refusal =
@@ -45,15 +52,15 @@ export function SendWindow({ units, detail, busy, onSend, onClose }: Props) {
       : null
 
   return (
-    <div className="b-info studies send" role="dialog" aria-label="Send troops">
+    <div className={'b-info studies send' + (className ? ` ${className}` : '')} role="dialog" aria-label="Send troops">
       <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
       <h3>Send troops</h3>
-      <p className="b-info-level">{detail ? `From ${detail.name} (${detail.x}|${detail.y})` : 'From this city'}</p>
+      <p className="b-info-level">{detail ? `From ${detail.name}` : 'From this city'}</p>
       <p className="b-info-desc">{KINDS.find((k) => k.kind === kind)!.hint}</p>
 
       <div className="send-head">
         <div className="send-kinds" role="group" aria-label="What kind of errand">
-          {KINDS.map((k) => (
+          {offered.map((k) => (
             <button
               key={k.kind}
               type="button"
@@ -64,16 +71,20 @@ export function SendWindow({ units, detail, busy, onSend, onClose }: Props) {
             </button>
           ))}
         </div>
+        {target ? (
+          <span className="send-target">Target <b className="send-there">{target.name}</b></span>
+        ) : (
         <label className="send-target">
           Target
           <input
             className="recruit-count send-field"
-            value={target}
+            value={typed}
             placeholder="128|240"
-            onChange={(e) => setTarget(e.target.value)}
+            onChange={(e) => setTyped(e.target.value)}
             aria-label="Target field as x|y"
           />
         </label>
+        )}
       </div>
 
       <ul className="study-list send-list">

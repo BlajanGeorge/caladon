@@ -33,7 +33,11 @@ data class SidePayload(
     val points: Long,
 )
 
-data class UnitTallyPayload(val type: Unit, val name: String, val sent: Int, val lost: Int, val left: Int)
+/**
+ * One type's three counts. [type] is a [Unit]'s name for troops and `MILITIA` for a barbarian village's
+ * men, who are a count rather than a unit type and have no place in the unit table.
+ */
+data class UnitTallyPayload(val type: String, val name: String, val sent: Int, val lost: Int, val left: Int)
 
 data class ResourcesPayload(val wood: Long, val stone: Long, val silver: Long)
 

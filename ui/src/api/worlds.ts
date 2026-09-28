@@ -31,6 +31,13 @@ export interface MapCity extends Tile {
   owner: string
 }
 
+/** A barbarian village: a tile that can be raided, hardening as it is. */
+export interface BarbarianTile extends Tile {
+  id?: number
+  /** 1, 2 or 3: how many militia stand there. Absent on an older server. */
+  level?: number
+}
+
 export interface MapResponse {
   startX: number
   startY: number
@@ -40,7 +47,7 @@ export interface MapResponse {
   terrain: number[]
   slots: Tile[]
   cities: MapCity[]
-  barbarians: Tile[]
+  barbarians: BarbarianTile[]
 }
 
 export interface ResourceStock {

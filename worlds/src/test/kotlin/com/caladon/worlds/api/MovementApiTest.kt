@@ -465,6 +465,7 @@ class MovementApiTest : ApiTestBase() {
             status { isConflict() }
             jsonPath("$.error") { value("SAME_CITY") }
         }
+        clearField(two.world, x + 1, y + 40)
         send(two, "ATTACK", mapOf("SPEARMAN" to 5), x = x + 1, y = y + 40).andExpect {
             status { isNotFound() }
             jsonPath("$.error") { value("CITY_NOT_FOUND") }

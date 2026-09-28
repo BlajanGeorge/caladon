@@ -92,6 +92,19 @@ abstract class ApiTestBase {
     protected fun createWorld(name: String = "Caladon I"): Long =
         json(post("/api/v1/admin/worlds", adminToken, mapOf("name" to name)).andExpect { status { isCreated() } })["id"].asLong()
 
+    /**
+     * Empties a field of anything the generator may have put there, so a test that means "nothing is
+     * here" is not at the mercy of where the world scattered its villages.
+     */
+    protected fun clearField(worldId: Long, x: Int, y: Int) {
+        barbarianVillageRepository.findAll()
+            .filter { it.worldId == worldId && it.x.toInt() == x && it.y.toInt() == y }
+            .forEach { barbarianVillageRepository.delete(it) }
+        citySlotRepository.findByWorldIdAndXAndY(worldId, x.toShort(), y.toShort())
+            ?.takeIf { slot -> cityRepository.findAll().none { it.slotId == slot.id } }
+            ?.let { citySlotRepository.delete(it) }
+    }
+
     protected fun createPlayableWorld(name: String = "Caladon I"): Long =
         createWorld(name).also { post("/api/v1/admin/worlds/$it/approve", adminToken).andExpect { status { isOk() } } }
 

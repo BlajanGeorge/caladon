@@ -39,7 +39,7 @@ class CitySweeper(
             UNION
             SELECT origin_city_id FROM city_movement WHERE arrives_at <= :now AND NOT applied
             UNION
-            SELECT target_city_id FROM city_movement WHERE arrives_at <= :now AND NOT applied
+            SELECT target_city_id FROM city_movement WHERE arrives_at <= :now AND NOT applied AND target_city_id IS NOT NULL
             """,
             mapOf("now" to java.sql.Timestamp.from(now)),
             Long::class.java,

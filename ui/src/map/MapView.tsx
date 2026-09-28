@@ -8,6 +8,7 @@ import goUrl from '@assets/sprites/ctl-go.png'
 import { clampCamera, needsRefetch, parseCoordinate, TILE, VISIBLE_PAD, visibleRect, windowFor, type Rect } from './camera'
 import { MapCache, type Entity } from './MapCache'
 import { MapRenderer, type Camera } from './MapRenderer'
+import { MapActions, type Action } from './MapActions'
 
 interface Props {
   worldId: number
@@ -32,6 +33,7 @@ export function MapView({ worldId, home }: Props) {
   const [dragging, setDragging] = useState(false)
   const [hover, setHover] = useState<{ px: number; py: number; text: string } | null>(null)
   const [selected, setSelected] = useState<Entity | null>(null)
+  const [action, setAction] = useState<Action | null>(null)
   const [goto, setGoto] = useState('')
   const [center, setCenter] = useState({ x: home.x, y: home.y })
 
@@ -192,7 +194,24 @@ export function MapView({ worldId, home }: Props) {
       </div>
       <div className="map-status">centre {center.x}, {center.y}</div>
       {hover && !dragging && <div className="map-tooltip" style={{ left: hover.px, top: hover.py }}>{hover.text}</div>}
-      {selected && <InfoPanel entity={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <InfoPanel
+          entity={selected}
+          mine={selected.kind === 'city' && selected.city.x === home.x && selected.city.y === home.y}
+          onAct={(a) => { setAction(a); setSelected(null) }}
+          onClose={() => setSelected(null)}
+        />
+      )}
+      {action && (
+        <MapActions
+          worldId={worldId}
+          cityId={home.id}
+          action={action}
+          onDone={() => setAction(null)}
+          onClose={() => setAction(null)}
+          onError={(m) => toast.error(m)}
+        />
+      )}
     </div>
   )
 }
@@ -205,8 +224,29 @@ function describe(entity: Entity): string {
   }
 }
 
-/** Info only — no actions yet. */
-function InfoPanel({ entity, onClose }: { entity: Entity; onClose: () => void }) {
+/**
+ * What stands on a field, and what may be sent to it. A player's own city offers nothing — troops are
+ * sent from it, not to it — and a barbarian village can only be raided.
+ */
+function InfoPanel(
+  { entity, mine, onAct, onClose }:
+  { entity: Entity; mine: boolean; onAct: (a: Action) => void; onClose: () => void },
+) {
+  const errands = (name: string, x: number, y: number, kinds: Action['kind'][]) => (
+    <div className="map-errands">
+      {kinds.map((kind) => (
+        <button
+          key={kind}
+          type="button"
+          className="send-kind"
+          onClick={() => onAct({ kind, x, y, name })}
+        >
+          {kind === 'ATTACK' ? 'Attack' : kind === 'SUPPORT' ? 'Support' : 'Spy'}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <aside className="map-panel">
       <button className="close" onClick={onClose} aria-label="Close" />
@@ -218,6 +258,7 @@ function InfoPanel({ entity, onClose }: { entity: Entity; onClose: () => void })
             <dt>Points</dt><dd>{entity.city.points}</dd>
             <dt>Coordinates</dt><dd>{entity.city.x}, {entity.city.y}</dd>
           </dl>
+          {!mine && errands(entity.city.name, entity.city.x, entity.city.y, ['ATTACK', 'SUPPORT', 'ESPIONAGE'])}
         </>
       )}
       {entity.kind === 'slot' && (
@@ -229,7 +270,13 @@ function InfoPanel({ entity, onClose }: { entity: Entity; onClose: () => void })
       {entity.kind === 'barbarian' && (
         <>
           <h3>Barbarian village</h3>
-          <dl><dt>Coordinates</dt><dd>{entity.tile.x}, {entity.tile.y}</dd></dl>
+          <dl>
+            {entity.tile.level !== undefined && (
+              <><dt>Defenders</dt><dd>{(entity.tile.level * 100).toLocaleString()} militia</dd></>
+            )}
+            <dt>Coordinates</dt><dd>{entity.tile.x}, {entity.tile.y}</dd>
+          </dl>
+          {errands('Barbarian village', entity.tile.x, entity.tile.y, ['ATTACK'])}
         </>
       )}
     </aside>

@@ -1,10 +1,10 @@
-import type { MapCity, MapResponse, Tile } from '../api/worlds'
+import type { BarbarianTile, MapCity, MapResponse, Tile } from '../api/worlds'
 import { contains, MAP_SIZE, type Rect } from './camera'
 
 export type Entity =
   | { kind: 'city'; city: MapCity }
   | { kind: 'slot'; tile: Tile }
-  | { kind: 'barbarian'; tile: Tile }
+  | { kind: 'barbarian'; tile: BarbarianTile }
 
 const key = (x: number, y: number) => y * MAP_SIZE + x
 
@@ -18,7 +18,7 @@ export class MapCache {
   private width = 0
   readonly slots = new Map<number, Tile>()
   readonly cities = new Map<number, MapCity>()
-  readonly barbarians = new Map<number, Tile>()
+  readonly barbarians = new Map<number, BarbarianTile>()
 
   setWindow(res: MapResponse) {
     this.bounds = { startX: res.startX, startY: res.startY, endX: res.endX, endY: res.endY }

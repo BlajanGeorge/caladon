@@ -1123,6 +1123,68 @@ on arrival and delete the row when the troops come home or die.
 
 ---
 
+## Raiding barbarians
+
+**Status: built (`V113`).** A barbarian village is not a player: it has no owner, no buildings and no
+reports of its own. It is a place to send an army that is not a declaration of war, and the early game's
+source of resources.
+
+**Only attacks reach them.** No support, no spying, no movement of any other kind: there is nobody there
+to support and nothing to learn.
+
+### What defends one
+
+A village defends with **militia**, a number of men rather than a roster: 20 defence each against every
+kind of attack, no arms, no Wall. A village starts at **100 men** and hardens as it is raided — **200**
+after it has been taken once, **300** after twice, and no further. Left alone for **24 hours** it falls
+back a step, so a village nobody bothers drifts back to 100 rather than standing at 300 for ever.
+
+So a fresh village defends with 2 000 and a hardened one with 6 000: 100 Axemen (4 000 attack) take the
+first easily and lose to the last. Losses follow the ordinary combat rules, the winner losing
+`(loser/winner)^1.5` of itself; the militia that die are simply gone, and free nothing, because nobody
+paid for them.
+
+### What can be taken
+
+A village holds a store of each resource, **1 000 × its level**, refilling at **100 × level an hour** to
+that ceiling. A raid takes, per resource, the least of three things:
+
+- what the village still holds,
+- **20 % of the raider's own Deposit capacity**, so a raid is worth what your city can hold rather than a
+  fixed prize, and
+- what the surviving attackers can carry, filled evenly as any plunder is.
+
+The store is the cooldown: empty it and there is nothing to come back for until it fills. It also means
+raiding the same village twice over pays less the second time, and raiding three villages pays three
+times, which is the behaviour worth encouraging.
+
+### Persistence
+
+`barbarian_village` gains `level`, `wood`, `stone`, `silver`, `settled_at` (when the store was last
+brought up to date) and `raided_at` (when it was last taken, for the fall-back). The store is settled
+lazily on arrival, exactly as a city's production is.
+
+A movement may target a village instead of a city: `city_movement` gains a nullable
+`target_barbarian_id`, and exactly one of that and `target_city_id` is set.
+
+### What the player sees
+
+A **battle report** as for any attack, with the militia as the defending side — a count rather than a
+roster, typed `MILITIA` so nothing had to be added to the unit roster — the plunder taken, and no Wall.
+Battle points are the population killed, and militia count **1 each**, so a raid is worth something but
+far less than a real battle. A raid that loses everything learns only its own dead, as any beaten attack
+does, and leaves the village untouched: it neither hardens nor resets its clock.
+
+The fall-back is counted in **whole days**, not one step per arrival, so a village left three days
+genuinely drifts back rather than waiting to be visited; a village that falls back has its store clamped
+to the smaller ceiling.
+
+**On the map**, clicking a village offers only a raid, and clicking another player's city offers attack,
+support and spying. Each opens the window it needs, with the target already chosen. A player's own city
+offers nothing: troops are sent from it, not to it.
+
+---
+
 ## Reports
 
 **Status: built (`V112`).** A report is what a player is left with after something happened while they

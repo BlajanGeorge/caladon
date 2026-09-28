@@ -154,7 +154,7 @@ class WorldController(
             terrain = view.terrain,
             slots = view.slots.map { TileResponse(it.x, it.y) },
             cities = view.cities.map { CityResponse(it.id, it.x, it.y, it.name, it.points, it.owner) },
-            barbarians = view.barbarians.map { TileResponse(it.x, it.y) },
+            barbarians = view.barbarians.map { BarbarianResponse(it.id, it.x, it.y, it.level) },
         )
     }
 }

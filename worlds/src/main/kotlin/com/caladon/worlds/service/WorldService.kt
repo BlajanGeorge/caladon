@@ -49,7 +49,7 @@ class WorldService(
         val terrain: IntArray,
         val slots: List<com.caladon.worlds.generation.Tile>,
         val cities: List<MapQueryDao.CityOnMap>,
-        val barbarians: List<com.caladon.worlds.generation.Tile>,
+        val barbarians: List<MapQueryDao.BarbarianOnMap>,
     )
 
     // ---- administrator ----
@@ -77,7 +77,7 @@ class WorldService(
         val worldId = requireNotNull(world.id)
         terrainStore.write(worldId, terrain)
         mapQueryDao.insertSlots(worldId, placement.slots)
-        mapQueryDao.insertBarbarians(worldId, placement.barbarians)
+        mapQueryDao.insertBarbarians(worldId, placement.barbarians, world.createdAt)
         terrainCache.put(worldId, terrain)
 
         log.info("Created world {} '{}' slots={} barbarians={}", worldId, trimmed, placement.slots.size, placement.barbarians.size)
