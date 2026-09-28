@@ -820,9 +820,17 @@ input { font: inherit; cursor: text; }
 /* The list on the left, the report itself on the right. */
 .rp-split { display: flex; gap: 16px; align-items: flex-start; }
 .rp-list {
-  flex: 0 0 360px; list-style: none; margin: 0; padding: 0;
-  display: flex; flex-direction: column; gap: 3px; max-height: 60vh; overflow-y: auto;
+  flex: 0 0 372px; list-style: none; margin: 0; padding: 0 10px 0 0;
+  display: flex; flex-direction: column; gap: 3px; max-height: 60vh;
+  /* The gutter is reserved and padded, so the bar never sits over a row's delete button. */
+  overflow-y: auto; scrollbar-gutter: stable;
 }
+.rp-list::-webkit-scrollbar { width: 10px; }
+.rp-list::-webkit-scrollbar-track { background: rgba(70,54,28,.14); border-radius: 6px; }
+.rp-list::-webkit-scrollbar-thumb {
+  background: rgba(122,102,54,.75); border-radius: 6px; border: 1px solid rgba(60,46,22,.45);
+}
+.rp-list::-webkit-scrollbar-thumb:hover { background: rgba(140,116,62,.9); }
 .rp-list li { display: flex; align-items: center; gap: 4px; border-radius: 8px; }
 .rp-list li.open { background: rgba(122,102,54,.22); }
 .rp-list li:hover { background: rgba(122,102,54,.14); }
