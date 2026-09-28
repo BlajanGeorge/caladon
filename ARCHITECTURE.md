@@ -1171,7 +1171,7 @@ row is `rank`, `playerId`, `player`, `cities`, `points`, `attackPoints`, `defenc
 The caller must have joined the world.
 
 **The screen** (`RankingPage`, at `/worlds/{id}/ranking`, reached from the ranking medallion in the top
-bar). One table, four buttons for the boards, a search box, and a footer with the page size (10, 50, 100)
+bar, which also carries the way back to the city from every screen but the city itself). One table, four buttons for the boards, a search box, and a footer with the page size (10, 50, 100)
 and a pager. The column the board is ordered by is picked out in gold, and the caller's own row is
 highlighted and **pinned above the table** when it falls outside the page. Scrolling to the bottom asks
 for the next cursor page, so the table grows rather than jumping; the pager is there for deliberate jumps.

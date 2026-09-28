@@ -6,6 +6,7 @@ import profileUrl from '@assets/sprites/profile.png'
 import accountUrl from '@assets/sprites/account.png'
 import worldUrl from '@assets/sprites/hud-world.png'
 import rankingUrl from '@assets/sprites/hud-ranking.png'
+import cityUrl from '@assets/sprites/ctl-city.png'
 
 interface Props {
   worldName?: string
@@ -15,9 +16,11 @@ interface Props {
   strip?: ReactNode
   /** Show the World map button (the City view does; the Map itself does not). */
   showWorldButton?: boolean
+  /** Show the City button (every screen but the city itself). */
+  showCityButton?: boolean
 }
 
-export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = false }: Props) {
+export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = false, showCityButton = false }: Props) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const rightRef = useRef<HTMLDivElement>(null)
@@ -56,6 +59,17 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
             onClick={() => navigate(`/worlds/${worldId}/map`, { state: { city } })}
           >
             <img src={worldUrl} alt="" />
+          </button>
+        )}
+        {showCityButton && (
+          <button
+            type="button"
+            className="mtb-icon-btn"
+            title="Your city"
+            aria-label="Your city"
+            onClick={() => navigate(`/worlds/${worldId}/city`, { state: { worldName, city } })}
+          >
+            <img src={cityUrl} alt="" />
           </button>
         )}
         <button

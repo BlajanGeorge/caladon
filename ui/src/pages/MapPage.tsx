@@ -36,7 +36,7 @@ export function MapPage() {
 
   return (
     <div className="map-shell">
-      <MapTopBar worldName={worldName} worldId={worldId} city={city} />
+      <MapTopBar showCityButton worldName={worldName} worldId={worldId} city={city} />
       {city ? <MapView worldId={worldId} home={city} /> : <div className="map-body"><div className="map-loading">Loading…</div></div>}
     </div>
   )

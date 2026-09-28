@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { worldsApi, type MapResponse, type OwnedCity } from '../api/worlds'
 import { useToast } from '../components/Toast'
 import { loadSprites } from './assets'
 import recenterUrl from '@assets/sprites/ctl-recenter.png'
-import cityUrl from '@assets/sprites/ctl-city.png'
 import goUrl from '@assets/sprites/ctl-go.png'
 import { clampCamera, needsRefetch, parseCoordinate, TILE, VISIBLE_PAD, visibleRect, windowFor, type Rect } from './camera'
 import { MapCache, type Entity } from './MapCache'
@@ -191,9 +189,6 @@ export function MapView({ worldId, home }: Props) {
         <button className="map-ctl-btn" onClick={goToCoordinate} title="Go to coordinate" aria-label="Go to coordinate">
           <img src={goUrl} alt="" />
         </button>
-        <Link className="map-ctl-btn" to={`/worlds/${worldId}/city`} title="Back to your city" aria-label="Back to your city" style={{ textDecoration: 'none' }}>
-          <img src={cityUrl} alt="" />
-        </Link>
       </div>
       <div className="map-status">centre {center.x}, {center.y}</div>
       {hover && !dragging && <div className="map-tooltip" style={{ left: hover.px, top: hover.py }}>{hover.text}</div>}
