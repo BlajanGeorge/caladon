@@ -1324,6 +1324,10 @@ is the caller's own standing** wherever it falls, so a player never has to page 
 row is `rank`, `playerId`, `player`, `cities`, `points`, `attackPoints`, `defencePoints`, `battlePoints`.
 The caller must have joined the world.
 
+**The profile** (`ProfilePage`, at `/profile`) wears the same skin as the standings — the battlefield
+behind it, the dark panel, Cinzel headings and the gold action — rather than the light chrome of the
+login pages, which belong to the part of the game you are not signed in to yet.
+
 **The screen** (`RankingPage`, at `/worlds/{id}/ranking`, reached from the ranking medallion in the top
 bar, which also carries the way back to the city from every screen but the city itself). One table, four buttons for the boards, a search box, and a footer with the page size (10, 50, 100)
 and a pager. The column the board is ordered by is picked out in gold, and the caller's own row is

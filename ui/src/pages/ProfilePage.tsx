@@ -45,43 +45,66 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="page profile">
-      <h1>Profile</h1>
-
-      <dl className="pf-facts">
-        <dt>Name</dt><dd>{profile?.nickname ?? '…'}</dd>
-        <dt>Email</dt><dd>{profile?.email ?? '…'}</dd>
-        <dt>Playing since</dt>
-        <dd>{profile ? new Date(profile.since).toLocaleDateString(undefined, { dateStyle: 'long' }) : '…'}</dd>
-      </dl>
-
-      <form className="pf-form" onSubmit={submit}>
-        <h2>Change your password</h2>
-        <label>
-          Current password
-          <input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-        </label>
-        <label>
-          New password
-          <input type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
-        </label>
-        <label>
-          New password again
-          <input type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />
-        </label>
-
-        <p className="pf-note">
-          {error ? <span className="pf-bad">{error}</span>
-            : done ? <span className="pf-good">Changed. Anywhere else you were signed in has been signed out.</span>
-            : refusal ? <span>{refusal}</span>
-            : <span>Everywhere else you are signed in will be signed out.</span>}
-        </p>
-
-        <div className="pf-buttons">
-          <button type="button" className="secondary" onClick={() => navigate(-1)}>Back</button>
-          <button type="submit" className="primary" disabled={busy || refusal !== null}>Change password</button>
+    <main className="rk-body pf-body">
+      <div className="rk-panel pf-panel">
+        <div className="rk-head">
+          <h1>{profile?.nickname ?? 'Profile'}</h1>
+          <button type="button" className="cave-max pf-back" onClick={() => navigate(-1)}>Back</button>
         </div>
-      </form>
-    </div>
+
+        <dl className="b-info-now pf-facts">
+          <dt>Email</dt><dd>{profile?.email ?? '…'}</dd>
+          <dt>Playing since</dt>
+          <dd>{profile ? new Date(profile.since).toLocaleDateString(undefined, { dateStyle: 'long' }) : '…'}</dd>
+        </dl>
+
+        <form className="pf-form" onSubmit={submit}>
+          <h2>Change your password</h2>
+          <div className="pf-fields">
+            <label>
+              Current
+              <input
+                className="recruit-count"
+                type="password"
+                autoComplete="current-password"
+                value={current}
+                onChange={(e) => setCurrent(e.target.value)}
+              />
+            </label>
+            <label>
+              New
+              <input
+                className="recruit-count"
+                type="password"
+                autoComplete="new-password"
+                value={next}
+                onChange={(e) => setNext(e.target.value)}
+              />
+            </label>
+            <label>
+              New again
+              <input
+                className="recruit-count"
+                type="password"
+                autoComplete="new-password"
+                value={again}
+                onChange={(e) => setAgain(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="send-go">
+            <span className="send-why">
+              {error ? <span className="pf-bad">{error}</span>
+                : done ? <span className="pf-good">Changed. Anywhere else you were signed in has been signed out.</span>
+                : refusal ?? 'Everywhere else you are signed in will be signed out.'}
+            </span>
+            <button type="submit" className="b-info-action send-off" disabled={busy || refusal !== null}>
+              Change
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
   )
 }

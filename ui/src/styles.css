@@ -940,24 +940,25 @@ input { font: inherit; cursor: text; }
 
 /* ---- Profile ------------------------------------------------------------------------------------ */
 
-/* Who you are and the one thing worth changing: the page keeps the plain light chrome of login. */
-.profile h1 { margin: 0 0 18px; font-size: 22px; }
-.pf-facts {
-  display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 0 0 28px;
-  padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-  box-shadow: var(--shadow);
+/* The same battlefield and dark panel the standings use: this is a page of the game, not of the login. */
+.pf-body { align-items: flex-start; }
+.pf-panel { width: min(640px, 100%); }
+.pf-panel h1 {
+  margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;
+  color: var(--overlay-text);
 }
-.pf-facts dt { color: var(--muted); font-size: 13px; font-weight: 600; }
-.pf-facts dd { margin: 0; font-size: 14px; }
-.pf-form {
-  display: flex; flex-direction: column; gap: 12px;
-  padding: 18px 20px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-  box-shadow: var(--shadow);
+.pf-back { margin-left: auto; height: 28px; }
+.pf-facts { margin: 0 0 20px; }
+.pf-form { display: flex; flex-direction: column; gap: 12px; }
+.pf-form h2 {
+  margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 13px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--overlay-muted);
 }
-.pf-form h2 { margin: 0 0 2px; font-size: 16px; }
-.pf-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
-.pf-form input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font: inherit; }
-.pf-note { margin: 2px 0 0; font-size: 13px; color: var(--muted); min-height: 18px; }
-.pf-bad { color: var(--danger); }
-.pf-good { color: #2f7d3b; }
-.pf-buttons { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.pf-fields { display: flex; flex-wrap: wrap; gap: 12px; }
+.pf-fields label {
+  flex: 1 1 160px; display: flex; flex-direction: column; gap: 6px;
+  font-size: 12px; color: var(--overlay-muted);
+}
+.pf-fields input { width: 100%; text-align: left; padding: 8px 10px; }
+.pf-bad { color: #d59b7a; }
+.pf-good { color: #9ed08a; }
