@@ -148,7 +148,11 @@ function Body({ report }: { report: Report }) {
               }
             />
           ) : (
-            <p className="rp-blind">The defending army is not known.</p>
+            // A beaten attacker still knows whose city it hit, only not what stood in it.
+            <div className="rp-side">
+              <h4>Defender <em>{report.otherPlayer} · {report.otherCity}</em></h4>
+              <p className="rp-blind">The defending army is not known.</p>
+            </div>
           )}
         </div>
         <p className={'rp-verdict ' + (report.won ? 'won' : 'lost')}>{verdict(p.role, report.won)}</p>
