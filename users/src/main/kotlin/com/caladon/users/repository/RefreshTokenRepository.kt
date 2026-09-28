@@ -10,6 +10,9 @@ import java.util.UUID
 interface RefreshTokenRepository : JpaRepository<RefreshToken, UUID> {
     fun deleteByIdAndUserId(id: UUID, userId: Long): Long
 
+    /** Everything the user is signed in with: a changed password ends every other session. */
+    fun deleteAllByUserId(userId: Long): Long
+
     @Modifying
     @Query("delete from RefreshToken t where t.expiresAt < :now")
     fun deleteAllExpiredBefore(now: Instant): Int

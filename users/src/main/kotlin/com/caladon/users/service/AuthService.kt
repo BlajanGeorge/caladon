@@ -83,6 +83,33 @@ class AuthService(
         refreshTokenRepository.deleteByIdAndUserId(claims.tokenId, userId)
     }
 
+    /** Who the caller is, for their own profile. */
+    @Transactional(readOnly = true)
+    fun profile(userId: Long): User = userRepository.findById(userId).orElseThrow { AuthException.InvalidCredentials() }
+
+    /**
+     * Changes the password, having checked the current one. Every refresh token is revoked — a password
+     * is changed because it might be known — and the caller is handed a fresh pair so the browser they
+     * did it in stays signed in.
+     */
+    @Transactional
+    fun changePassword(userId: Long, currentPassword: String, newPassword: String): LoginResult {
+        val user = userRepository.findById(userId).orElseThrow { AuthException.InvalidCredentials() }
+        if (!passwordEncoder.matches(currentPassword, user.passwordHash)) throw AuthException.InvalidCredentials()
+
+        user.passwordHash = passwordEncoder.encode(newPassword)
+        userRepository.saveAndFlush(user)
+        refreshTokenRepository.deleteAllByUserId(userId)
+
+        val access = jwtService.issueAccessToken(userId, user.role)
+        val refreshId = UUID.randomUUID()
+        val refresh = jwtService.issueRefreshToken(userId, refreshId)
+        refreshTokenRepository.save(
+            RefreshToken(id = refreshId, userId = userId, expiresAt = refresh.expiresAt, createdAt = clock.instant()),
+        )
+        return LoginResult(access.token, refresh.token, user.nickname)
+    }
+
     private fun rejectIfTaken(email: String, nickname: String) {
         if (userRepository.existsByEmailIgnoreCase(email)) throw AuthException.EmailTaken()
         if (userRepository.existsByNicknameIgnoreCase(nickname)) throw AuthException.NicknameTaken()

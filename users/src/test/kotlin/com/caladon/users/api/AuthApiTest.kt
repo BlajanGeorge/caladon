@@ -13,6 +13,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActionsDsl
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
@@ -57,6 +58,61 @@ class AuthApiTest {
             .andReturn().response.contentAsString
         @Suppress("UNCHECKED_CAST")
         return objectMapper.readValue(response, Map::class.java) as Map<String, String>
+    }
+
+    @Test
+    fun `the profile is the caller's own account`() {
+        register().andExpect { status { isCreated() } }
+        val tokens = login()
+        mockMvc.get("/api/v1/auth/me") { header("Authorization", "Bearer ${tokens["accessToken"]}") }.andExpect {
+            status { isOk() }
+            jsonPath("$.nickname") { value("george") }
+            jsonPath("$.email") { value("a@b.com") }
+            jsonPath("$.role") { value("PLAYER") }
+            jsonPath("$.since") { isNotEmpty() }
+        }
+        mockMvc.get("/api/v1/auth/me").andExpect { status { isUnauthorized() } }
+    }
+
+    @Test
+    fun `changing the password ends every other session and keeps this one`() {
+        register().andExpect { status { isCreated() } }
+        val first = login()
+        val second = login()   // another browser, signed in as well
+
+        postJson(
+            "/api/v1/auth/password",
+            mapOf("currentPassword" to "wrong-one", "newPassword" to "brand-new-1"),
+            first["accessToken"],
+        ).andExpect {
+            status { isUnauthorized() }
+            jsonPath("$.error") { value("INVALID_CREDENTIALS") }
+        }
+        postJson(
+            "/api/v1/auth/password",
+            mapOf("currentPassword" to "password1", "newPassword" to "short"),
+            first["accessToken"],
+        ).andExpect { status { isBadRequest() } }
+
+        val fresh = postJson(
+            "/api/v1/auth/password",
+            mapOf("currentPassword" to "password1", "newPassword" to "brand-new-1"),
+            first["accessToken"],
+        ).andExpect {
+            status { isOk() }
+            jsonPath("$.nickname") { value("george") }
+        }.andReturn().response.contentAsString
+        @Suppress("UNCHECKED_CAST")
+        val issued = objectMapper.readValue(fresh, Map::class.java) as Map<String, String>
+
+        // The old password is gone, the new one works, and the other session cannot refresh any more.
+        postJson("/api/v1/auth/login", mapOf("email" to "a@b.com", "password" to "password1"))
+            .andExpect { status { isUnauthorized() } }
+        login(password = "brand-new-1")
+        postJson("/api/v1/auth/refresh", mapOf("refreshToken" to second["refreshToken"]))
+            .andExpect { status { isUnauthorized() } }
+        postJson("/api/v1/auth/refresh", mapOf("refreshToken" to issued["refreshToken"]))
+            .andExpect { status { isOk() } }
     }
 
     @Test

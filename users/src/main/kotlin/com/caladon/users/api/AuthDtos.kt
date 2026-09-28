@@ -30,6 +30,21 @@ data class LoginResponse(
     val nickname: String,
 )
 
+/** The caller's own account, for the profile screen. */
+data class ProfileResponse(
+    val nickname: String,
+    val email: String,
+    val role: String,
+    val since: java.time.Instant,
+)
+
+data class ChangePasswordRequest(
+    @field:NotBlank val currentPassword: String,
+
+    @field:NotBlank @field:Size(min = 8, max = 72)
+    val newPassword: String,
+)
+
 data class RefreshRequest(
     @field:NotBlank val refreshToken: String,
 )

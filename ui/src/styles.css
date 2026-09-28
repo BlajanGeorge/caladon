@@ -937,3 +937,27 @@ input { font: inherit; cursor: text; }
 /* A window opened from the map floats over it, centred rather than pinned to a city's plot. */
 .map-window { left: 50%; top: 80px; transform: translateX(-50%); }
 .b-info.studies.map-window { left: 50%; transform: translateX(-50%); }
+
+/* ---- Profile ------------------------------------------------------------------------------------ */
+
+/* Who you are and the one thing worth changing: the page keeps the plain light chrome of login. */
+.profile h1 { margin: 0 0 18px; font-size: 22px; }
+.pf-facts {
+  display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 0 0 28px;
+  padding: 18px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.pf-facts dt { color: var(--muted); font-size: 13px; font-weight: 600; }
+.pf-facts dd { margin: 0; font-size: 14px; }
+.pf-form {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 18px 20px 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.pf-form h2 { margin: 0 0 2px; font-size: 16px; }
+.pf-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.pf-form input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font: inherit; }
+.pf-note { margin: 2px 0 0; font-size: 13px; color: var(--muted); min-height: 18px; }
+.pf-bad { color: var(--danger); }
+.pf-good { color: #2f7d3b; }
+.pf-buttons { display: flex; justify-content: space-between; gap: 10px; margin-top: 4px; }

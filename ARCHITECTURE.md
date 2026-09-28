@@ -95,6 +95,19 @@ Base path: `/api/v1/auth` (and `/api/v1/users`).
 - `200` — `{ "accessToken": "jwt...", "refreshToken": "jwt...", "nickname": "george" }`
 - `401` — `{ "error": "INVALID_CREDENTIALS" }`
 
+### GET `/api/v1/auth/me`
+
+The caller's own account, for the profile screen: `{ nickname, email, role, since }`. Bearer token
+required.
+
+### POST `/api/v1/auth/password`
+
+`{ currentPassword, newPassword }` → the same body as login. Checks the current password
+(`401 INVALID_CREDENTIALS` if wrong), stores the new one, and **revokes every refresh token the user
+has**: a password is changed because it might be known, so every other session ends. The caller is handed
+a fresh pair so the browser they did it in stays signed in. `newPassword` is 8–72 characters, as at
+registration.
+
 ### POST `/api/v1/auth/refresh`
 ```json
 // request

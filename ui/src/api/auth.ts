@@ -7,7 +7,28 @@ export interface LoginResponse {
   nickname: string
 }
 
+export interface Profile {
+  nickname: string
+  email: string
+  role: string
+  /** When the account was made. */
+  since: string
+}
+
 export const authApi = {
+  me(): Promise<Profile> {
+    return api<Profile>('/auth/me')
+  },
+
+  /**
+   * Changes the password. Every other session is revoked by the server, which hands this one a fresh
+   * pair so the browser it was done in stays signed in.
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const res = await api<LoginResponse>('/auth/password', { method: 'POST', body: { currentPassword, newPassword } })
+    session.set({ accessToken: res.accessToken, refreshToken: res.refreshToken, nickname: res.nickname })
+  },
+
   register(email: string, nickname: string, password: string): Promise<void> {
     return api<void>('/auth/register', { method: 'POST', body: { email, nickname, password }, auth: false })
   },
