@@ -886,7 +886,7 @@ input { font: inherit; cursor: text; }
 }
 .rp-units td { padding: 3px 6px; text-align: right; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
 .rp-units .rp-unit { display: flex; align-items: center; gap: 6px; text-align: left; color: #d8cfb4; }
-.rp-units .rp-unit img { width: 20px; height: 20px; display: block; }
+.rp-units .rp-unit img { width: 20px; height: 20px; display: block; flex: 0 0 20px; }
 .rp-units tr.gone td { color: var(--overlay-muted); }
 .rp-units .rp-lost { color: #d59b7a; }
 /* What a side came away with, in the troops' own columns so the icons and names line up with them. */

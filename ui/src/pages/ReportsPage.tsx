@@ -7,6 +7,7 @@ import {
 import { MapTopBar } from '../components/MapTopBar'
 import { UNIT_ICONS } from '../city/unitIcons'
 import { BUILDING_NAMES } from '../city/format'
+import { BUILDING_ICONS } from '../city/buildingIcons'
 import { useWorldName } from '../useWorldName'
 import attackUrl from '@assets/sprites/hud-move-attack.png'
 import wallUrl from '@assets/sprites/icon-wall.png'
@@ -162,58 +163,92 @@ function Body({ report }: { report: Report }) {
 
   if (report.kind === 'ESPIONAGE') {
     const p = report.payload as SpyPayload
+    const where = <em>{report.otherPlayer} · {report.otherCity}</em>
     if (!p.seen) {
       return (
-        <p className="rp-blind">
-          The attempt failed: {p.silver.toLocaleString()} silver spent, and the city keeps its secrets.
-        </p>
+        <>
+          <div className="rp-sides rp-stack">
+            <div className="rp-side">
+              <h4>The city {where}</h4>
+              <table className="rp-units">
+                <tbody>
+                  <tr><td className="rp-unit" colSpan={2}><span className="rp-blind">Nothing was learned.</span></td></tr>
+                  <FootRow icon={silverUrl} name="Silver spent">
+                    <span className="rp-points">{p.silver.toLocaleString()}</span>
+                  </FootRow>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="rp-verdict lost">Your spy was caught</p>
+        </>
       )
     }
     return (
       <>
-        <dl className="b-info-now rp-facts">
-          <dt>Spent</dt><dd><span className="mw-load"><img src={silverUrl} alt="Silver" />{p.silver.toLocaleString()}</span></dd>
-          <dt>Resources</dt><dd><Goods of={p.seen.resources} /></dd>
-        </dl>
-        <div className="rp-sides">
+        {/* The same two-block shape a battle has: what stands there, and what has been built. */}
+        <div className="rp-sides rp-stack">
           <div className="rp-side">
-            <h4>Troops</h4>
+            <h4>Troops {where}</h4>
             <table className="rp-units">
               <tbody>
-                {p.seen.units.length === 0 && <tr><td className="rp-unit">None standing there</td></tr>}
+                {p.seen.units.length === 0 && (
+                  <tr><td className="rp-unit" colSpan={2}><span className="rp-blind">The city stands empty.</span></td></tr>
+                )}
                 {p.seen.units.map((u) => (
                   <tr key={u.type}>
                     <td className="rp-unit"><img src={UNIT_ICONS[u.type]} alt="" />{u.name}</td>
                     <td>{u.count.toLocaleString()}</td>
                   </tr>
                 ))}
+                <FootRow icon={silverUrl} name="Silver spent">
+                  <span className="rp-points">{p.silver.toLocaleString()}</span>
+                </FootRow>
               </tbody>
             </table>
           </div>
           <div className="rp-side">
-            <h4>Buildings</h4>
+            <h4>Buildings {where}</h4>
             <table className="rp-units">
               <tbody>
                 {p.seen.buildings.map((b) => (
                   <tr key={b.type}>
-                    <td className="rp-unit">{BUILDING_NAMES[b.type] ?? b.type}</td>
+                    <td className="rp-unit">
+                      {BUILDING_ICONS[b.type] ? <img src={BUILDING_ICONS[b.type]} alt="" /> : <span className="rp-no-icon" />}
+                      {BUILDING_NAMES[b.type] ?? b.type}
+                    </td>
                     <td>{b.level}</td>
                   </tr>
                 ))}
+                <FootRow icon={goodsUrl} name="Resources">
+                  <Goods of={p.seen.resources} />
+                </FootRow>
               </tbody>
             </table>
           </div>
         </div>
+        <p className="rp-verdict won">Your spy got in and came home</p>
       </>
     )
   }
 
   const p = report.payload as CaughtPayload
   return (
-    <p className="rp-blind">
-      {p.player} tried to spy on this city from {p.city} and was caught. The attempt cost them{' '}
-      {p.silver.toLocaleString()} silver.
-    </p>
+    <>
+      <div className="rp-sides rp-stack">
+        <div className="rp-side">
+          <h4>The spy <em>{p.player} · {p.city}</em></h4>
+          <table className="rp-units">
+            <tbody>
+              <FootRow icon={silverUrl} name="Silver wasted">
+                <span className="rp-points">{p.silver.toLocaleString()}</span>
+              </FootRow>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p className="rp-verdict won">You caught a spy, and learned nothing more than that</p>
+    </>
   )
 }
 
