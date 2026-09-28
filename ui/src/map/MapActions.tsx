@@ -58,7 +58,6 @@ export function MapActions({ worldId, cityId, action, onDone, onClose, onError }
     // The same shape as sending troops: what it costs above, what it will take below, one gold button.
     const away = detail ? Math.hypot(action.x - detail.x, action.y - detail.y) : 0
     const travel = away > 0 && detail ? Math.round((away * detail.spySpeed * 60) / (detail.worldSpeed || 1)) : 0
-    const refusal = held === 0 ? 'No silver in the Cave to pay a spy' : null
     return (
       <div className="b-info studies send map-window" role="dialog" aria-label="Spy">
         <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
@@ -100,9 +99,8 @@ export function MapActions({ worldId, cityId, action, onDone, onClose, onError }
         </ul>
 
         <div className="send-go">
-          {refusal ? (
-            <span className="send-why">{refusal}</span>
-          ) : spend === 0 ? (
+          {/* An empty Cave shows an empty field and a dark button; it needs no telling. */}
+          {spend === 0 ? (
             <span className="send-why" />
           ) : (
             <span className="send-why send-facts">
@@ -112,7 +110,7 @@ export function MapActions({ worldId, cityId, action, onDone, onClose, onError }
           <button
             type="button"
             className="b-info-action send-off"
-            disabled={busy || spend === 0 || refusal !== null}
+            disabled={busy || spend === 0}
             onClick={() => void run(() => worldsApi.spy(worldId, cityId, action.x, action.y, spend))}
           >
             Send
