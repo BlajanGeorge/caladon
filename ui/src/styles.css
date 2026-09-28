@@ -403,6 +403,11 @@ input { font: inherit; cursor: text; }
   margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(122,102,54,.4);
 }
 .send-why { flex: 1; font-size: 12px; color: var(--overlay-muted); }
+/* What the march costs and what it can bring back, one under the other. */
+.send-facts { display: flex; flex-direction: column; gap: 2px; }
+.send-facts > span { display: flex; align-items: baseline; gap: 8px; }
+.send-facts i { font-style: normal; min-width: 76px; color: var(--overlay-muted); }
+.send-facts b { color: var(--overlay-text); font-weight: 700; font-variant-numeric: tabular-nums; }
 .send-go .confirm-yes { flex: 0 0 auto; padding: 8px 16px; }
 
 /* Movements: the section that is not a queue, so its header opens nothing and reads as a label. It keeps

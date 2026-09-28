@@ -158,6 +158,8 @@ export interface CityDetail extends OwnedCity {
   studyQueue: StudyOrder[]
   /** Study-queue slots at the current Academy level. */
   studyQueueSlots: number
+  /** How fast the world runs; a march's length is worked out from it. */
+  worldSpeed: number
 }
 
 export interface NextLevel {

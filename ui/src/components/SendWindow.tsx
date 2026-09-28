@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CityDetail, MovementKind, UnitType, UnitView } from '../api/worlds'
 import { UNIT_ICONS, UNIT_ORDER } from '../city/unitIcons'
+import { formatDuration } from '../city/format'
 
 interface Props {
   units: UnitView[]
@@ -44,6 +45,17 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
 
   const field = target ?? parseTarget(typed)
   const chosen = UNIT_ORDER.filter((t) => want(t) > 0)
+
+  // What the march will cost and what it can bring back, worked out the way the server will: the
+  // straight-line distance at the slowest unit's pace, and every unit's own carry.
+  const away = field && detail
+    ? Math.hypot(field.x - detail.x, field.y - detail.y)
+    : 0
+  const slowest = chosen.reduce((m, t) => Math.max(m, byType.get(t)?.speed ?? 0), 0)
+  const travel = away > 0 && slowest > 0
+    ? Math.round((away * slowest * 60) / (detail?.worldSpeed || 1))
+    : 0
+  const carry = chosen.reduce((n, t) => n + (byType.get(t)?.carry ?? 0) * want(t), 0)
   // The rules the server enforces, said before the click rather than after it.
   const refusal =
     chosen.length === 0 ? 'Choose some troops'
@@ -126,7 +138,14 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
       </ul>
 
       <div className="send-go">
-        <span className="send-why">{refusal ?? `${chosen.reduce((n, t) => n + want(t), 0).toLocaleString()} troops to ${field!.x}|${field!.y}`}</span>
+        {refusal ? (
+          <span className="send-why">{refusal}</span>
+        ) : (
+          <span className="send-why send-facts">
+            <span><i>Travel time</i><b>{formatDuration(travel)}</b></span>
+            <span><i>Resources</i><b>{carry.toLocaleString()}</b></span>
+          </span>
+        )}
         <button
           type="button"
           className="confirm-yes"

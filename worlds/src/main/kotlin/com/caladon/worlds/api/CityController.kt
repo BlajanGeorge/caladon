@@ -8,6 +8,7 @@ import com.caladon.worlds.buildings.BuildingService
 import com.caladon.worlds.buildings.CaveService
 import com.caladon.worlds.domain.Resource
 import com.caladon.worlds.resources.CityAccess
+import com.caladon.worlds.resources.ResourceConstants
 import com.caladon.worlds.resources.CityState
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
@@ -200,6 +201,7 @@ class CityController(
             studied = Unit.entries.filter { it.needsStudy && state.isStudied(it) },
             studyQueue = state.studyQueue().mapIndexed { i, s -> StudyOrderResponse(s.id.unit, s.id.unit.displayName, i + 1, s.orderedAt, s.completesAt) },
             studyQueueSlots = BuildingRules.studySlots(state.level(Building.ACADEMY)),
+            worldSpeed = ResourceConstants.WORLD_SPEED,
         )
     }
 

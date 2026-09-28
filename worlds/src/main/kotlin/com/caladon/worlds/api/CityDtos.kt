@@ -61,6 +61,8 @@ data class CityDetailResponse(
     val studyQueue: List<StudyOrderResponse>,
     /** Study-queue slots at the current Academy level. */
     val studyQueueSlots: Int,
+    /** How fast this world runs: the client needs it to work out a march's length before sending one. */
+    val worldSpeed: Double,
 )
 
 /**
