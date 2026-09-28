@@ -146,7 +146,8 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
         ) : (
           <span className="send-why send-facts">
             <span><i>Travel time</i><b>{formatDuration(travel)}</b></span>
-            <span><i>Resources</i><b>{carry.toLocaleString()}</b></span>
+            {/* Support carries nothing home: it stays. */}
+            {kind === 'ATTACK' && <span><i>Resources</i><b>{carry.toLocaleString()}</b></span>}
           </span>
         )}
         <button
