@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { worldsApi, type OwnedCity, type Ranking, type RankingBoard, type Standing } from '../api/worlds'
@@ -20,9 +20,8 @@ const BOARDS: { board: RankingBoard; label: string; column: keyof Standing }[] =
 const SIZES = [10, 50, 100]
 
 /**
- * The world's standings. The board scrolls endlessly by the cursor the server hands back, which cannot
- * skip or repeat a player, and the pager below jumps by page number, which can. The caller's own row is
- * pinned above the table, so they never scroll to find themselves.
+ * The world's standings, a page at a time. The caller's own row is pinned above the table when their
+ * rank falls outside the page, so they never page about to find themselves.
  */
 export function RankingPage() {
   const { id } = useParams()
@@ -35,50 +34,41 @@ export function RankingPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [data, setData] = useState<Ranking | null>(null)
-  const [rows, setRows] = useState<Standing[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const cursor = useRef<string | null>(null)
-  const end = useRef(false)
+  /**
+   * Which request is the current one. A board the player has just left can still have its reply in the
+   * air; without this, that reply lands afterwards and leaves the table sorted the old way.
+   */
+  const latest = useRef(0)
 
-  // A new board, page size, page or search starts the table again.
-  const load = useCallback(async (append: boolean) => {
+  useEffect(() => {
+    const mine = ++latest.current
     setLoading(true)
-    try {
-      const next = await worldsApi.ranking(worldId, {
-        board, limit, search,
-        after: append ? cursor.current : null,
-        page: append ? undefined : page,
-      })
-      setData(next)
-      setRows((old) => (append ? [...old, ...next.rows] : next.rows))
-      cursor.current = next.next
-      end.current = next.next === null
-      setError(null)
-    } catch (err) {
-      setError(err instanceof ApiError && err.code === 'NOT_JOINED' ? 'You have not joined this world' : 'Could not load the ranking')
-    } finally {
-      setLoading(false)
-    }
+    // Typing a name waits a moment; pressing a button does not.
+    const run = setTimeout(() => {
+      worldsApi.ranking(worldId, { board, limit, page, search })
+        .then((next) => {
+          if (mine !== latest.current) return
+          setData(next)
+          setError(null)
+        })
+        .catch((err) => {
+          if (mine !== latest.current) return
+          setError(err instanceof ApiError && err.code === 'NOT_JOINED' ? 'You have not joined this world' : 'Could not load the ranking')
+        })
+        .finally(() => { if (mine === latest.current) setLoading(false) })
+    }, search ? 250 : 0)
+    return () => clearTimeout(run)
   }, [worldId, board, limit, page, search])
 
-  useEffect(() => { cursor.current = null; end.current = false; void load(false) }, [load])
-
-  // Endless scroll: the last row coming into view asks for the next cursor page.
-  const tail = useCallback((node: HTMLTableRowElement | null) => {
-    if (!node) return
-    const io = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !end.current && !loading) void load(true)
-    }, { rootMargin: '200px' })
-    io.observe(node)
-    return () => io.disconnect()
-  }, [load, loading])
+  const rows = data?.rows ?? []
 
   const pages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1
   const sorted = BOARDS.find((b) => b.board === board)!
 
-  const row = (s: Standing, mine: boolean, ref?: (n: HTMLTableRowElement | null) => void) => (
-    <tr key={s.playerId} ref={ref} className={mine ? 'rk-me' : undefined}>
+  const row = (s: Standing, mine: boolean) => (
+    <tr key={s.playerId} className={mine ? 'rk-me' : undefined}>
       <td className="rk-rank">{s.rank.toLocaleString()}</td>
       <td className="rk-player">{s.player}</td>
       <td>{s.cities.toLocaleString()}</td>
@@ -135,7 +125,7 @@ export function RankingPage() {
                 </thead>
                 <tbody>
                   {data?.me && !rows.some((r) => r.playerId === data.me!.playerId) && row(data.me, true)}
-                  {rows.map((s, i) => row(s, s.playerId === data?.me?.playerId, i === rows.length - 1 ? tail : undefined))}
+                  {rows.map((s) => row(s, s.playerId === data?.me?.playerId))}
                 </tbody>
               </table>
 

@@ -1173,8 +1173,13 @@ The caller must have joined the world.
 **The screen** (`RankingPage`, at `/worlds/{id}/ranking`, reached from the ranking medallion in the top
 bar, which also carries the way back to the city from every screen but the city itself). One table, four buttons for the boards, a search box, and a footer with the page size (10, 50, 100)
 and a pager. The column the board is ordered by is picked out in gold, and the caller's own row is
-highlighted and **pinned above the table** when it falls outside the page. Scrolling to the bottom asks
-for the next cursor page, so the table grows rather than jumping; the pager is there for deliberate jumps.
+highlighted and **pinned above the table** when it falls outside the page.
+
+The screen uses **page numbers only**. It had an endless scroll on the cursor as well, and the two fought:
+a scroll fired while the player was changing board, and its reply — a page of the old ordering — landed
+afterwards and left the table sorted the wrong way. One kind of paging on screen, and every reply is
+tagged so a stale one is dropped rather than shown. The cursor stays in the API for a client that wants
+it.
 
 ---
 
