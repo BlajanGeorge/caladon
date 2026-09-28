@@ -107,7 +107,6 @@ export function MapActions({ worldId, cityId, action, onDone, onClose, onError }
           ) : (
             <span className="send-why send-facts">
               <span><i>Travel time</i><b>{formatDuration(travel)}</b></span>
-              <span><i>Silver spent</i><b>{spend.toLocaleString()}</b></span>
             </span>
           )}
           <button
