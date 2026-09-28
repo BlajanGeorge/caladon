@@ -820,7 +820,7 @@ input { font: inherit; cursor: text; }
 /* The list on the left, the report itself on the right. */
 .rp-split { display: flex; gap: 16px; align-items: flex-start; }
 .rp-list {
-  flex: 0 0 372px; list-style: none; margin: 0; padding: 0 10px 0 0;
+  flex: 0 0 382px; list-style: none; margin: 0; padding: 0 18px 0 0;
   display: flex; flex-direction: column; gap: 3px; max-height: 60vh;
   /* The gutter is reserved and padded, so the bar never sits over a row's delete button. */
   overflow-y: auto; scrollbar-gutter: stable;
@@ -832,11 +832,15 @@ input { font: inherit; cursor: text; }
 }
 .rp-list::-webkit-scrollbar-thumb:hover { background: rgba(140,116,62,.9); }
 .rp-list li { display: flex; align-items: center; gap: 4px; border-radius: 8px; }
-.rp-list li.open { background: rgba(122,102,54,.22); }
-.rp-list li:hover { background: rgba(122,102,54,.14); }
+.rp-list li.open { background: rgba(122,102,54,.22); box-shadow: 0 0 0 1px rgba(122,102,54,.5); }
+/* A little more than a tint under the pointer, so a row lifts rather than merely lightens. */
+.rp-list li:hover {
+  background: rgba(122,102,54,.2);
+  box-shadow: 0 0 0 1px rgba(122,102,54,.45), 0 3px 10px rgba(0,0,0,.45);
+}
 .rp-none { padding: 10px; font-size: 13px; color: var(--overlay-muted); }
 .rp-row {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 9px 12px;
   background: none; border: none; text-align: left; font: inherit; color: var(--overlay-muted);
   cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }

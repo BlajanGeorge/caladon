@@ -481,7 +481,8 @@ class MovementService(
             worldId = worldId, ownerUserId = origin.city.ownerUserId, kind = ReportService.Kind.ESPIONAGE,
             createdAt = origin.now, subjectCity = origin.city.name, otherCity = target.city.name,
             otherPlayer = names[target.cityId]?.player, won = success,
-            summary = if (success) "Espionage of ${target.city.name}" else "Espionage of ${target.city.name} failed",
+            // How it went is the report's own verdict; the title only says what was attempted.
+            summary = "Espionage of ${target.city.name}",
             payload = EspionagePayload(success, silver, seen = if (success) seen(target) else null),
         )
         if (!success) {

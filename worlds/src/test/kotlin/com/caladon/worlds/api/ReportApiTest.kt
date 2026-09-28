@@ -286,7 +286,8 @@ class ReportApiTest : ApiTestBase() {
 
         val mine = report(three.world, playerToken, reports(three.world, playerToken)["rows"].single()["id"].asLong())
         assertThat(mine["won"].asBoolean()).isFalse()
-        assertThat(mine["summary"].asText()).isEqualTo("Espionage of ana's city failed")
+        // The title says what was attempted; whether it worked is the report's own verdict.
+        assertThat(mine["summary"].asText()).isEqualTo("Espionage of ana's city")
         assertThat(mine["payload"]["success"].asBoolean()).isFalse()
         assertThat(mine["payload"]["seen"].isNull).isTrue()
 
