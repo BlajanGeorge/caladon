@@ -408,7 +408,12 @@ input { font: inherit; cursor: text; }
 .send-facts > span { display: flex; align-items: baseline; gap: 8px; }
 .send-facts i { font-style: normal; min-width: 76px; color: var(--overlay-muted); }
 .send-facts b { color: var(--overlay-text); font-weight: 700; font-variant-numeric: tabular-nums; }
-.send-go .confirm-yes { flex: 0 0 auto; padding: 8px 16px; }
+/* The same gold action every window sends with, not the red of a confirmation. */
+.send-go .send-off {
+  margin-top: 0; width: auto; flex: 0 0 auto; height: 34px; padding: 0 22px;
+  display: inline-flex; align-items: center; justify-content: center; letter-spacing: .14em;
+}
+.send-go .send-off:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 
 /* Movements: the section that is not a queue, so its header opens nothing and reads as a label. It keeps
    the gauntlet: a plain `default` here would drop back to the system arrow mid-screen. */

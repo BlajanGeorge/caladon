@@ -56,10 +56,11 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
     ? Math.round((away * slowest * 60) / (detail?.worldSpeed || 1))
     : 0
   const carry = chosen.reduce((n, t) => n + (byType.get(t)?.carry ?? 0) * want(t), 0)
-  // The rules the server enforces, said before the click rather than after it.
+  // The rules the server enforces, said before the click rather than after it. Choosing nothing yet is
+  // not a complaint worth making: the button is simply dark until something is.
+  const nothingChosen = chosen.length === 0
   const refusal =
-    chosen.length === 0 ? 'Choose some troops'
-      : !field ? 'Enter the field as x|y'
+    !field ? 'Enter the field as x|y'
       : field.x === detail?.x && field.y === detail?.y ? 'That is this city'
       : null
 
@@ -140,6 +141,8 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
       <div className="send-go">
         {refusal ? (
           <span className="send-why">{refusal}</span>
+        ) : nothingChosen ? (
+          <span className="send-why" />
         ) : (
           <span className="send-why send-facts">
             <span><i>Travel time</i><b>{formatDuration(travel)}</b></span>
@@ -148,8 +151,8 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
         )}
         <button
           type="button"
-          className="confirm-yes"
-          disabled={busy || refusal !== null}
+          className="b-info-action send-off"
+          disabled={busy || nothingChosen || refusal !== null}
           onClick={() => {
             const load: Partial<Record<UnitType, number>> = {}
             for (const t of chosen) load[t] = want(t)
@@ -157,7 +160,7 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
             setCounts({})
           }}
         >
-          Send them
+          Send
         </button>
       </div>
     </div>
