@@ -394,9 +394,7 @@ input { font: inherit; cursor: text; }
 .send-target { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--overlay-muted); }
 .send-field { width: 96px; text-align: left; }
 .send-there { color: var(--overlay-text); font-weight: 700; }
-/* How many stand at home, beside the unit's name rather than under it. */
-.send-name { flex-direction: row; align-items: baseline; gap: 8px; }
-.send-name b { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
+
 .send-list .study-action { min-width: 140px; gap: 6px; }
 .send-list .cave-max { height: 26px; padding: 0 10px; }
 /* The reason it cannot go yet, beside the button that would send it. */
@@ -675,6 +673,9 @@ input { font: inherit; cursor: text; }
 .study-list .study-icon { width: 34px; height: 34px; display: block; }
 .study-name { flex: 1; min-width: 150px; display: flex; flex-direction: column; color: var(--overlay-text); }
 .study-name em { font-style: normal; font-size: 11px; color: var(--overlay-muted); white-space: nowrap; }
+/* How many stand at home: on the same line as the name, after it, not beneath it. */
+.study-name.send-name { flex-direction: row; align-items: baseline; gap: 8px; }
+.study-name.send-name b { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
 .study-state { display: flex; flex-direction: column; align-items: flex-end; text-align: right; white-space: nowrap; }
 .study-state em { font-style: normal; font-size: 11px; color: var(--overlay-muted); }
 .study-list li.done .study-state { color: #9ed08a; }
