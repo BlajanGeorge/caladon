@@ -80,6 +80,13 @@ function FootRow({ icon, name, children }: { icon?: string; name: string; childr
   )
 }
 
+/** How it ended, said to whoever is reading it rather than about two strangers. */
+function verdict(role: BattlePayload['role'], won: boolean): string {
+  if (role === 'ATTACKER') return won ? 'Your army carried the field' : 'Your army was destroyed'
+  if (role === 'SUPPORTER') return won ? 'The defence you joined held' : 'The defence you joined was broken'
+  return won ? 'Your defence held' : 'Your defence was broken'
+}
+
 /** What a side earned, when the report was written after battle points were kept. */
 function Points({ of }: { of: BattlePayload['attacker'] | null }) {
   if (!of || of.points === undefined) return null
@@ -144,11 +151,7 @@ function Body({ report }: { report: Report }) {
             <p className="rp-blind">The defending army is not known.</p>
           )}
         </div>
-        <p className={'rp-verdict ' + (report.won ? 'won' : 'lost')}>
-          {p.role === 'ATTACKER'
-            ? (report.won ? `${p.attacker.player} took the field` : `${report.otherPlayer} held`)
-            : (report.won ? `${p.defender?.player ?? 'The defenders'} held` : `${p.attacker.player} took the field`)}
-        </p>
+        <p className={'rp-verdict ' + (report.won ? 'won' : 'lost')}>{verdict(p.role, report.won)}</p>
       </>
     )
   }
