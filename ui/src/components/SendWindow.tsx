@@ -18,9 +18,9 @@ interface Props {
 }
 
 /** Spying is not an errand troops go on; it is paid for from the Cave, and is not here. */
-const KINDS: { kind: MovementKind; label: string; hint: string }[] = [
-  { kind: 'ATTACK', label: 'Attack', hint: 'They fight what stands there and bring back what they can carry.' },
-  { kind: 'SUPPORT', label: 'Support', hint: 'They stay and defend that city until you call them home.' },
+const KINDS: { kind: MovementKind; label: string }[] = [
+  { kind: 'ATTACK', label: 'Attack' },
+  { kind: 'SUPPORT', label: 'Support' },
 ]
 
 /** "128|240" or "128 240" or "128,240" — whichever the player types. */
@@ -54,23 +54,25 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
   return (
     <div className={'b-info studies send' + (className ? ` ${className}` : '')} role="dialog" aria-label="Send troops">
       <button type="button" className="b-info-close" onClick={onClose} aria-label="Close">×</button>
-      <h3>Send troops</h3>
+      <h3>{offered.length === 1 ? offered[0].label : 'Send troops'}</h3>
       <p className="b-info-level">{detail ? `From ${detail.name}` : 'From this city'}</p>
-      <p className="b-info-desc">{KINDS.find((k) => k.kind === kind)!.hint}</p>
 
       <div className="send-head">
-        <div className="send-kinds" role="group" aria-label="What kind of errand">
-          {offered.map((k) => (
-            <button
-              key={k.kind}
-              type="button"
-              className={'send-kind' + (kind === k.kind ? ' on' : '')}
-              onClick={() => setKind(k.kind)}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
+        {/* Only worth asking when there is a choice: from the map, the errand is already chosen. */}
+        {offered.length > 1 && (
+          <div className="send-kinds" role="group" aria-label="What kind of errand">
+            {offered.map((k) => (
+              <button
+                key={k.kind}
+                type="button"
+                className={'send-kind' + (kind === k.kind ? ' on' : '')}
+                onClick={() => setKind(k.kind)}
+              >
+                {k.label}
+              </button>
+            ))}
+          </div>
+        )}
         {target ? (
           <span className="send-target">Target <b className="send-there">{target.name}</b></span>
         ) : (

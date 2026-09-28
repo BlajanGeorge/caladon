@@ -106,7 +106,7 @@ export function MapActions({ worldId, cityId, action, onDone, onClose, onError }
       busy={busy}
       target={{ x: action.x, y: action.y, name: action.name }}
       className="map-window"
-      only={action.kind === 'ATTACK' && !action.name.startsWith('Barbarian') ? undefined : [action.kind]}
+      only={[action.kind]}
       onSend={(kind, x, y, load: Partial<Record<UnitType, number>>) =>
         void run(() => worldsApi.send(worldId, cityId, kind, x, y, load))}
       onClose={onClose}
