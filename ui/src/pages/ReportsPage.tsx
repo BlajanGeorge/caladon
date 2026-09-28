@@ -167,43 +167,54 @@ function Body({ report }: { report: Report }) {
     if (!p.seen) {
       return (
         <>
+          <p className="rp-cost">
+            <img src={silverUrl} alt="" />
+            <span className="rp-foot-name">Silver spent</span>
+            <b>{p.silver.toLocaleString()}</b>
+          </p>
           <div className="rp-sides rp-stack">
             <div className="rp-side">
               <h4>The city {where}</h4>
-              <table className="rp-units">
-                <tbody>
-                  <tr><td className="rp-unit" colSpan={2}><span className="rp-blind">Nothing was learned.</span></td></tr>
-                  <FootRow icon={silverUrl} name="Silver spent">
-                    <span className="rp-points">{p.silver.toLocaleString()}</span>
-                  </FootRow>
-                </tbody>
-              </table>
+              <p className="rp-blind">Nothing was learned.</p>
             </div>
           </div>
           <p className="rp-verdict lost">Your spy was caught</p>
         </>
       )
     }
+    const seen = p.seen
     return (
       <>
-        {/* The same two-block shape a battle has: what stands there, and what has been built. */}
+        {/* What it cost leads, then what was learned: resources, troops, buildings, a block each. */}
+        <p className="rp-cost">
+          <img src={silverUrl} alt="" />
+          <span className="rp-foot-name">Silver spent</span>
+          <b>{p.silver.toLocaleString()}</b>
+        </p>
         <div className="rp-sides rp-stack">
+          <div className="rp-side">
+            <h4>Resources {where}</h4>
+            <table className="rp-units">
+              <tbody>
+                <tr><td className="rp-unit"><img src={woodUrl} alt="" />Wood</td><td>{seen.resources.wood.toLocaleString()}</td></tr>
+                <tr><td className="rp-unit"><img src={stoneUrl} alt="" />Stone</td><td>{seen.resources.stone.toLocaleString()}</td></tr>
+                <tr><td className="rp-unit"><img src={silverUrl} alt="" />Silver</td><td>{seen.resources.silver.toLocaleString()}</td></tr>
+              </tbody>
+            </table>
+          </div>
           <div className="rp-side">
             <h4>Troops {where}</h4>
             <table className="rp-units">
               <tbody>
-                {p.seen.units.length === 0 && (
+                {seen.units.length === 0 && (
                   <tr><td className="rp-unit" colSpan={2}><span className="rp-blind">The city stands empty.</span></td></tr>
                 )}
-                {p.seen.units.map((u) => (
+                {seen.units.map((u) => (
                   <tr key={u.type}>
                     <td className="rp-unit"><img src={UNIT_ICONS[u.type]} alt="" />{u.name}</td>
                     <td>{u.count.toLocaleString()}</td>
                   </tr>
                 ))}
-                <FootRow icon={silverUrl} name="Silver spent">
-                  <span className="rp-points">{p.silver.toLocaleString()}</span>
-                </FootRow>
               </tbody>
             </table>
           </div>
@@ -211,7 +222,7 @@ function Body({ report }: { report: Report }) {
             <h4>Buildings {where}</h4>
             <table className="rp-units">
               <tbody>
-                {p.seen.buildings.map((b) => (
+                {seen.buildings.map((b) => (
                   <tr key={b.type}>
                     <td className="rp-unit">
                       {BUILDING_ICONS[b.type] ? <img src={BUILDING_ICONS[b.type]} alt="" /> : <span className="rp-no-icon" />}
@@ -220,9 +231,6 @@ function Body({ report }: { report: Report }) {
                     <td>{b.level}</td>
                   </tr>
                 ))}
-                <FootRow icon={goodsUrl} name="Resources">
-                  <Goods of={p.seen.resources} />
-                </FootRow>
               </tbody>
             </table>
           </div>
@@ -235,16 +243,15 @@ function Body({ report }: { report: Report }) {
   const p = report.payload as CaughtPayload
   return (
     <>
+      <p className="rp-cost">
+        <img src={silverUrl} alt="" />
+        <span className="rp-foot-name">Silver wasted</span>
+        <b>{p.silver.toLocaleString()}</b>
+      </p>
       <div className="rp-sides rp-stack">
         <div className="rp-side">
           <h4>The spy <em>{p.player} · {p.city}</em></h4>
-          <table className="rp-units">
-            <tbody>
-              <FootRow icon={silverUrl} name="Silver wasted">
-                <span className="rp-points">{p.silver.toLocaleString()}</span>
-              </FootRow>
-            </tbody>
-          </table>
+          <p className="rp-blind">Nothing of yours was seen.</p>
         </div>
       </div>
       <p className="rp-verdict won">You caught a spy, and learned nothing more than that</p>

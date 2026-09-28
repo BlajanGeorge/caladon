@@ -906,3 +906,7 @@ input { font: inherit; cursor: text; }
 .rp-verdict.lost { color: #d59b7a; }
 .rp-facts { margin-top: 12px; }
 .rp-blind { margin: 10px 0 0; font-size: 13px; color: var(--overlay-muted); }
+/* What a mission cost, above everything it bought. */
+.rp-cost { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; }
+.rp-cost img { width: 22px; height: 22px; display: block; }
+.rp-cost b { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
