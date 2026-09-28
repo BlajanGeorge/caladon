@@ -941,7 +941,8 @@ input { font: inherit; cursor: text; }
 /* ---- Profile ------------------------------------------------------------------------------------ */
 
 /* The same battlefield and dark panel the standings use: this is a page of the game, not of the login. */
-.pf-body { align-items: flex-start; }
+/* The shell above is a flex column, so the page fills what the bar leaves and its picture with it. */
+.pf-body { align-items: flex-start; min-height: 0; }
 .pf-panel { width: min(640px, 100%); }
 .pf-panel h1 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;

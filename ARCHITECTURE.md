@@ -1326,7 +1326,10 @@ The caller must have joined the world.
 
 **The profile** (`ProfilePage`, at `/profile`) wears the same skin as the standings — the battlefield
 behind it, the dark panel, Cinzel headings and the gold action — rather than the light chrome of the
-login pages, which belong to the part of the game you are not signed in to yet.
+login pages, which belong to the part of the game you are not signed in to yet. It carries the **whole
+top bar**, though it sits outside any world: the bar takes a world when it has one, and the last world
+the player was in is kept in `lastWorld` so a bookmarked or reloaded profile still offers the way back
+to the city, the map, the reports and the standings.
 
 **The screen** (`RankingPage`, at `/worlds/{id}/ranking`, reached from the ranking medallion in the top
 bar, which also carries the way back to the city from every screen but the city itself). One table, four buttons for the boards, a search box, and a footer with the page size (10, 50, 100)

@@ -1,13 +1,26 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { authApi, type Profile } from '../api/auth'
+import type { OwnedCity } from '../api/worlds'
+import { MapTopBar } from '../components/MapTopBar'
+import { lastWorld } from '../lastWorld'
 
 const MIN_PASSWORD = 8
 
 /** Who you are, and the one thing worth changing here. */
+interface NavState {
+  worldId?: number
+  worldName?: string
+  city?: OwnedCity
+}
+
 export function ProfilePage() {
   const navigate = useNavigate()
+  // Where the player came from, so the bar can still take them back into the world.
+  const from = (useLocation().state ?? {}) as NavState
+  // Reached from the game, or bookmarked: either way the bar offers the whole world it belongs to.
+  const back = from.worldId !== undefined ? { id: from.worldId, name: from.worldName } : lastWorld()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -45,7 +58,15 @@ export function ProfilePage() {
   }
 
   return (
-    <main className="rk-body pf-body">
+    <div className="city-shell">
+      <MapTopBar
+        showCityButton
+        showWorldButton
+        worldName={back?.name}
+        worldId={back?.id}
+        city={from.city}
+      />
+      <main className="rk-body pf-body">
       <div className="rk-panel pf-panel">
         <div className="rk-head">
           <h1>{profile?.nickname ?? 'Profile'}</h1>
@@ -104,7 +125,8 @@ export function ProfilePage() {
             </button>
           </div>
         </form>
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   )
 }

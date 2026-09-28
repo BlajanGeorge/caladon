@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api/auth'
 import { worldsApi, type OwnedCity } from '../api/worlds'
+import { rememberWorld } from '../lastWorld'
 import profileUrl from '@assets/sprites/profile.png'
 import accountUrl from '@assets/sprites/account.png'
 import worldUrl from '@assets/sprites/hud-world.png'
@@ -11,7 +12,8 @@ import reportsUrl from '@assets/sprites/hud-reports.png'
 
 interface Props {
   worldName?: string
-  worldId: number
+  /** Absent outside a world, as on the profile: the world's own buttons are then not shown. */
+  worldId?: number
   city?: OwnedCity | null
   /** Rendered in the right-hand group, just before the Profile icon (the City view's resource strip). */
   strip?: ReactNode
@@ -26,6 +28,11 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
   const [menuOpen, setMenuOpen] = useState(false)
   const [unread, setUnread] = useState(0)
   const rightRef = useRef<HTMLDivElement>(null)
+
+  // The world the player is in, kept so a screen outside one still knows where to send them back to.
+  useEffect(() => {
+    if (worldId !== undefined) rememberWorld({ id: worldId, name: worldName })
+  }, [worldId, worldName])
 
   // What is waiting to be read, asked for on entry and then at the poll cadence of the rest of the HUD.
   useEffect(() => {
@@ -66,7 +73,7 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
 
       <div className="mtb-right" ref={rightRef}>
         {strip}
-        {showWorldButton && (
+        {showWorldButton && worldId !== undefined && (
           <button
             type="button"
             className="mtb-icon-btn"
@@ -77,7 +84,7 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
             <img src={worldUrl} alt="" />
           </button>
         )}
-        {showCityButton && (
+        {showCityButton && worldId !== undefined && (
           <button
             type="button"
             className="mtb-icon-btn"
@@ -88,6 +95,7 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
             <img src={cityUrl} alt="" />
           </button>
         )}
+        {worldId !== undefined && (
         <button
           type="button"
           className="mtb-icon-btn mtb-with-badge"
@@ -98,6 +106,8 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
           <img src={reportsUrl} alt="" />
           {unread > 0 && <span className="mtb-badge">{unread > 99 ? '99+' : unread}</span>}
         </button>
+        )}
+        {worldId !== undefined && (
         <button
           type="button"
           className="mtb-icon-btn"
@@ -107,7 +117,8 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
         >
           <img src={rankingUrl} alt="" />
         </button>
-        <button type="button" className="mtb-icon-btn" title="Profile" aria-label="Profile" onClick={() => navigate('/profile')}>
+        )}
+        <button type="button" className="mtb-icon-btn" title="Profile" aria-label="Profile" onClick={() => navigate('/profile', { state: { worldId, worldName, city } })}>
           <img src={profileUrl} alt="" />
         </button>
         <div className="mtb-account">
