@@ -24,6 +24,8 @@ const KINDS: { kind: ReportKind | ''; label: string }[] = [
   { kind: 'ESPIONAGE_CAUGHT', label: 'Caught' },
 ]
 
+const SIZES = [10, 50, 100]
+
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
 
 /** One army's losses, the shape both sides of a battle are shown in. */
@@ -148,6 +150,7 @@ export function ReportsPage() {
   const worldName = useWorldName(worldId, state.worldName)
 
   const [kind, setKind] = useState<ReportKind | ''>('')
+  const [limit, setLimit] = useState(50)
   const [page, setPage] = useState(1)
   const [list, setList] = useState<Reports | null>(null)
   const [open, setOpen] = useState<Report | null>(null)
@@ -156,10 +159,10 @@ export function ReportsPage() {
 
   const reload = useCallback(() => {
     const mine = ++latest.current
-    worldsApi.reports(worldId, { limit: 50, page, kind })
+    worldsApi.reports(worldId, { limit, page, kind })
       .then((next) => { if (mine === latest.current) { setList(next); setError(null) } })
       .catch(() => { if (mine === latest.current) setError('Could not load the reports') })
-  }, [worldId, page, kind])
+  }, [worldId, limit, page, kind])
 
   useEffect(reload, [reload])
 
@@ -232,6 +235,18 @@ export function ReportsPage() {
 
           <div className="rk-foot">
             <span className="rk-total">{list ? `${list.total.toLocaleString()} reports` : ''}</span>
+            <div className="rk-sizes" role="group" aria-label="Rows per page">
+              {SIZES.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={'cave-max' + (n === limit ? ' on' : '')}
+                  onClick={() => { setLimit(n); setPage(1) }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
             <div className="rk-pager">
               <button type="button" className="cave-max" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Back</button>
               <span className="rk-page">{page} of {pages.toLocaleString()}</span>
