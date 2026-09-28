@@ -55,11 +55,22 @@ class ReportApiTest : ApiTestBase() {
         return slot.x.toInt() to slot.y.toInt()
     }
 
+    /**
+     * Moves a city onto an exact field. Whatever slot is already there is shifted aside rather than
+     * deleted: the generated map may have put another player's city on it, and deleting that slot breaks
+     * the city pointing at it — which it did, now and then, depending on where the world put people.
+     */
     private fun place(cityId: Long, x: Int, y: Int) {
         val city = cityRepository.findById(cityId).orElseThrow()
         citySlotRepository.findByWorldIdAndXAndY(city.worldId, x.toShort(), y.toShort())
             ?.takeIf { it.id != city.slotId }
-            ?.let { citySlotRepository.delete(it) }
+            ?.let { blocking ->
+                var free = 499
+                while (citySlotRepository.findByWorldIdAndXAndY(city.worldId, free.toShort(), free.toShort()) != null) free--
+                blocking.x = free.toShort()
+                blocking.y = free.toShort()
+                citySlotRepository.saveAndFlush(blocking)
+            }
         val slot = citySlotRepository.findById(city.slotId).orElseThrow()
         slot.x = x.toShort()
         slot.y = y.toShort()

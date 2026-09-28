@@ -247,7 +247,8 @@ export function ReportsPage() {
               {open ? (
                 <>
                   <h3>{open.summary}</h3>
-                  <p className="b-info-level">{when(open.createdAt)} · {open.otherPlayer} · {open.otherCity}</p>
+                  {/* Only when it happened: the city and the player are named in the report itself. */}
+                  <p className="b-info-level">{when(open.createdAt)}</p>
                   <Body report={open} />
                 </>
               ) : (
