@@ -854,6 +854,9 @@ input { font: inherit; cursor: text; }
   margin: 0 0 2px; font-family: "Cinzel", Georgia, serif; font-size: 17px; color: var(--overlay-text);
 }
 .rp-sides { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+/* A battle's two armies stack; the spy report's troops and buildings still sit side by side. */
+.rp-sides.rp-stack { flex-direction: column; gap: 14px; }
+.rp-sides.rp-stack .rp-side { flex: 1 1 auto; max-width: 520px; }
 .rp-side { flex: 1 1 260px; min-width: 0; }
 .rp-side h4 {
   margin: 0 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;

@@ -85,7 +85,8 @@ function Body({ report }: { report: Report }) {
     const p = report.payload as BattlePayload
     return (
       <>
-        <div className="rp-sides">
+        {/* One army under the other: they are read in turn, not compared column by column. */}
+        <div className="rp-sides rp-stack">
           <Side side={p.attacker} title="Attacker" />
           {p.defender
             ? <Side side={p.defender} title="Defender" />
