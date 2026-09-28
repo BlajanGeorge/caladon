@@ -5,6 +5,7 @@ import type { OwnedCity } from '../api/worlds'
 import profileUrl from '@assets/sprites/profile.png'
 import accountUrl from '@assets/sprites/account.png'
 import worldUrl from '@assets/sprites/hud-world.png'
+import rankingUrl from '@assets/sprites/hud-ranking.png'
 
 interface Props {
   worldName?: string
@@ -57,6 +58,15 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
             <img src={worldUrl} alt="" />
           </button>
         )}
+        <button
+          type="button"
+          className="mtb-icon-btn"
+          title="Ranking"
+          aria-label="Ranking"
+          onClick={() => navigate(`/worlds/${worldId}/ranking`, { state: { worldName, city } })}
+        >
+          <img src={rankingUrl} alt="" />
+        </button>
         <button type="button" className="mtb-icon-btn" title="Profile" aria-label="Profile" onClick={() => navigate('/profile')}>
           <img src={profileUrl} alt="" />
         </button>

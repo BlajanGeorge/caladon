@@ -1125,7 +1125,7 @@ on arrival and delete the row when the troops come home or die.
 
 ## Ranking
 
-**Status: backend built, no UI yet.** Two numbers stand for a player in a world.
+**Status: built.** Two numbers stand for a player in a world.
 
 **Points** are not stored: they are the sum of `city.points` over the cities that player holds, which is
 what the map already colours cities by. Losing a city loses its points with it.
@@ -1169,6 +1169,12 @@ The response is `{ board, total, limit, next, me, rows }`. `next` is null at the
 is the caller's own standing** wherever it falls, so a player never has to page to find themselves. Each
 row is `rank`, `playerId`, `player`, `cities`, `points`, `attackPoints`, `defencePoints`, `battlePoints`.
 The caller must have joined the world.
+
+**The screen** (`RankingPage`, at `/worlds/{id}/ranking`, reached from the ranking medallion in the top
+bar). One table, four buttons for the boards, a search box, and a footer with the page size (10, 50, 100)
+and a pager. The column the board is ordered by is picked out in gold, and the caller's own row is
+highlighted and **pinned above the table** when it falls outside the page. Scrolling to the bottom asks
+for the next cursor page, so the table grows rather than jumping; the pager is there for deliberate jumps.
 
 ---
 

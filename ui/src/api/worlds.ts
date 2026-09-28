@@ -243,6 +243,30 @@ export interface Movements {
   incoming: Movement[]
 }
 
+export type RankingBoard = 'points' | 'battle' | 'attack' | 'defence'
+
+export interface Standing {
+  rank: number
+  playerId: number
+  player: string
+  cities: number
+  points: number
+  attackPoints: number
+  defencePoints: number
+  battlePoints: number
+}
+
+export interface Ranking {
+  board: RankingBoard
+  total: number
+  limit: number
+  /** Where an endless scroll continues; null at the end of the board. */
+  next: string | null
+  /** The caller's own standing, wherever it falls. */
+  me: Standing | null
+  rows: Standing[]
+}
+
 export const worldsApi = {
   list: () => api<PlayableWorld[]>('/worlds'),
   mine: () => api<{ id: number; name: string }[]>('/worlds/mine'),
@@ -270,6 +294,13 @@ export const worldsApi = {
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/movements`, { method: 'POST', body: { kind, targetX, targetY, units } }),
   recall: (worldId: number, cityId: number, movementId: number) =>
     api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/movements/${movementId}`, { method: 'DELETE' }),
+  ranking: (worldId: number, q: { board: RankingBoard; limit: number; after?: string | null; page?: number; search?: string }) => {
+    const p = new URLSearchParams({ board: q.board, limit: String(q.limit) })
+    if (q.after) p.set('after', q.after)
+    else if (q.page && q.page > 1) p.set('page', String(q.page))
+    if (q.search?.trim()) p.set('q', q.search.trim())
+    return api<Ranking>(`/worlds/${worldId}/ranking?${p}`)
+  },
   map: (worldId: number, startX: number, startY: number, endX: number, endY: number) =>
     api<MapResponse>(`/worlds/${worldId}/map?startX=${startX}&startY=${startY}&endX=${endX}&endY=${endY}`),
 }

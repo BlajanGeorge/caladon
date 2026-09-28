@@ -750,3 +750,45 @@ input { font: inherit; cursor: text; }
 .queue .q-time { color: var(--muted); font-variant-numeric: tabular-nums; flex: 1; }
 .recruit-form { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .recruit-form input { width: 72px; padding: 5px 6px; border: 1px solid var(--border); border-radius: 6px; }
+
+
+/* ---- Ranking ---------------------------------------------------------------------------------- */
+
+.rk-body { flex: 1; overflow: auto; padding: 22px; display: flex; justify-content: center; }
+.rk-panel {
+  width: min(1100px, 100%); align-self: flex-start;
+  padding: 18px 20px 16px; color: var(--overlay-text);
+  background: rgba(20, 22, 26, .94); border: var(--overlay-border); border-radius: var(--overlay-radius);
+  box-shadow: 0 10px 28px rgba(0,0,0,.6);
+}
+.rk-head { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+.rk-head h1 {
+  margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;
+  color: var(--overlay-text);
+}
+.rk-boards { display: flex; gap: 6px; }
+.rk-search { flex: 0 0 200px; margin-left: auto; text-align: left; }
+.rk-note { margin: 12px 0; font-size: 13px; color: var(--overlay-muted); }
+
+.rk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rk-table th {
+  padding: 8px 10px; text-align: right; font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--overlay-muted); border-bottom: 1px solid rgba(122,102,54,.4);
+}
+.rk-table td { padding: 7px 10px; text-align: right; font-variant-numeric: tabular-nums; }
+.rk-table tbody tr { border-bottom: 1px solid rgba(122,102,54,.16); }
+.rk-table tbody tr:hover { background: rgba(122,102,54,.12); }
+.rk-table .rk-rank { width: 70px; text-align: right; color: var(--overlay-muted); }
+.rk-table .rk-player { text-align: left; color: var(--overlay-text); font-weight: 600; }
+/* The column the board is ordered by, and the caller's own row. */
+.rk-table .rk-sorted { color: #f0c778; font-weight: 700; }
+.rk-table tbody tr.rk-me { background: rgba(199,154,68,.16); }
+.rk-table tbody tr.rk-me .rk-player { color: #fff3d4; }
+
+.rk-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 14px; }
+.rk-total { flex: 1; font-size: 12px; color: var(--overlay-muted); }
+.rk-sizes, .rk-pager { display: flex; align-items: center; gap: 6px; }
+/* The quiet button outside the Cave's row has no height of its own, so it gets one here. */
+.rk-sizes .cave-max, .rk-pager .cave-max { height: 28px; }
+.rk-sizes .cave-max.on { color: #22242a; background: rgba(199,154,68,.75); border-color: rgba(199,154,68,.9); }
+.rk-page { font-size: 12px; color: var(--overlay-muted); font-variant-numeric: tabular-nums; }

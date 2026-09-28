@@ -21,8 +21,8 @@ what is still owed, newest first. Cross off by deleting the line in the commit t
 
 ## Ranking
 
-- The backend is built (points from cities, battle points from population killed). **No UI yet**: a
-  standings screen, and the player's own rank somewhere in the HUD.
+- A board of cities by points, and tribes, when tribes exist.
+- A daily snapshot, so a row can show what it has gained since yesterday.
 
 ## Smaller things
 
