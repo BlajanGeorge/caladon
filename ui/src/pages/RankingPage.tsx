@@ -92,7 +92,7 @@ export function RankingPage() {
 
   return (
     <div className="city-shell">
-      <MapTopBar showCityButton worldName={worldName} worldId={worldId} city={state.city} />
+      <MapTopBar showCityButton showWorldButton worldName={worldName} worldId={worldId} city={state.city} />
       <main className="rk-body">
         <div className="rk-panel">
           <div className="rk-head">
