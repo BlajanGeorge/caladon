@@ -1175,7 +1175,8 @@ thing was.
 `report(id, world_id, owner_user_id, kind, created_at, read, subject_city, other_city, other_player, payload jsonb)`
 — the payload is the snapshot, since a report is never queried by its contents, only read.
 
-- `GET …/worlds/{id}/reports?limit&page&kind` — newest first, with `unread` in the response.
+- `GET …/worlds/{id}/reports?limit&page&kind` — newest first, with `unread` in the response. `kind` is a
+  **group**, `BATTLE` or `SPYING`, not one of the stored kinds.
 - `GET …/worlds/{id}/reports/{reportId}` — one report, and marks it read.
 - `DELETE …/worlds/{id}/reports/{reportId}` — a player may throw one away.
 - The top bar carries the unread count, on the reports medallion, refreshed every minute.
@@ -1184,8 +1185,11 @@ thing was.
 
 **The screen** (`ReportsPage`, at `/worlds/{id}/reports`): the list on the left, newest first, unread in
 brighter type with a dot coloured by what happened — green for a battle won, red for one lost, blue for
-spying, gold for a spy caught — and the report itself on the right. Filters for all, battles, spying and
-caught; each row can be thrown away.
+spying, gold for a spy caught — and the report itself on the right. Filters are **all, battles and spying**, the last covering a run of
+our own and one we caught alike, since a player thinks of those as one thing; each row can be thrown
+away. A row leads with the errand's medallion and an arrow: **out** is something we did, **in** is
+something done to us, so "Attack coming in" is an attack on our city and "Spy coming in" is one we
+caught. The list row carries `role` for that, read straight out of the payload.
 
 **Sending a spy** is done from the **Cave**, since that is what pays for it: the field and the silver,
 beside the line that moves silver in. `POST …/cities/{id}/spy {targetX, targetY, silver}`, refused with

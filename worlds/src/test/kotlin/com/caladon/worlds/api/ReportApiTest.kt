@@ -346,10 +346,12 @@ class ReportApiTest : ApiTestBase() {
         assertThat(afterReading["unread"].asLong()).isEqualTo(1)
         assertThat(afterReading["rows"][0]["read"].asBoolean()).isTrue()
 
-        // Narrowing by kind narrows the rows, never the unread count the top bar carries.
-        val espionage = reports(three.world, playerToken, "?kind=ESPIONAGE")
-        assertThat(espionage["total"].asLong()).isZero()
-        assertThat(espionage["unread"].asLong()).isEqualTo(1)
+        // Narrowing by kind narrows the rows, never the unread count the top bar carries. The filter is a
+        // group: SPYING covers a run of one's own and one caught alike, and these are battles.
+        val spying = reports(three.world, playerToken, "?kind=SPYING")
+        assertThat(spying["total"].asLong()).isZero()
+        assertThat(spying["unread"].asLong()).isEqualTo(1)
+        assertThat(reports(three.world, playerToken, "?kind=BATTLE")["total"].asLong()).isEqualTo(2)
         get("/api/v1/worlds/${three.world}/reports?kind=NONSENSE", playerToken).andExpect {
             status { isBadRequest() }
             jsonPath("$.error") { value("VALIDATION_ERROR") }

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import {
-  worldsApi, type BattlePayload, type CaughtPayload, type OwnedCity, type Report, type ReportKind,
+  worldsApi, type BattlePayload, type CaughtPayload, type OwnedCity, type Report, type ReportFilter,
   type Reports, type SpyPayload,
 } from '../api/worlds'
 import { MapTopBar } from '../components/MapTopBar'
 import { UNIT_ICONS } from '../city/unitIcons'
 import { BUILDING_NAMES } from '../city/format'
 import { useWorldName } from '../useWorldName'
+import attackUrl from '@assets/sprites/hud-move-attack.png'
+import spyUrl from '@assets/sprites/hud-move-spy.png'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
 import silverUrl from '@assets/sprites/hud-silver.png'
@@ -17,12 +19,25 @@ interface NavState {
   city?: OwnedCity
 }
 
-const KINDS: { kind: ReportKind | ''; label: string }[] = [
+const KINDS: { kind: ReportFilter | ''; label: string }[] = [
   { kind: '', label: 'All' },
   { kind: 'BATTLE', label: 'Battles' },
-  { kind: 'ESPIONAGE', label: 'Spying' },
-  { kind: 'ESPIONAGE_CAUGHT', label: 'Caught' },
+  // Spying covers a run of our own and one we caught; a player thinks of them as one thing.
+  { kind: 'SPYING', label: 'Spying' },
 ]
+
+/**
+ * How a row reads at a glance: whose errand it was, which way it went, and against whom. The arrow is
+ * the whole story — out is something we did, in is something done to us.
+ */
+function headline(r: Report): { mark: string; out: boolean; what: string } {
+  if (r.kind === 'BATTLE') {
+    const out = r.role === 'ATTACKER'
+    return { mark: attackUrl, out, what: out ? 'Attack going out' : 'Attack coming in' }
+  }
+  if (r.kind === 'ESPIONAGE') return { mark: spyUrl, out: true, what: 'Spying going out' }
+  return { mark: spyUrl, out: false, what: 'Spy coming in' }
+}
 
 const SIZES = [10, 50, 100]
 
@@ -149,7 +164,7 @@ export function ReportsPage() {
   const state = (useLocation().state ?? {}) as NavState
   const worldName = useWorldName(worldId, state.worldName)
 
-  const [kind, setKind] = useState<ReportKind | ''>('')
+  const [kind, setKind] = useState<ReportFilter | ''>('')
   const [limit, setLimit] = useState(50)
   const [page, setPage] = useState(1)
   const [list, setList] = useState<Reports | null>(null)
@@ -211,8 +226,16 @@ export function ReportsPage() {
               {list?.rows.map((r) => (
                 <li key={r.id} className={(r.read ? '' : 'unread ') + (open?.id === r.id ? 'open' : '')}>
                   <button type="button" className="rp-row" onClick={() => void read(r)}>
-                    <span className={'rp-dot ' + (r.kind === 'BATTLE' ? (r.won ? 'won' : 'lost') : r.kind.toLowerCase())} />
-                    <span className="rp-summary">{r.summary}</span>
+                    <img className="rp-mark" src={headline(r).mark} alt="" />
+                    <span className="rp-summary">
+                      <b className={r.kind === 'BATTLE' ? (r.won ? 'won' : 'lost') : undefined}>
+                        {headline(r).what}
+                      </b>
+                      <em>
+                        <i className="rp-way">{headline(r).out ? '→' : '←'}</i>
+                        {r.otherCity}{r.otherPlayer ? ` · ${r.otherPlayer}` : ''}
+                      </em>
+                    </span>
                     <span className="rp-when">{when(r.createdAt)}</span>
                   </button>
                   <button type="button" className="cq-cancel" title="Throw it away" onClick={() => void drop(r)}>×</button>

@@ -86,6 +86,8 @@ data class ReportRowResponse(
     val otherPlayer: String?,
     val won: Boolean?,
     val summary: String,
+    /** ATTACKER, DEFENDER or SUPPORTER for a battle; null for the rest. */
+    val role: String?,
 )
 
 /** One page of a player's reports, newest first; [unread] counts the whole world, for the top bar. */

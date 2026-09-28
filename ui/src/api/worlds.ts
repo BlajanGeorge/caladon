@@ -268,6 +268,8 @@ export interface Ranking {
 }
 
 export type ReportKind = 'BATTLE' | 'ESPIONAGE' | 'ESPIONAGE_CAUGHT'
+/** What the list may be narrowed to: a group, since spying covers a run and one caught. */
+export type ReportFilter = 'BATTLE' | 'SPYING'
 
 export interface ReportUnit {
   type: UnitType
@@ -318,6 +320,8 @@ export interface Report {
   otherPlayer: string
   won: boolean
   summary: string
+  /** Which side of a battle the reader was on; null for a spy report. */
+  role: 'ATTACKER' | 'DEFENDER' | 'SUPPORTER' | null
   payload?: BattlePayload | SpyPayload | CaughtPayload
 }
 
@@ -363,7 +367,7 @@ export const worldsApi = {
     if (q.search?.trim()) p.set('q', q.search.trim())
     return api<Ranking>(`/worlds/${worldId}/ranking?${p}`)
   },
-  reports: (worldId: number, q: { limit: number; page: number; kind?: ReportKind | '' }) => {
+  reports: (worldId: number, q: { limit: number; page: number; kind?: ReportFilter | '' }) => {
     const p = new URLSearchParams({ limit: String(q.limit), page: String(q.page) })
     if (q.kind) p.set('kind', q.kind)
     return api<Reports>(`/worlds/${worldId}/reports?${p}`)

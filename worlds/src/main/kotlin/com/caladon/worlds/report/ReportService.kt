@@ -30,6 +30,8 @@ class ReportService(private val jdbc: NamedParameterJdbcTemplate, private val ob
         val otherPlayer: String?,
         val won: Boolean?,
         val summary: String,
+        /** Which side of it the reader was on, for a battle: the list draws an arrow from it. */
+        val role: String?,
         val payload: JsonNode?,
     )
 
@@ -95,17 +97,29 @@ class ReportService(private val jdbc: NamedParameterJdbcTemplate, private val ob
         )
     }
 
+    /**
+     * What the list may be narrowed to. A filter is a **group** rather than one kind, because a player
+     * thinks of spying as one thing whether they did it or caught someone at it.
+     */
+    enum class Filter(val kinds: List<Kind>) {
+        BATTLE(listOf(Kind.BATTLE)),
+        SPYING(listOf(Kind.ESPIONAGE, Kind.ESPIONAGE_CAUGHT)),
+    }
+
     /** One page of the player's own reports, newest first, with the unread count the top bar shows. */
     @Transactional(readOnly = true)
-    fun list(worldId: Long, userId: Long, limit: Int, page: Int, kind: Kind?): Page {
+    fun list(worldId: Long, userId: Long, limit: Int, page: Int, filter: Filter?): Page {
         val size = limit.coerceIn(1, 100)
         val offset = (page.coerceAtLeast(1) - 1).toLong() * size
         val params = mapOf<String, Any?>(
-            "worldId" to worldId, "userId" to userId, "kind" to kind?.name, "limit" to size, "offset" to offset,
+            "worldId" to worldId, "userId" to userId,
+            "kinds" to filter?.kinds?.map { it.name }?.toTypedArray(),
+            "limit" to size, "offset" to offset,
         )
         val rows = jdbc.queryForList(
             """
-            SELECT id, kind, created_at, read, subject_city, other_city, other_player, won, summary
+            SELECT id, kind, created_at, read, subject_city, other_city, other_player, won, summary,
+                   payload ->> 'role' AS role
             FROM report
             WHERE world_id = :worldId AND owner_user_id = :userId $OF_KIND
             ORDER BY created_at DESC, id DESC
@@ -134,7 +148,8 @@ class ReportService(private val jdbc: NamedParameterJdbcTemplate, private val ob
             """
             UPDATE report SET read = TRUE
             WHERE id = :id AND world_id = :worldId AND owner_user_id = :userId
-            RETURNING id, kind, created_at, read, subject_city, other_city, other_player, won, summary, payload
+            RETURNING id, kind, created_at, read, subject_city, other_city, other_player, won, summary,
+                      payload ->> 'role' AS role, payload
             """.trimIndent(),
             mapOf("id" to id, "worldId" to worldId, "userId" to userId),
         ).firstOrNull() ?: throw WorldException.ReportNotFound()
@@ -160,12 +175,13 @@ class ReportService(private val jdbc: NamedParameterJdbcTemplate, private val ob
         otherPlayer = r["other_player"] as String?,
         won = r["won"] as Boolean?,
         summary = r["summary"] as String,
+        role = r["role"] as String?,
         payload = payload,
     )
 
     private companion object {
         /** The newest per player per world; older ones go as new ones arrive. */
         const val KEEP = 200
-        const val OF_KIND = "AND (CAST(:kind AS text) IS NULL OR kind = CAST(:kind AS text))"
+        const val OF_KIND = "AND (CAST(:kinds AS text[]) IS NULL OR kind = ANY(CAST(:kinds AS text[])))"
     }
 }

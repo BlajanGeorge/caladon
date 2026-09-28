@@ -26,7 +26,8 @@ class WorldController(
 
     /**
      * One page of the caller's own reports, newest first, with the unread count the top bar carries.
-     * `kind` narrows the list; `unread` and the caller's ownership never do.
+     * `kind` narrows the list to `BATTLE` or `SPYING` — the latter being a run and one caught, which a
+     * player thinks of as one thing; `unread` and the caller's ownership never narrow.
      */
     @GetMapping("/{id}/reports")
     fun reports(
@@ -38,7 +39,7 @@ class WorldController(
     ): ReportsResponse {
         worldService.requirePlayable(id, user.id)
         val which = kind?.takeIf { it.isNotBlank() }?.let { asked ->
-            ReportService.Kind.entries.firstOrNull { it.name.equals(asked, ignoreCase = true) }
+            ReportService.Filter.entries.firstOrNull { it.name.equals(asked, ignoreCase = true) }
                 ?: throw WorldException.InvalidKind(asked)
         }
         val result = reportService.list(id, user.id, limit, page, which)
@@ -77,7 +78,7 @@ class WorldController(
 
     private fun toReportRow(r: ReportService.Row) = ReportRowResponse(
         id = r.id, kind = r.kind, createdAt = r.createdAt, read = r.read, subjectCity = r.subjectCity,
-        otherCity = r.otherCity, otherPlayer = r.otherPlayer, won = r.won, summary = r.summary,
+        otherCity = r.otherCity, otherPlayer = r.otherPlayer, won = r.won, summary = r.summary, role = r.role,
     )
 
     /**
