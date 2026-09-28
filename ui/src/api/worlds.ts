@@ -34,7 +34,7 @@ export interface MapCity extends Tile {
 /** A barbarian village: a tile that can be raided, hardening as it is. */
 export interface BarbarianTile extends Tile {
   id?: number
-  /** 1, 2 or 3: how many militia stand there. Absent on an older server. */
+  /** 1, 2 or 3: how many brigands stand there. Absent on an older server. */
   level?: number
 }
 

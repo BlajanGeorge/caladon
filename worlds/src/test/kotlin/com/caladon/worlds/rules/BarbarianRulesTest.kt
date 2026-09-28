@@ -10,16 +10,16 @@ class BarbarianRulesTest {
     private val t0: Instant = Instant.parse("2024-01-01T00:00:00Z")
 
     @Test
-    fun `a village defends with its level's militia at twenty each`() {
-        assertThat(BarbarianRules.militia(1)).isEqualTo(100)
-        assertThat(BarbarianRules.militia(2)).isEqualTo(200)
-        assertThat(BarbarianRules.militia(3)).isEqualTo(300)
+    fun `a village defends with its level's brigands at twenty each`() {
+        assertThat(BarbarianRules.brigands(1)).isEqualTo(100)
+        assertThat(BarbarianRules.brigands(2)).isEqualTo(200)
+        assertThat(BarbarianRules.brigands(3)).isEqualTo(300)
         assertThat(BarbarianRules.defence(1)).isEqualTo(2000.0)
         assertThat(BarbarianRules.defence(3)).isEqualTo(6000.0)
         // A village hardens no further than three, and a level beyond the table is read as the last one.
         assertThat(BarbarianRules.hardened(1)).isEqualTo(2)
         assertThat(BarbarianRules.hardened(3)).isEqualTo(3)
-        assertThat(BarbarianRules.militia(4)).isEqualTo(300)
+        assertThat(BarbarianRules.brigands(4)).isEqualTo(300)
     }
 
     @Test
@@ -65,21 +65,21 @@ class BarbarianRulesTest {
     }
 
     @Test
-    fun `the militia meet the attack as one flat number and a tie goes to the village`() {
-        // 100 Axemen (4000) against 100 militia (2000): (2000/4000)^1.5 = 35% of the raiders.
-        val won = BarbarianRules.resolve(mapOf(Unit.AXEMAN to 100), BarbarianRules.militia(1))
+    fun `the brigands meet the attack as one flat number and a tie goes to the village`() {
+        // 100 Axemen (4000) against 100 brigands (2000): (2000/4000)^1.5 = 35% of the raiders.
+        val won = BarbarianRules.resolve(mapOf(Unit.AXEMAN to 100), BarbarianRules.brigands(1))
         assertThat(won.attackerWon).isTrue()
         assertThat(won.attackerLeft).containsEntry(Unit.AXEMAN, 65)
-        assertThat(won.militiaLeft).isZero()
+        assertThat(won.brigandsLeft).isZero()
 
-        // 10 Axemen (400) against the same 2000: the raid dies and 8 militia fall with it.
-        val lost = BarbarianRules.resolve(mapOf(Unit.AXEMAN to 10), BarbarianRules.militia(1))
+        // 10 Axemen (400) against the same 2000: the raid dies and 8 brigands fall with it.
+        val lost = BarbarianRules.resolve(mapOf(Unit.AXEMAN to 10), BarbarianRules.brigands(1))
         assertThat(lost.attackerWon).isFalse()
         assertThat(lost.attackerLeft).containsEntry(Unit.AXEMAN, 0)
-        assertThat(lost.militiaLeft).isEqualTo(92)
+        assertThat(lost.brigandsLeft).isEqualTo(92)
 
         // 50 Axemen are exactly 2000: a tie goes to the village, as it does to a defending city.
-        assertThat(BarbarianRules.resolve(mapOf(Unit.AXEMAN to 50), BarbarianRules.militia(1)).attackerWon).isFalse()
+        assertThat(BarbarianRules.resolve(mapOf(Unit.AXEMAN to 50), BarbarianRules.brigands(1)).attackerWon).isFalse()
     }
 
     @Test

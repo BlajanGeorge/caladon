@@ -10,7 +10,7 @@ import java.time.Instant
 
 /**
  * Raidable, never owned or conquered (ARCHITECTURE.md → Raiding barbarians): a level that says how many
- * militia stand there, a store that refills to the level's ceiling, and the two clocks the store and the
+ * brigands stand there, a store that refills to the level's ceiling, and the two clocks the store and the
  * hardening are measured from.
  */
 @Entity

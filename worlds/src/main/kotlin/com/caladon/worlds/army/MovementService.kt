@@ -400,7 +400,7 @@ class MovementService(
     /**
      * A raid on a barbarian village (ARCHITECTURE.md → Raiding barbarians): the store is brought up to
      * date first, then whatever hardening the village has been left too long to keep falls away, and only
-     * then do the militia meet the attack. The dead militia free nothing: nobody paid for them.
+     * then do the brigands meet the attack. The dead brigands free nothing: nobody paid for them.
      */
     private fun arriveRaid(m: CityMovement, villageId: Long, origin: CityState) {
         val village = barbarianVillageRepository.findWithLockById(villageId)
@@ -412,16 +412,16 @@ class MovementService(
         fallBack(village, origin.now)
 
         val attackers = unitsOf(m)
-        val militia = BarbarianRules.militia(village.level)
-        val raid = BarbarianRules.resolve(attackers, militia)
+        val brigands = BarbarianRules.brigands(village.level)
+        val raid = BarbarianRules.resolve(attackers, brigands)
         val survivors = raid.attackerLeft.filterValues { it > 0 }
         val attackerFreed = attackers.entries.sumOf { (u, n) -> u.population.toLong() * (n - (survivors[u] ?: 0)) }
         origin.resources.population += attackerFreed.toInt()
         writeUnits(requireNotNull(m.id), survivors)
 
-        // A militiaman is worth one population, so a raid earns something and far less than a battle.
-        val militiaKilled = (militia - raid.militiaLeft).toLong()
-        rankingService.award(origin.city.worldId, origin.city.ownerUserId, attack = militiaKilled)
+        // A brigand is worth one population, so a raid earns something and far less than a battle.
+        val brigandsKilled = (brigands - raid.brigandsLeft).toLong()
+        rankingService.award(origin.city.worldId, origin.city.ownerUserId, attack = brigandsKilled)
 
         var taken: Triple<Long, Long, Long>? = null
         if (raid.attackerWon && survivors.isNotEmpty()) {
@@ -438,7 +438,7 @@ class MovementService(
             village.raidedAt = origin.now
         }
 
-        writeRaidReport(origin, attackers, survivors, militia, raid, taken)
+        writeRaidReport(origin, attackers, survivors, brigands, raid, taken)
         if (survivors.isEmpty()) {
             m.applied = true
             return
@@ -472,25 +472,25 @@ class MovementService(
     }
 
     /**
-     * The one report a raid writes, to the raider: there is nobody at the other end to tell. The militia
+     * The one report a raid writes, to the raider: there is nobody at the other end to tell. The brigands
      * are the defending side, a count rather than a roster, and there is no Wall behind them.
      */
     private fun writeRaidReport(
         origin: CityState,
         sent: Map<Unit, Int>,
         survivors: Map<Unit, Int>,
-        militia: Int,
+        brigands: Int,
         raid: BarbarianRules.Raid,
         plunder: Triple<Long, Long, Long>?,
     ) {
         val attackerSide = SidePayload(
             player = refs(setOf(origin.cityId))[origin.cityId]?.player ?: "", city = origin.city.name,
             units = tallies(sent) { survivors[it] ?: 0 },
-            points = (militia - raid.militiaLeft).toLong(),
+            points = (brigands - raid.brigandsLeft).toLong(),
         )
         val defenderSide = SidePayload(
             player = "", city = BarbarianRules.NAME,
-            units = listOf(UnitTallyPayload(MILITIA, "Militia", militia, militia - raid.militiaLeft, raid.militiaLeft)),
+            units = listOf(UnitTallyPayload(BRIGAND, "Brigand", brigands, brigands - raid.brigandsLeft, raid.brigandsLeft)),
             points = killed(sent, survivors),
         )
         reportService.write(
@@ -796,8 +796,8 @@ class MovementService(
         /** The share of its flight an attack is in sight for: the last quarter. */
         const val SIGHTED = 0.25
 
-        /** What the militia stand as in a report: a count, not a type the Barracks has ever heard of. */
-        const val MILITIA = "MILITIA"
+        /** What the brigands stand as in a report: a count, not a type the Barracks has ever heard of. */
+        const val BRIGAND = "BRIGAND"
 
         /** One pass processes a chain of legs (out, home, and a recall in between); a bound, never reached. */
         const val MAX_ARRIVALS = 64

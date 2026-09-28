@@ -272,7 +272,7 @@ function InfoPanel(
           <h3>Barbarian village</h3>
           <dl>
             {entity.tile.level !== undefined && (
-              <><dt>Defenders</dt><dd>{(entity.tile.level * 100).toLocaleString()} militia</dd></>
+              <><dt>Defenders</dt><dd>{(entity.tile.level * 100).toLocaleString()} brigands</dd></>
             )}
             <dt>Coordinates</dt><dd>{entity.tile.x}, {entity.tile.y}</dd>
           </dl>

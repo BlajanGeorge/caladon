@@ -16,10 +16,10 @@ object BarbarianRules {
     /** Level 1 is a fresh village; a village hardens no further than 3. */
     const val MAX_LEVEL = 3
 
-    const val MILITIA_PER_LEVEL = 100
+    const val BRIGANDS_PER_LEVEL = 100
 
-    /** What one militiaman is worth against every kind of attack: no arms, no Wall. */
-    const val DEFENCE_PER_MAN = 20
+    /** What one brigand is worth against every kind of attack: no arms, no Wall. */
+    const val DEFENCE_PER_BRIGAND = 20
 
     const val STORE_PER_LEVEL = 1000L
     const val REFILL_PER_LEVEL_PER_HOUR = 100.0
@@ -33,10 +33,10 @@ object BarbarianRules {
     /** Untouched for this long, a village gives up a level of the hardening a raid bought it. */
     val FALL_BACK_AFTER: Duration = Duration.ofHours(24)
 
-    fun militia(level: Int): Int = MILITIA_PER_LEVEL * level.coerceIn(1, MAX_LEVEL)
+    fun brigands(level: Int): Int = BRIGANDS_PER_LEVEL * level.coerceIn(1, MAX_LEVEL)
 
-    /** The whole militia's defence, met by every arm alike. */
-    fun defence(level: Int): Double = militia(level).toDouble() * DEFENCE_PER_MAN
+    /** The whole band's defence, met by every arm alike. */
+    fun defence(level: Int): Double = brigands(level).toDouble() * DEFENCE_PER_BRIGAND
 
     fun ceiling(level: Int): Long = STORE_PER_LEVEL * level.coerceIn(1, MAX_LEVEL)
 
@@ -89,15 +89,15 @@ object BarbarianRules {
     }
 
     /** What a raid did: who was left standing on each side. */
-    data class Raid(val attackerWon: Boolean, val attackerLeft: Map<Unit, Int>, val militiaLeft: Int)
+    data class Raid(val attackerWon: Boolean, val attackerLeft: Map<Unit, Int>, val brigandsLeft: Int)
 
     /**
-     * The militia meet the attack as one flat number rather than a roster, with no Wall behind them. A
+     * The brigands meet the attack as one flat number rather than a roster, with no Wall behind them. A
      * tie goes to the village, and the winner loses the ordinary `(loser/winner)^1.5` of itself.
      */
-    fun resolve(attackers: Map<Unit, Int>, militia: Int): Raid {
+    fun resolve(attackers: Map<Unit, Int>, brigands: Int): Raid {
         val attackPower = attackers.entries.sumOf { it.key.attack.toDouble() * it.value }
-        val defencePower = militia.toDouble() * DEFENCE_PER_MAN
+        val defencePower = brigands.toDouble() * DEFENCE_PER_BRIGAND
         val won = attackPower > defencePower
         val loss = MovementRules.losses(
             if (won) defencePower else attackPower,
@@ -106,7 +106,7 @@ object BarbarianRules {
         return Raid(
             attackerWon = won,
             attackerLeft = attackers.mapValues { if (won) MovementRules.survivors(it.value, loss) else 0 },
-            militiaLeft = if (won) 0 else MovementRules.survivors(militia, loss),
+            brigandsLeft = if (won) 0 else MovementRules.survivors(brigands, loss),
         )
     }
 

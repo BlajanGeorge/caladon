@@ -898,7 +898,7 @@ capacity when plundering.
 | `NOBLEMAN`  | Nobleman      | conquest: lowers loyalty, takes the city | 40 000 / 50 000 / 50 000 | 100 | 5 h       | 30  | 100 / 50 / 100      | 35    | 0     | 20         | 20                 |
 
 Fixed and global: a Kotlin enum with these stats as constants. Not in the game: Mounted Archer, Paladin,
-Militia.
+Militia. The brigands who hold a barbarian village are not in it either: they are a number, not a unit.
 
 ### Recruitment (Barracks)
 
@@ -1134,14 +1134,14 @@ to support and nothing to learn.
 
 ### What defends one
 
-A village defends with **militia**, a number of men rather than a roster: 20 defence each against every
+A village defends with **brigands**, a number of men rather than a roster: 20 defence each against every
 kind of attack, no arms, no Wall. A village starts at **100 men** and hardens as it is raided — **200**
 after it has been taken once, **300** after twice, and no further. Left alone for **24 hours** it falls
 back a step, so a village nobody bothers drifts back to 100 rather than standing at 300 for ever.
 
 So a fresh village defends with 2 000 and a hardened one with 6 000: 100 Axemen (4 000 attack) take the
 first easily and lose to the last. Losses follow the ordinary combat rules, the winner losing
-`(loser/winner)^1.5` of itself; the militia that die are simply gone, and free nothing, because nobody
+`(loser/winner)^1.5` of itself; the brigands that die are simply gone, and free nothing, because nobody
 paid for them.
 
 ### What can be taken
@@ -1169,9 +1169,9 @@ A movement may target a village instead of a city: `city_movement` gains a nulla
 
 ### What the player sees
 
-A **battle report** as for any attack, with the militia as the defending side — a count rather than a
-roster, typed `MILITIA` so nothing had to be added to the unit roster — the plunder taken, and no Wall.
-Battle points are the population killed, and militia count **1 each**, so a raid is worth something but
+A **battle report** as for any attack, with the brigands as the defending side — a count rather than a
+roster, typed `BRIGAND` so nothing had to be added to the unit roster — the plunder taken, and no Wall.
+Battle points are the population killed, and brigands count **1 each**, so a raid is worth something but
 far less than a real battle. A raid that loses everything learns only its own dead, as any beaten attack
 does, and leaves the village untouched: it neither hardens nor resets its clock.
 

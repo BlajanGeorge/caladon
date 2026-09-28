@@ -113,7 +113,7 @@ class RaidApiTest : ApiTestBase() {
         assertThat(out["y"].asInt()).isEqualTo(raid.y)
 
         jump(5401)
-        // 4000 attack against 100 militia (2000): the raid wins, losing 35 of its 100 axemen.
+        // 4000 attack against 100 brigands (2000): the raid wins, losing 35 of its 100 axemen.
         val home = movements(raid)["outgoing"].single()
         assertThat(home["direction"].asText()).isEqualTo("HOMEWARD")
         assertThat(home["units"].single()["count"].asInt()).isEqualTo(65)
@@ -136,7 +136,7 @@ class RaidApiTest : ApiTestBase() {
     }
 
     @Test
-    fun `a second raid meets twice the militia and a store refilled only by the time elapsed`() {
+    fun `a second raid meets twice the brigands and a store refilled only by the time elapsed`() {
         val raid = oneVillage()
         give(raid.city, Unit.AXEMAN, 100)
         send(raid, mapOf("AXEMAN" to 100)).andExpect { status { isOk() } }
@@ -150,7 +150,7 @@ class RaidApiTest : ApiTestBase() {
 
         val payload = report(raid, reports(raid)["rows"][0]["id"].asLong())["payload"]
         assertThat(payload["defender"]["units"].single()["sent"].asInt()).isEqualTo(200)
-        // 8000 against 200 militia (4000): 70 of the 200 axemen fall, and the share is still 200 each.
+        // 8000 against 200 brigands (4000): 70 of the 200 axemen fall, and the share is still 200 each.
         assertThat(payload["attacker"]["units"].single()["left"].asInt()).isEqualTo(130)
         assertThat(payload["plunder"]["wood"].asLong()).isEqualTo(200)
         val after = village(raid.village)
@@ -165,7 +165,7 @@ class RaidApiTest : ApiTestBase() {
         send(raid, mapOf("AXEMAN" to 10)).andExpect { status { isOk() } }
 
         jump(5401)
-        // 400 against 2000: the raid dies to the last man and 8 militia fall with it.
+        // 400 against 2000: the raid dies to the last man and 8 brigands fall with it.
         assertThat(movements(raid)["outgoing"]).isEmpty()
         assertThat(cityUnitRepository.findById(CityUnitId(raid.city, Unit.AXEMAN)).orElseThrow().count).isZero()
         val after = village(raid.village)
@@ -178,7 +178,7 @@ class RaidApiTest : ApiTestBase() {
         val payload = report(raid, row["id"].asLong())["payload"]
         assertThat(payload["attacker"]["units"].single()["lost"].asInt()).isEqualTo(10)
         assertThat(payload["plunder"].isNull).isTrue()
-        // The militia are not paid for: what they killed earns the raider nothing back.
+        // The brigands are not paid for: what they killed earns the raider nothing back.
         assertThat(payload["attacker"]["points"].asLong()).isEqualTo(8)
     }
 
@@ -268,7 +268,7 @@ class RaidApiTest : ApiTestBase() {
     }
 
     @Test
-    fun `the report names the militia as the defending side and pays the raider a point a man`() {
+    fun `the report names the brigands as the defending side and pays the raider a point a man`() {
         val raid = oneVillage()
         give(raid.city, Unit.AXEMAN, 100)
         send(raid, mapOf("AXEMAN" to 100)).andExpect { status { isOk() } }
@@ -286,13 +286,13 @@ class RaidApiTest : ApiTestBase() {
         val payload = report(raid, row["id"].asLong())["payload"]
         assertThat(payload["role"].asText()).isEqualTo("ATTACKER")
         assertThat(payload["attacker"]["player"].asText()).isEqualTo("george")
-        assertThat(payload["attacker"]["points"].asLong()).isEqualTo(100)   // a militiaman is one population
-        val militia = payload["defender"]["units"].single()
-        assertThat(militia["type"].asText()).isEqualTo("MILITIA")
-        assertThat(militia["name"].asText()).isEqualTo("Militia")
-        assertThat(militia["sent"].asInt()).isEqualTo(100)
-        assertThat(militia["lost"].asInt()).isEqualTo(100)
-        assertThat(militia["left"].asInt()).isZero()
+        assertThat(payload["attacker"]["points"].asLong()).isEqualTo(100)   // a brigand is one population
+        val brigands = payload["defender"]["units"].single()
+        assertThat(brigands["type"].asText()).isEqualTo("BRIGAND")
+        assertThat(brigands["name"].asText()).isEqualTo("Brigand")
+        assertThat(brigands["sent"].asInt()).isEqualTo(100)
+        assertThat(brigands["lost"].asInt()).isEqualTo(100)
+        assertThat(brigands["left"].asInt()).isZero()
         assertThat(payload["defender"]["player"].asText()).isEmpty()
         assertThat(payload["defender"]["city"].asText()).isEqualTo("Barbarian village")
         assertThat(payload["defender"]["points"].asLong()).isEqualTo(35)   // the axemen it took with it
