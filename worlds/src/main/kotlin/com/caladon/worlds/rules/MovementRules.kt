@@ -87,6 +87,29 @@ object MovementRules {
         val defenderLeft: Map<K, Map<Unit, Int>>,
     )
 
+    /**
+     * What the surviving siege engines are worth against the Wall (ARCHITECTURE.md → Reports → The Wall,
+     * rams and catapults): a Ram 1, a Catapult 2. Only survivors batter anything, so a lost attack is
+     * handed an empty map and does no damage.
+     */
+    fun siegeStrength(survivors: Map<Unit, Int>): Int =
+        (survivors[Unit.RAM] ?: 0).coerceAtLeast(0) + 2 * (survivors[Unit.CATAPULT] ?: 0).coerceAtLeast(0)
+
+    /**
+     * The Wall left after [strength] has been spent on it. Each level costs `2 × L` to take from `L` to
+     * `L − 1`, paid from the top down, so the first level off a Wall is always its dearest; what is left
+     * over at level 0 is wasted.
+     */
+    fun wallAfter(level: Int, strength: Int): Int {
+        var standing = level.coerceAtLeast(0)
+        var left = strength
+        while (standing > 0 && left >= 2 * standing) {
+            left -= 2 * standing
+            standing--
+        }
+        return standing
+    }
+
     /** The fraction of itself the winner loses: `(loser / winner)^1.5`. */
     fun losses(loserPower: Double, winnerPower: Double): Double =
         if (winnerPower <= 0.0) 0.0 else (loserPower / winnerPower).coerceIn(0.0, 1.0).pow(1.5)

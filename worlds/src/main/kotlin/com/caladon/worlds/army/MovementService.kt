@@ -3,6 +3,18 @@ package com.caladon.worlds.army
 import com.caladon.users.domain.Role
 import com.caladon.worlds.map.MapQueryDao
 import com.caladon.worlds.ranking.RankingService
+import com.caladon.worlds.report.BattlePayload
+import com.caladon.worlds.report.BattleRole
+import com.caladon.worlds.report.BuildingLevelPayload
+import com.caladon.worlds.report.CaughtPayload
+import com.caladon.worlds.report.EspionagePayload
+import com.caladon.worlds.report.ReportService
+import com.caladon.worlds.report.ResourcesPayload
+import com.caladon.worlds.report.SeenPayload
+import com.caladon.worlds.report.SidePayload
+import com.caladon.worlds.report.UnitCountPayload
+import com.caladon.worlds.report.UnitTallyPayload
+import com.caladon.worlds.report.WallPayload
 import com.caladon.worlds.repository.CityRepository
 import com.caladon.worlds.repository.CitySlotRepository
 import com.caladon.worlds.resources.CityAccess
@@ -35,6 +47,7 @@ class MovementService(
     private val movementUnitRepository: CityMovementUnitRepository,
     private val mapQueryDao: MapQueryDao,
     private val rankingService: RankingService,
+    private val reportService: ReportService,
     private val jdbc: NamedParameterJdbcTemplate,
 ) {
     data class MovementUnitView(val unit: Unit, val count: Int)
@@ -138,6 +151,39 @@ class MovementService(
         return state
     }
 
+    /**
+     * Sends a spy mission at the city on `(targetX, targetY)`, paid for out of this city's Cave. The
+     * silver goes at once and never comes back: it bought the attempt, not the outcome. While the
+     * mission is anywhere on the road, out or back, the city may not send another at the same target.
+     */
+    @Transactional
+    fun spy(worldId: Long, cityId: Long, userId: Long, role: Role, targetX: Int, targetY: Int, silver: Long): CityState {
+        if (silver <= 0) throw WorldException.InvalidAmount()
+        val state = cityAccess.open(worldId, cityId, userId, role)
+        val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY) ?: throw WorldException.CityNotFound()
+        if (targetId == state.cityId) throw WorldException.SameCity()
+        if (state.level(Building.CAVE) < 1) throw WorldException.RequirementsNotMet(mapOf(Building.CAVE.name to "1"))
+        if (state.resources.caveSilver < silver) {
+            throw WorldException.NotEnoughSilver((silver - state.resources.caveSilver).toString())
+        }
+        if (movementRepository.existsByOriginCityIdAndTargetCityIdAndKindAndAppliedFalse(cityId, targetId, MovementKind.ESPIONAGE)) {
+            throw WorldException.AlreadySpying()
+        }
+
+        state.resources.caveSilver -= silver
+        val (x, y) = cityAccess.coordinates(state)
+        val target = requireNotNull(refs(setOf(targetId))[targetId])
+        val seconds = MovementRules.travelSeconds(MovementRules.distance(x, y, target.x, target.y), MovementRules.SPY_SPEED)
+        movementRepository.save(
+            CityMovement(
+                worldId = worldId, originCityId = cityId, targetCityId = targetId, kind = MovementKind.ESPIONAGE,
+                direction = MovementDirection.OUTWARD, departsAt = state.now, arrivesAt = state.now.plusSeconds(seconds),
+                carriedSilver = silver,
+            ),
+        )
+        return state
+    }
+
     // ---- recall ----
 
     /**
@@ -224,9 +270,7 @@ class MovementService(
         when {
             m.direction == MovementDirection.HOMEWARD -> arriveHome(m, origin)
             m.kind == MovementKind.SUPPORT -> arriveSupport(m, target)
-            // A spy mission has nothing to resolve against until the Cave and reports are wired up; it
-            // turns around so it cannot sit on the road for ever.
-            m.kind == MovementKind.ESPIONAGE -> turnAroundAt(m, MovementRules.SPY_SPEED, origin, target)
+            m.kind == MovementKind.ESPIONAGE -> arriveEspionage(m, origin, target)
             else -> arriveAttack(m, origin, target)
         }
     }
@@ -260,7 +304,8 @@ class MovementService(
             put(target.cityId, target.units.mapValues { it.value.count }.filterValues { it > 0 })
             for ((ownerId, rows) in support.groupBy { it.id.ownerCityId }) put(ownerId, rows.associate { it.id.unit to it.count })
         }
-        val combat = MovementRules.resolve(attackers, defenders, target.level(Building.WALL))
+        val wallBefore = target.level(Building.WALL)
+        val combat = MovementRules.resolve(attackers, defenders, wallBefore)
 
         // The dead free the population they were paid for, each to the city that raised them: the target
         // for its own, every supporter for the troops it lent, and the attacker for what it lost.
@@ -295,24 +340,174 @@ class MovementService(
             killedAttacking = attackerFreed,
             defenceByHolder = combat.defenceByHolder,
         )
+        // Only a winner has survivors, so only a winner batters the Wall and only a winner plunders.
+        var wallAfter = wallBefore
+        var taken: Triple<Long, Long, Long>? = null
+        if (combat.attackerWon && survivors.isNotEmpty()) {
+            wallAfter = MovementRules.wallAfter(wallBefore, MovementRules.siegeStrength(survivors))
+            damageWall(target, wallBefore, wallAfter)
+
+            val hidden = BuildingRules.vault(target.level(Building.VAULT))
+            val plundered = MovementRules.plunder(
+                Triple(target.resources.wood - hidden, target.resources.stone - hidden, target.resources.silver - hidden),
+                MovementRules.carry(survivors),
+            )
+            target.resources.wood -= plundered.first
+            target.resources.stone -= plundered.second
+            target.resources.silver -= plundered.third
+            m.carriedWood = plundered.first
+            m.carriedStone = plundered.second
+            m.carriedSilver = plundered.third
+            taken = plundered.takeIf { it.first + it.second + it.third > 0 }
+        }
+
+        writeBattleReports(
+            origin = origin, target = target, sent = attackers, survivors = survivors,
+            defenders = defenders, defenderLeft = combat.defenderLeft, attackerWon = combat.attackerWon,
+            plunder = taken, wall = WallPayload(wallBefore, wallAfter), supporters = supporters,
+        )
         if (survivors.isEmpty()) {
             m.applied = true
             return
         }
-        if (combat.attackerWon) {
-            val hidden = BuildingRules.vault(target.level(Building.VAULT))
-            val taken = MovementRules.plunder(
-                Triple(target.resources.wood - hidden, target.resources.stone - hidden, target.resources.silver - hidden),
-                MovementRules.carry(survivors),
-            )
-            target.resources.wood -= taken.first
-            target.resources.stone -= taken.second
-            target.resources.silver -= taken.third
-            m.carriedWood = taken.first
-            m.carriedStone = taken.second
-            m.carriedSilver = taken.third
-        }
         turnAround(m, survivors, origin, target)
+    }
+
+    /**
+     * Takes the levels the siege engines knocked off the Wall, and the points with them: a level that is
+     * gone is a level the city is no longer worth.
+     */
+    private fun damageWall(target: CityState, before: Int, after: Int) {
+        if (after >= before) return
+        val row = target.buildings[Building.WALL] ?: return
+        row.level = after
+        target.city.points -= (BuildingRules.points(Building.WALL, before) - BuildingRules.points(Building.WALL, after)).toInt()
+    }
+
+    /**
+     * One report per player who was in the fight. The defender and every supporter see it whole; a
+     * beaten attacker sees only its own dead, since nobody survived to carry the news back.
+     *
+     * A player who supported from two cities gets **one** report, not two: a report is what a player is
+     * left with, and the defending side is reported as one army in any case. A player who is already
+     * being written to as the defender — or, oddly, as the attacker — is not written to twice.
+     */
+    private fun writeBattleReports(
+        origin: CityState,
+        target: CityState,
+        sent: Map<Unit, Int>,
+        survivors: Map<Unit, Int>,
+        defenders: Map<Long, Map<Unit, Int>>,
+        defenderLeft: Map<Long, Map<Unit, Int>>,
+        attackerWon: Boolean,
+        plunder: Triple<Long, Long, Long>?,
+        wall: WallPayload,
+        supporters: Map<Long, Long>,
+    ) {
+        val worldId = target.city.worldId
+        val names = refs(setOf(origin.cityId, target.cityId) + supporters.keys)
+        val attackerSide = SidePayload(
+            player = names[origin.cityId]?.player ?: "", city = origin.city.name,
+            units = tallies(sent) { survivors[it] ?: 0 },
+        )
+        // The whole defence as one army: the city's own troops and every supporter's, which is the army
+        // the attack actually met.
+        val defenderSent = merge(defenders.values)
+        val defenderSide = SidePayload(
+            player = names[target.cityId]?.player ?: "", city = target.city.name,
+            units = tallies(defenderSent, merge(defenderLeft.values)::getValue),
+        )
+        val loot = plunder?.let { ResourcesPayload(it.first, it.second, it.third) }
+
+        reportService.write(
+            worldId = worldId, ownerUserId = origin.city.ownerUserId, kind = ReportService.Kind.BATTLE,
+            createdAt = origin.now, subjectCity = origin.city.name, otherCity = target.city.name,
+            otherPlayer = defenderSide.player, won = attackerWon, summary = "Attack on ${target.city.name}",
+            payload = BattlePayload(
+                role = BattleRole.ATTACKER, attacker = attackerSide,
+                defender = defenderSide.takeIf { attackerWon }, plunder = loot.takeIf { attackerWon },
+                wall = wall.takeIf { attackerWon },
+            ),
+        )
+        reportService.write(
+            worldId = worldId, ownerUserId = target.city.ownerUserId, kind = ReportService.Kind.BATTLE,
+            createdAt = target.now, subjectCity = target.city.name, otherCity = origin.city.name,
+            otherPlayer = attackerSide.player, won = !attackerWon, summary = "Attack from ${origin.city.name}",
+            payload = BattlePayload(BattleRole.DEFENDER, attackerSide, defenderSide, loot, wall),
+        )
+
+        val written = setOf(target.city.ownerUserId, origin.city.ownerUserId)
+        for ((userId, cityIds) in supporters.entries.groupBy({ it.value }, { it.key })) {
+            if (userId in written) continue
+            val own = cityIds.min()
+            reportService.write(
+                worldId = worldId, ownerUserId = userId, kind = ReportService.Kind.BATTLE,
+                createdAt = target.now, subjectCity = names[own]?.name ?: "", otherCity = target.city.name,
+                otherPlayer = defenderSide.player, won = !attackerWon, summary = "Battle at ${target.city.name}",
+                payload = BattlePayload(BattleRole.SUPPORTER, attackerSide, defenderSide, loot, wall),
+            )
+        }
+    }
+
+    /** The three numbers a report gives per unit type: what set out, what died, and what is left. */
+    private fun tallies(sent: Map<Unit, Int>, left: (Unit) -> Int): List<UnitTallyPayload> =
+        Unit.entries.mapNotNull { u ->
+            val out = sent[u] ?: 0
+            if (out <= 0) null else UnitTallyPayload(u, u.displayName, out, out - left(u), left(u))
+        }
+
+    private fun merge(held: Collection<Map<Unit, Int>>): Map<Unit, Int> =
+        Unit.entries.associateWith { u -> held.sumOf { it[u] ?: 0 } }
+
+    /**
+     * The silver committed meets the target's Cave: more than it holds and the spy sees everything and is
+     * never noticed; not more and it learns only that it failed, while the target learns by whom. The
+     * silver is spent either way, so the mission comes home empty.
+     */
+    private fun arriveEspionage(m: CityMovement, origin: CityState, target: CityState) {
+        val silver = m.carriedSilver
+        val success = silver > target.resources.caveSilver
+        val names = refs(setOf(origin.cityId, target.cityId))
+        val worldId = target.city.worldId
+
+        reportService.write(
+            worldId = worldId, ownerUserId = origin.city.ownerUserId, kind = ReportService.Kind.ESPIONAGE,
+            createdAt = origin.now, subjectCity = origin.city.name, otherCity = target.city.name,
+            otherPlayer = names[target.cityId]?.player, won = success,
+            summary = if (success) "Espionage of ${target.city.name}" else "Espionage of ${target.city.name} failed",
+            payload = EspionagePayload(success, silver, seen = if (success) seen(target) else null),
+        )
+        if (!success) {
+            reportService.write(
+                worldId = worldId, ownerUserId = target.city.ownerUserId, kind = ReportService.Kind.ESPIONAGE_CAUGHT,
+                createdAt = target.now, subjectCity = target.city.name, otherCity = origin.city.name,
+                otherPlayer = names[origin.cityId]?.player, won = true,
+                summary = "Caught a spy from ${origin.city.name}",
+                payload = CaughtPayload(names[origin.cityId]?.player ?: "", origin.city.name, silver),
+            )
+        }
+        // The silver bought the attempt: nothing comes back with the mission, and the way home is the
+        // cooldown that holds the city to one mission per target.
+        m.carriedSilver = 0
+        turnAroundAt(m, MovementRules.SPY_SPEED, origin, target)
+    }
+
+    /** The city as the spy found it. Its Cave silver is not in here: hiding that is what the Cave is for. */
+    private fun seen(target: CityState): SeenPayload {
+        val standing = merge(
+            listOf(target.units.mapValues { it.value.count }) +
+                citySupportRepository.findAllByIdHostCityId(target.cityId)
+                    .filter { it.id.ownerCityId != target.cityId }
+                    .groupBy { it.id.ownerCityId }
+                    .map { (_, rows) -> rows.associate { it.id.unit to it.count } },
+        )
+        return SeenPayload(
+            resources = ResourcesPayload(target.resources.wood, target.resources.stone, target.resources.silver),
+            buildings = Building.entries.mapNotNull { b ->
+                target.level(b).takeIf { it > 0 }?.let { BuildingLevelPayload(b, it) }
+            },
+            units = standing.entries.filter { it.value > 0 }.map { UnitCountPayload(it.key, it.key.displayName, it.value) },
+        )
     }
 
     /** The way home takes as long as the way out, at the speed of whoever is left. */

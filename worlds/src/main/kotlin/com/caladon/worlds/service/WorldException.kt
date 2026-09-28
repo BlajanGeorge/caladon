@@ -32,7 +32,12 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class AlreadyArrived : WorldException(HttpStatus.CONFLICT, "ALREADY_ARRIVED")
     /** details: silver over what the Cave can still hold. */
     class CaveFull(over: String) : WorldException(HttpStatus.CONFLICT, "CAVE_FULL", mapOf("silver" to over))
+    class ReportNotFound : WorldException(HttpStatus.NOT_FOUND, "REPORT_NOT_FOUND")
+    /** details: silver the Cave is short of what the mission would cost. */
+    class NotEnoughSilver(shortfall: String) : WorldException(HttpStatus.CONFLICT, "NOT_ENOUGH_SILVER", mapOf("silver" to shortfall))
+    class AlreadySpying : WorldException(HttpStatus.CONFLICT, "ALREADY_SPYING")
     class InvalidAmount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("amount" to "must be positive"))
+    class InvalidKind(kind: String) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("kind" to kind))
     class InvalidBoard(board: String) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("board" to board))
     class InvalidCount : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", mapOf("count" to "must be between 1 and 10000"))
     class InvalidViewport(details: Map<String, String>) : WorldException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", details)

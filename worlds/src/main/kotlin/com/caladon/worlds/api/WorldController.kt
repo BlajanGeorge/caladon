@@ -3,9 +3,12 @@ package com.caladon.worlds.api
 import com.caladon.users.security.AuthenticatedUser
 import com.caladon.worlds.map.Viewport
 import com.caladon.worlds.ranking.RankingService
+import com.caladon.worlds.report.ReportService
 import com.caladon.worlds.service.WorldException
 import com.caladon.worlds.service.WorldService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,7 +21,64 @@ import org.springframework.web.bind.annotation.RestController
 class WorldController(
     private val worldService: WorldService,
     private val rankingService: RankingService,
+    private val reportService: ReportService,
 ) {
+
+    /**
+     * One page of the caller's own reports, newest first, with the unread count the top bar carries.
+     * `kind` narrows the list; `unread` and the caller's ownership never do.
+     */
+    @GetMapping("/{id}/reports")
+    fun reports(
+        @AuthenticationPrincipal user: AuthenticatedUser,
+        @PathVariable id: Long,
+        @RequestParam(defaultValue = "50") limit: Int,
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(required = false) kind: String?,
+    ): ReportsResponse {
+        worldService.requirePlayable(id, user.id)
+        val which = kind?.takeIf { it.isNotBlank() }?.let { asked ->
+            ReportService.Kind.entries.firstOrNull { it.name.equals(asked, ignoreCase = true) }
+                ?: throw WorldException.InvalidKind(asked)
+        }
+        val result = reportService.list(id, user.id, limit, page, which)
+        return ReportsResponse(
+            unread = result.unread, total = result.total, limit = result.limit, page = result.page,
+            rows = result.rows.map(::toReportRow),
+        )
+    }
+
+    /** One report, marked read by the reading. Someone else's does not exist as far as the caller sees. */
+    @GetMapping("/{id}/reports/{reportId}")
+    fun report(
+        @AuthenticationPrincipal user: AuthenticatedUser,
+        @PathVariable id: Long,
+        @PathVariable reportId: Long,
+    ): ReportResponse {
+        worldService.requirePlayable(id, user.id)
+        val r = reportService.read(id, user.id, reportId)
+        return ReportResponse(
+            id = r.id, kind = r.kind, createdAt = r.createdAt, read = r.read, subjectCity = r.subjectCity,
+            otherCity = r.otherCity, otherPlayer = r.otherPlayer, won = r.won, summary = r.summary, payload = r.payload,
+        )
+    }
+
+    /** A player may throw one away. */
+    @DeleteMapping("/{id}/reports/{reportId}")
+    fun deleteReport(
+        @AuthenticationPrincipal user: AuthenticatedUser,
+        @PathVariable id: Long,
+        @PathVariable reportId: Long,
+    ): ResponseEntity<Void> {
+        worldService.requirePlayable(id, user.id)
+        reportService.delete(id, user.id, reportId)
+        return ResponseEntity.noContent().build()
+    }
+
+    private fun toReportRow(r: ReportService.Row) = ReportRowResponse(
+        id = r.id, kind = r.kind, createdAt = r.createdAt, read = r.read, subjectCity = r.subjectCity,
+        otherCity = r.otherCity, otherPlayer = r.otherPlayer, won = r.won, summary = r.summary,
+    )
 
     /**
      * One page of the world's standings, best first. Ordered by city points unless another `board` is

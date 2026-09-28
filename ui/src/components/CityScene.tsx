@@ -60,13 +60,14 @@ interface Props {
   onRecall: (movementId: number) => void
   onSend: (kind: MovementKind, x: number, y: number, units: Partial<Record<UnitType, number>>) => void
   onStoreSilver: (amount: number) => void
+  onSpy: (x: number, y: number, silver: number) => void
 }
 
 /**
  * The city view: the picture fills the whole view with the side panel floating over it, which holds the city's name, its resources and its troops. Plot labels (later:
  * building sprites) live inside the picture box, so their percentage anchors stay on the plots.
  */
-export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver }: Props) {
+export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver, onSpy }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
   const [hover, setHover] = useState<string | null>(null)
@@ -234,7 +235,7 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         <ArrivalsWindow movements={movements} units={units} onClose={() => setWindow(null)} />
       )}
       {cave && (
-        <CaveWindow detail={detail} busy={busy} onStore={onStoreSilver} onClose={() => setWindow(null)} />
+        <CaveWindow detail={detail} busy={busy} onStore={onStoreSilver} onSpy={onSpy} onClose={() => setWindow(null)} />
       )}
       {sending && units && (
         <SendWindow units={units} detail={detail} busy={busy} onSend={onSend} onClose={() => setWindow(null)} />

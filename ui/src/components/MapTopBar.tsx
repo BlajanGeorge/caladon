@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api/auth'
-import type { OwnedCity } from '../api/worlds'
+import { worldsApi, type OwnedCity } from '../api/worlds'
 import profileUrl from '@assets/sprites/profile.png'
 import accountUrl from '@assets/sprites/account.png'
 import worldUrl from '@assets/sprites/hud-world.png'
 import rankingUrl from '@assets/sprites/hud-ranking.png'
 import cityUrl from '@assets/sprites/ctl-city.png'
+import reportsUrl from '@assets/sprites/hud-reports.png'
 
 interface Props {
   worldName?: string
@@ -23,7 +24,22 @@ interface Props {
 export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = false, showCityButton = false }: Props) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [unread, setUnread] = useState(0)
   const rightRef = useRef<HTMLDivElement>(null)
+
+  // What is waiting to be read, asked for on entry and then at the poll cadence of the rest of the HUD.
+  useEffect(() => {
+    if (!worldId) return
+    let stop = false
+    const ask = () => {
+      worldsApi.reports(worldId, { limit: 1, page: 1 })
+        .then((r) => { if (!stop) setUnread(r.unread) })
+        .catch(() => {})
+    }
+    ask()
+    const t = window.setInterval(ask, 60_000)
+    return () => { stop = true; window.clearInterval(t) }
+  }, [worldId])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -72,6 +88,16 @@ export function MapTopBar({ worldName, worldId, city, strip, showWorldButton = f
             <img src={cityUrl} alt="" />
           </button>
         )}
+        <button
+          type="button"
+          className="mtb-icon-btn mtb-with-badge"
+          title="Reports"
+          aria-label={unread > 0 ? `Reports, ${unread} unread` : 'Reports'}
+          onClick={() => navigate(`/worlds/${worldId}/reports`, { state: { worldName, city } })}
+        >
+          <img src={reportsUrl} alt="" />
+          {unread > 0 && <span className="mtb-badge">{unread > 99 ? '99+' : unread}</span>}
+        </button>
         <button
           type="button"
           className="mtb-icon-btn"

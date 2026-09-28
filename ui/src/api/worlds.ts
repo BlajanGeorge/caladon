@@ -267,6 +267,68 @@ export interface Ranking {
   rows: Standing[]
 }
 
+export type ReportKind = 'BATTLE' | 'ESPIONAGE' | 'ESPIONAGE_CAUGHT'
+
+export interface ReportUnit {
+  type: UnitType
+  name: string
+  sent: number
+  lost: number
+  left: number
+}
+
+export interface ReportSide {
+  player: string
+  city: string
+  units: ReportUnit[]
+}
+
+/** A battle as one side saw it; `defender`, `plunder` and `wall` are null to a beaten attacker. */
+export interface BattlePayload {
+  role: 'ATTACKER' | 'DEFENDER' | 'SUPPORTER'
+  attacker: ReportSide
+  defender: ReportSide | null
+  plunder: Cost | null
+  wall: { before: number; after: number } | null
+}
+
+export interface SpyPayload {
+  success: boolean
+  silver: number
+  seen: {
+    resources: Cost
+    buildings: { type: BuildingType; level: number }[]
+    units: { type: UnitType; name: string; count: number }[]
+  } | null
+}
+
+export interface CaughtPayload {
+  player: string
+  city: string
+  silver: number
+}
+
+export interface Report {
+  id: number
+  kind: ReportKind
+  createdAt: string
+  read: boolean
+  subjectCity: string
+  otherCity: string
+  otherPlayer: string
+  won: boolean
+  summary: string
+  payload?: BattlePayload | SpyPayload | CaughtPayload
+}
+
+export interface Reports {
+  unread: number
+  total: number
+  limit: number
+  page: number
+  rows: Report[]
+}
+
 export const worldsApi = {
   list: () => api<PlayableWorld[]>('/worlds'),
   mine: () => api<{ id: number; name: string }[]>('/worlds/mine'),
@@ -301,6 +363,16 @@ export const worldsApi = {
     if (q.search?.trim()) p.set('q', q.search.trim())
     return api<Ranking>(`/worlds/${worldId}/ranking?${p}`)
   },
+  reports: (worldId: number, q: { limit: number; page: number; kind?: ReportKind | '' }) => {
+    const p = new URLSearchParams({ limit: String(q.limit), page: String(q.page) })
+    if (q.kind) p.set('kind', q.kind)
+    return api<Reports>(`/worlds/${worldId}/reports?${p}`)
+  },
+  report: (worldId: number, reportId: number) => api<Report>(`/worlds/${worldId}/reports/${reportId}`),
+  deleteReport: (worldId: number, reportId: number) =>
+    api<void>(`/worlds/${worldId}/reports/${reportId}`, { method: 'DELETE' }),
+  spy: (worldId: number, cityId: number, targetX: number, targetY: number, silver: number) =>
+    api<CityDetail>(`/worlds/${worldId}/cities/${cityId}/spy`, { method: 'POST', body: { targetX, targetY, silver } }),
   map: (worldId: number, startX: number, startY: number, endX: number, endY: number) =>
     api<MapResponse>(`/worlds/${worldId}/map?startX=${startX}&startY=${startY}&endX=${endX}&endY=${endY}`),
 }

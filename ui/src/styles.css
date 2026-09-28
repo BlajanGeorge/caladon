@@ -802,3 +802,68 @@ input { font: inherit; cursor: text; }
 .rk-sizes .cave-max, .rk-pager .cave-max { height: 28px; }
 .rk-sizes .cave-max.on { color: #22242a; background: rgba(199,154,68,.75); border-color: rgba(199,154,68,.9); }
 .rk-page { font-size: 12px; color: var(--overlay-muted); font-variant-numeric: tabular-nums; }
+
+
+/* ---- Reports ----------------------------------------------------------------------------------- */
+
+/* The unread count, on the reports medallion in the top bar. */
+.mtb-with-badge { position: relative; }
+.mtb-badge {
+  position: absolute; top: 2px; right: 2px; min-width: 20px; height: 20px; padding: 0 5px;
+  display: grid; place-items: center; border-radius: 10px;
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: #fff3d4; background: #8c2f24; border: 1px solid rgba(20,22,26,.8);
+}
+
+.rp-panel { width: min(1200px, 100%); }
+.rp-unread { margin-left: auto; font-size: 12px; color: var(--overlay-muted); }
+/* The list on the left, the report itself on the right. */
+.rp-split { display: flex; gap: 16px; align-items: flex-start; }
+.rp-list {
+  flex: 0 0 360px; list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 3px; max-height: 60vh; overflow-y: auto;
+}
+.rp-list li { display: flex; align-items: center; gap: 4px; border-radius: 8px; }
+.rp-list li.open { background: rgba(122,102,54,.22); }
+.rp-list li:hover { background: rgba(122,102,54,.14); }
+.rp-none { padding: 10px; font-size: 13px; color: var(--overlay-muted); }
+.rp-row {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  background: none; border: none; text-align: left; font: inherit; color: var(--overlay-muted);
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
+}
+.rp-list li.unread .rp-row { color: var(--overlay-text); font-weight: 600; }
+.rp-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--overlay-muted); }
+.rp-dot.won { background: #6f9e5a; }
+.rp-dot.lost { background: #8c2f24; }
+.rp-dot.espionage { background: #3a6ea5; }
+.rp-dot.espionage_caught { background: #c79a44; }
+.rp-summary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.rp-when { font-size: 11px; color: var(--overlay-muted); white-space: nowrap; }
+
+.rp-detail {
+  flex: 1; min-width: 0; padding: 14px 16px; border-radius: 10px;
+  background: rgba(10,11,13,.45); border: 1px solid rgba(122,102,54,.28); min-height: 220px;
+}
+.rp-detail h3 {
+  margin: 0 0 2px; font-family: "Cinzel", Georgia, serif; font-size: 17px; color: var(--overlay-text);
+}
+.rp-sides { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+.rp-side { flex: 1 1 260px; min-width: 0; }
+.rp-side h4 {
+  margin: 0 0 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--overlay-muted);
+}
+.rp-side h4 em { font-style: normal; text-transform: none; letter-spacing: 0; color: #d8cfb4; }
+.rp-units { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rp-units th {
+  padding: 2px 6px; text-align: right; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--overlay-muted); font-weight: 700;
+}
+.rp-units td { padding: 3px 6px; text-align: right; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
+.rp-units .rp-unit { display: flex; align-items: center; gap: 6px; text-align: left; color: #d8cfb4; }
+.rp-units .rp-unit img { width: 20px; height: 20px; display: block; }
+.rp-units tr.gone td { color: var(--overlay-muted); }
+.rp-units .rp-lost { color: #d59b7a; }
+.rp-facts { margin-top: 12px; }
+.rp-blind { margin: 10px 0 0; font-size: 13px; color: var(--overlay-muted); }

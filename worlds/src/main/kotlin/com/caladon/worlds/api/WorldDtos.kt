@@ -1,6 +1,8 @@
 package com.caladon.worlds.api
 
 import com.caladon.worlds.domain.WorldState
+import com.caladon.worlds.report.ReportService
+import com.fasterxml.jackson.databind.JsonNode
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.Instant
@@ -68,4 +70,43 @@ data class RankingResponse(
     val next: String?,
     val me: StandingResponse?,
     val rows: List<StandingResponse>,
+)
+
+/**
+ * One line of the report list: enough to show it without opening it. [won] is null where winning means
+ * nothing, and [otherCity] and [otherPlayer] name the other end of what happened.
+ */
+data class ReportRowResponse(
+    val id: Long,
+    val kind: ReportService.Kind,
+    val createdAt: Instant,
+    val read: Boolean,
+    val subjectCity: String,
+    val otherCity: String?,
+    val otherPlayer: String?,
+    val won: Boolean?,
+    val summary: String,
+)
+
+/** One page of a player's reports, newest first; [unread] counts the whole world, for the top bar. */
+data class ReportsResponse(
+    val unread: Long,
+    val total: Long,
+    val limit: Int,
+    val page: Int,
+    val rows: List<ReportRowResponse>,
+)
+
+/** One report with its snapshot; the shape of [payload] follows the kind (ARCHITECTURE.md → Reports). */
+data class ReportResponse(
+    val id: Long,
+    val kind: ReportService.Kind,
+    val createdAt: Instant,
+    val read: Boolean,
+    val subjectCity: String,
+    val otherCity: String?,
+    val otherPlayer: String?,
+    val won: Boolean?,
+    val summary: String,
+    val payload: JsonNode?,
 )

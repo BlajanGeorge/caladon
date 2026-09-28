@@ -147,6 +147,15 @@ class CityController(
         ),
     )
 
+    /** Sends a spy mission at another city, paid for out of this city's Cave. */
+    @PostMapping("/spy")
+    fun spy(
+        @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,
+        @RequestBody request: SendSpyRequest,
+    ): CityDetailResponse = toDetail(
+        movementService.spy(worldId, cityId, user.id, user.role, request.targetX, request.targetY, request.silver),
+    )
+
     @DeleteMapping("/movements/{id}")
     fun recall(
         @AuthenticationPrincipal user: AuthenticatedUser, @PathVariable worldId: Long, @PathVariable cityId: Long,

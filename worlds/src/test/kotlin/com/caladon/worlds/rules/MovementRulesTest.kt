@@ -81,6 +81,29 @@ class MovementRulesTest {
     }
 
     @Test
+    fun `only rams and catapults are worth anything against the wall`() {
+        assertThat(MovementRules.siegeStrength(mapOf(Unit.RAM to 10))).isEqualTo(10)
+        assertThat(MovementRules.siegeStrength(mapOf(Unit.CATAPULT to 10))).isEqualTo(20)
+        assertThat(MovementRules.siegeStrength(mapOf(Unit.RAM to 4, Unit.CATAPULT to 3, Unit.AXEMAN to 500))).isEqualTo(10)
+        assertThat(MovementRules.siegeStrength(emptyMap())).isZero()
+    }
+
+    @Test
+    fun `the wall comes down from the top, two per level, and what is left over is wasted`() {
+        // A level-20 Wall costs 40 to crack, 78 for two levels and 180 to drop it to 15.
+        assertThat(MovementRules.wallAfter(20, 39)).isEqualTo(20)
+        assertThat(MovementRules.wallAfter(20, 40)).isEqualTo(19)
+        assertThat(MovementRules.wallAfter(20, 78)).isEqualTo(18)
+        assertThat(MovementRules.wallAfter(20, 180)).isEqualTo(15)
+
+        // Everything at once: a level-3 Wall is 2 + 4 + 6, and the rest of the strength is wasted.
+        assertThat(MovementRules.wallAfter(3, 12)).isZero()
+        assertThat(MovementRules.wallAfter(3, 1000)).isZero()
+        assertThat(MovementRules.wallAfter(0, 1000)).isZero()
+        assertThat(MovementRules.wallAfter(10, 0)).isEqualTo(10)
+    }
+
+    @Test
     fun `plunder fills the carry evenly and never takes what the vault hides`() {
         assertThat(MovementRules.plunder(Triple(1000, 500, 0), 900)).isEqualTo(Triple(450L, 450L, 0L))
         assertThat(MovementRules.plunder(Triple(100, 100, 100), 900)).isEqualTo(Triple(100L, 100L, 100L))

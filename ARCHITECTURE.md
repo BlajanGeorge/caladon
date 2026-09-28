@@ -1123,6 +1123,81 @@ on arrival and delete the row when the troops come home or die.
 
 ---
 
+## Reports
+
+**Status: built (`V112`).** A report is what a player is left with after something happened while they
+were not looking. It is a **snapshot**, written once and never recomputed: the city it describes will
+have changed by the time it is read.
+
+### What is reported
+
+| kind | who gets one |
+|------|--------------|
+| `BATTLE` | the attacker, the defender, and **every supporter whose troops were in the fight** |
+| `ESPIONAGE` | the spy's owner, always |
+| `ESPIONAGE_CAUGHT` | the target, but **only when the attempt failed** |
+
+### What a battle report holds
+
+For each side: the units that **set out**, the units **lost**, and the units **left**. Plus the plunder
+taken, and the Wall's level **before and after**.
+
+**What each reader may see.**
+
+- The **defender** sees everything, both sides in full. It happened at home; there is nothing to hide.
+- A **supporter** sees the same report the defender does: their troops were there.
+- The **attacker** sees everything **only if it won**. A beaten attacker sees its own losses and the fact
+  that it lost, and nothing about what it met — the survivors who would have counted are dead.
+
+### The Wall, rams and catapults
+
+Rams and catapults batter the **Wall and nothing else**; catapults do not touch other buildings. Only
+**surviving** siege engines do damage, which means an attack that loses damages nothing, since the loser
+loses everything.
+
+Each surviving Ram is worth **1** of siege strength and each Catapult **2** — the catapult is the heavier
+engine and here it has only one job. Taking the Wall from level `L` to `L−1` costs **`2 × L`** of that
+strength, spent from the top down, so a level-20 Wall costs 40 to crack, 78 for two levels, and 180 to
+drop it to 15. Strength left over when the Wall reaches 0 is wasted.
+
+### What an espionage report holds
+
+**On success**: the target's resources, its building levels, and the troops standing in it (its own and
+any support), as they were at that moment. It does **not** show the target's Cave silver — hiding that is
+what the Cave is for. The target learns nothing.
+
+**On failure**: the spy's owner learns only that it failed. The target gets its own report: that it was
+spied on, **by whom**, and **how much silver** was spent on the attempt, which tells it how close the
+thing was.
+
+### Keeping and reading them
+
+`report(id, world_id, owner_user_id, kind, created_at, read, subject_city, other_city, other_player, payload jsonb)`
+— the payload is the snapshot, since a report is never queried by its contents, only read.
+
+- `GET …/worlds/{id}/reports?limit&page&kind` — newest first, with `unread` in the response.
+- `GET …/worlds/{id}/reports/{reportId}` — one report, and marks it read.
+- `DELETE …/worlds/{id}/reports/{reportId}` — a player may throw one away.
+- The top bar carries the unread count, on the reports medallion, refreshed every minute.
+- **Retention**: the newest 200 per player per world; older ones are dropped as new ones arrive, so the
+  table cannot grow without bound.
+
+**The screen** (`ReportsPage`, at `/worlds/{id}/reports`): the list on the left, newest first, unread in
+brighter type with a dot coloured by what happened — green for a battle won, red for one lost, blue for
+spying, gold for a spy caught — and the report itself on the right. Filters for all, battles, spying and
+caught; each row can be thrown away.
+
+**Sending a spy** is done from the **Cave**, since that is what pays for it: the field and the silver,
+beside the line that moves silver in. `POST …/cities/{id}/spy {targetX, targetY, silver}`, refused with
+`NOT_ENOUGH_SILVER`, `ALREADY_SPYING` (one mission per target at a time, out or back), `SAME_CITY`,
+`CITY_NOT_FOUND`, or `REQUIREMENTS_NOT_MET` without a Cave.
+
+**What the implementation settled** beyond the design: a beaten attacker is told nothing of the Wall
+either, so `wall` is null alongside `defender` and `plunder`; the `defender` block is the whole defending
+army, the city's own troops and every supporter's summed per type, which is what the attack actually met;
+a player who lent troops from two cities gets one report, not two; and the Wall levels a siege knocks
+down take their points off the city with them.
+
 ## Ranking
 
 **Status: built.** Two numbers stand for a player in a world.

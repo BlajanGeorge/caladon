@@ -177,7 +177,7 @@ data class MovementResponse(
     val y: Int,
     val departsAt: Instant,
     val arrivesAt: Instant,
-    /** Empty for an incoming attack or scouting run: the defender learns nothing until reports exist. */
+    /** Empty for an incoming attack still too far off to make out, and for every spy mission. */
     val units: List<MovementUnitResponse>,
     /** Null where the units are hidden. */
     val carrying: CostResponse?,
@@ -188,3 +188,6 @@ data class MovementResponse(
 data class MovementUnitResponse(val type: Unit, val name: String, val count: Int)
 
 data class SendMovementRequest(val kind: MovementKind, val targetX: Int, val targetY: Int, val units: Map<Unit, Int>)
+
+/** A spy mission carries silver instead of troops; the silver comes out of this city's Cave. */
+data class SendSpyRequest(val targetX: Int, val targetY: Int, val silver: Long)

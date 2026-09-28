@@ -8,6 +8,7 @@ import { LobbyPage } from './pages/LobbyPage'
 import { LoginPage } from './pages/LoginPage'
 import { MapPage } from './pages/MapPage'
 import { RankingPage } from './pages/RankingPage'
+import { ReportsPage } from './pages/ReportsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
 
@@ -52,6 +53,7 @@ export function App() {
           <Route path="/worlds/:id/city" element={<RequireSession><CityPage /></RequireSession>} />
           <Route path="/worlds/:id/map" element={<RequireSession><MapPage /></RequireSession>} />
           <Route path="/worlds/:id/ranking" element={<RequireSession><RankingPage /></RequireSession>} />
+          <Route path="/worlds/:id/reports" element={<RequireSession><ReportsPage /></RequireSession>} />
           <Route path="*" element={<Navigate to="/lobby" replace />} />
         </Routes>
       </ToastProvider>

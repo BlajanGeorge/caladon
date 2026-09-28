@@ -18,9 +18,9 @@ import java.io.Serializable
 import java.time.Instant
 
 /**
- * `ESPIONAGE` carries silver rather than troops (ARCHITECTURE.md → Espionage and the Cave). The kind
- * exists so the bar can draw a spy mission; nothing sends one yet, and one that lands simply turns
- * around until reports are built (docs/TODO.md).
+ * `ESPIONAGE` carries silver rather than troops (ARCHITECTURE.md → Espionage and the Cave): the silver
+ * is spent on the way out and the mission comes home empty, the homeward leg being the cooldown that
+ * holds a city to one mission per target at a time.
  */
 enum class MovementKind { ATTACK, SUPPORT, ESPIONAGE }
 
@@ -66,6 +66,13 @@ interface CityMovementRepository : JpaRepository<CityMovement, Long> {
 
     /** In flight and heading for this city, either way. */
     fun findAllByTargetCityIdAndAppliedFalseOrderByArrivesAtAscIdAsc(targetCityId: Long): List<CityMovement>
+
+    /** A spy mission of this city still on the road against that one, out or back: the cooldown. */
+    fun existsByOriginCityIdAndTargetCityIdAndKindAndAppliedFalse(
+        originCityId: Long,
+        targetCityId: Long,
+        kind: MovementKind,
+    ): Boolean
 
     @Query(
         """
