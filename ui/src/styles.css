@@ -831,7 +831,8 @@ input { font: inherit; cursor: text; }
   background: rgba(122,102,54,.75); border-radius: 6px; border: 1px solid rgba(60,46,22,.45);
 }
 .rp-list::-webkit-scrollbar-thumb:hover { background: rgba(140,116,62,.9); }
-.rp-list li { display: flex; align-items: center; gap: 4px; border-radius: 8px; }
+/* Room round the delete button: flush against the row's edge it looked like a mistake. */
+.rp-list li { display: flex; align-items: center; gap: 10px; padding-right: 10px; border-radius: 8px; }
 .rp-list li.open { background: rgba(122,102,54,.22); box-shadow: 0 0 0 1px rgba(122,102,54,.5); }
 /* A little more than a tint under the pointer, so a row lifts rather than merely lightens. */
 .rp-list li:hover {
