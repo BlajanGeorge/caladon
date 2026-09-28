@@ -873,13 +873,20 @@ input { font: inherit; cursor: text; }
 .rp-units .rp-unit img { width: 20px; height: 20px; display: block; }
 .rp-units tr.gone td { color: var(--overlay-muted); }
 .rp-units .rp-lost { color: #d59b7a; }
-/* What a side came away with, closing its own block: the plunder taken, the Wall left standing. */
-.rp-side-foot {
-  display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px;
-  border-top: 1px solid rgba(122,102,54,.25); font-size: 12px;
-}
-.rp-side-foot > img { width: 22px; height: 22px; display: block; }
-.rp-foot-name { color: var(--overlay-muted); }
+/* What a side came away with, in the troops' own columns so the icons and names line up with them. */
+.rp-foot-row td { padding-top: 6px; }
+.rp-foot-row:first-of-type td { border-top: 1px solid rgba(122,102,54,.25); padding-top: 7px; }
+.rp-foot-row .rp-unit { color: var(--overlay-muted); }
+.rp-foot-row td:last-child { text-align: left; }
+.rp-no-icon { width: 20px; height: 20px; display: block; }
 .rp-wall { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
+.rp-points { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
+/* How it ended, under both armies. */
+.rp-verdict {
+  margin: 14px 0 0; padding-top: 10px; border-top: 1px solid rgba(122,102,54,.4);
+  font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .04em;
+}
+.rp-verdict.won { color: #9ed08a; }
+.rp-verdict.lost { color: #d59b7a; }
 .rp-facts { margin-top: 12px; }
 .rp-blind { margin: 10px 0 0; font-size: 13px; color: var(--overlay-muted); }

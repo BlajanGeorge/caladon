@@ -392,6 +392,10 @@ class MovementService(
      * left with, and the defending side is reported as one army in any case. A player who is already
      * being written to as the defender — or, oddly, as the attacker — is not written to twice.
      */
+    /** The population a side killed: what it is paid in battle points. */
+    private fun killed(before: Map<Unit, Int>, after: Map<Unit, Int>): Long =
+        before.entries.sumOf { (u, n) -> u.population.toLong() * (n - (after[u] ?: 0)) }
+
     private fun writeBattleReports(
         origin: CityState,
         target: CityState,
@@ -406,9 +410,11 @@ class MovementService(
     ) {
         val worldId = target.city.worldId
         val names = refs(setOf(origin.cityId, target.cityId) + supporters.keys)
+        // What each side earned is what it killed, the same figures the standings are given.
         val attackerSide = SidePayload(
             player = names[origin.cityId]?.player ?: "", city = origin.city.name,
             units = tallies(sent) { survivors[it] ?: 0 },
+            points = killed(merge(defenders.values), merge(defenderLeft.values)),
         )
         // The whole defence as one army: the city's own troops and every supporter's, which is the army
         // the attack actually met.
@@ -416,6 +422,7 @@ class MovementService(
         val defenderSide = SidePayload(
             player = names[target.cityId]?.player ?: "", city = target.city.name,
             units = tallies(defenderSent, merge(defenderLeft.values)::getValue),
+            points = killed(sent, survivors),
         )
         val loot = plunder?.let { ResourcesPayload(it.first, it.second, it.third) }
 

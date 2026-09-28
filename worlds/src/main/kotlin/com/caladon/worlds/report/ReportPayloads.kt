@@ -25,7 +25,13 @@ data class BattlePayload(
 )
 
 /** One side's troops: the whole defence, its own and every supporter's, counts as the defending side. */
-data class SidePayload(val player: String, val city: String, val units: List<UnitTallyPayload>)
+data class SidePayload(
+    val player: String,
+    val city: String,
+    val units: List<UnitTallyPayload>,
+    /** What the battle earned this side: the population it killed. */
+    val points: Long,
+)
 
 data class UnitTallyPayload(val type: Unit, val name: String, val sent: Int, val lost: Int, val left: Int)
 

@@ -63,10 +63,30 @@ function Side({ side, title, foot }: { side: BattlePayload['attacker']; title: s
               <td>{u.left.toLocaleString()}</td>
             </tr>
           ))}
+          {foot}
         </tbody>
       </table>
-      {foot && <div className="rp-side-foot">{foot}</div>}
     </div>
+  )
+}
+
+/** A closing line of a side's table: an icon and a name in the troops' column, the rest beside it. */
+function FootRow({ icon, name, children }: { icon?: string; name: string; children: ReactNode }) {
+  return (
+    <tr className="rp-foot-row">
+      <td className="rp-unit">{icon ? <img src={icon} alt="" /> : <span className="rp-no-icon" />}{name}</td>
+      <td colSpan={3}>{children}</td>
+    </tr>
+  )
+}
+
+/** What a side earned, when the report was written after battle points were kept. */
+function Points({ of }: { of: BattlePayload['attacker'] | null }) {
+  if (!of || of.points === undefined) return null
+  return (
+    <FootRow name="Battle points">
+      <span className="rp-points">{of.points.toLocaleString()}</span>
+    </FootRow>
   )
 }
 
@@ -97,9 +117,11 @@ function Body({ report }: { report: Report }) {
             title="Attacker"
             foot={
               <>
-                <img src={goodsUrl} alt="" />
-                <span className="rp-foot-name">Stolen</span>
-                {p.plunder ? <Goods of={p.plunder} /> : <span className="rp-blind">nothing</span>}
+                {/* A lost attack took nothing, which reads as zeros rather than a word. */}
+                <FootRow icon={goodsUrl} name="Stolen">
+                  <Goods of={p.plunder ?? { wood: 0, stone: 0, silver: 0 }} />
+                </FootRow>
+                <Points of={p.attacker} />
               </>
             }
           />
@@ -107,18 +129,26 @@ function Body({ report }: { report: Report }) {
             <Side
               side={p.defender}
               title="Defender"
-              foot={p.wall && (
+              foot={
                 <>
-                  <img src={wallUrl} alt="" />
-                  <span className="rp-foot-name">Wall</span>
-                  <span className="rp-wall">{p.wall.before} → {p.wall.after}</span>
+                  {p.wall && (
+                    <FootRow icon={wallUrl} name="Wall">
+                      <span className="rp-wall">{p.wall.before} → {p.wall.after}</span>
+                    </FootRow>
+                  )}
+                  <Points of={p.defender} />
                 </>
-              )}
+              }
             />
           ) : (
-            <p className="rp-blind">Nobody came back to say what stood there.</p>
+            <p className="rp-blind">The defending army is not known.</p>
           )}
         </div>
+        <p className={'rp-verdict ' + (report.won ? 'won' : 'lost')}>
+          {p.role === 'ATTACKER'
+            ? (report.won ? `${p.attacker.player} took the field` : `${report.otherPlayer} held`)
+            : (report.won ? `${p.defender?.player ?? 'The defenders'} held` : `${p.attacker.player} took the field`)}
+        </p>
       </>
     )
   }

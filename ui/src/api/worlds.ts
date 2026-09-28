@@ -283,6 +283,8 @@ export interface ReportSide {
   player: string
   city: string
   units: ReportUnit[]
+  /** What this side earned: the population it killed. Absent on reports written before it was kept. */
+  points?: number
 }
 
 /** A battle as one side saw it; `defender`, `plunder` and `wall` are null to a beaten attacker. */
