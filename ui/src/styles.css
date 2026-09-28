@@ -873,5 +873,13 @@ input { font: inherit; cursor: text; }
 .rp-units .rp-unit img { width: 20px; height: 20px; display: block; }
 .rp-units tr.gone td { color: var(--overlay-muted); }
 .rp-units .rp-lost { color: #d59b7a; }
+/* What a side came away with, closing its own block: the plunder taken, the Wall left standing. */
+.rp-side-foot {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 6px;
+  border-top: 1px solid rgba(122,102,54,.25); font-size: 12px;
+}
+.rp-side-foot > img { width: 22px; height: 22px; display: block; }
+.rp-foot-name { color: var(--overlay-muted); }
+.rp-wall { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--overlay-text); }
 .rp-facts { margin-top: 12px; }
 .rp-blind { margin: 10px 0 0; font-size: 13px; color: var(--overlay-muted); }

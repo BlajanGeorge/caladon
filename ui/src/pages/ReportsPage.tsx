@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import {
   worldsApi, type BattlePayload, type CaughtPayload, type OwnedCity, type Report, type ReportFilter,
@@ -9,6 +9,8 @@ import { UNIT_ICONS } from '../city/unitIcons'
 import { BUILDING_NAMES } from '../city/format'
 import { useWorldName } from '../useWorldName'
 import attackUrl from '@assets/sprites/hud-move-attack.png'
+import wallUrl from '@assets/sprites/icon-wall.png'
+import goodsUrl from '@assets/sprites/hud-resources.png'
 import spyUrl from '@assets/sprites/hud-move-spy.png'
 import woodUrl from '@assets/sprites/hud-wood.png'
 import stoneUrl from '@assets/sprites/hud-stone.png'
@@ -43,8 +45,8 @@ const SIZES = [10, 50, 100]
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
 
-/** One army's losses, the shape both sides of a battle are shown in. */
-function Side({ side, title }: { side: BattlePayload['attacker']; title: string }) {
+/** One army's losses, the shape both sides of a battle are shown in; [foot] closes the block. */
+function Side({ side, title, foot }: { side: BattlePayload['attacker']; title: string; foot?: ReactNode }) {
   return (
     <div className="rp-side">
       <h4>{title} <em>{side.player} · {side.city}</em></h4>
@@ -63,6 +65,7 @@ function Side({ side, title }: { side: BattlePayload['attacker']; title: string 
           ))}
         </tbody>
       </table>
+      {foot && <div className="rp-side-foot">{foot}</div>}
     </div>
   )
 }
@@ -85,18 +88,37 @@ function Body({ report }: { report: Report }) {
     const p = report.payload as BattlePayload
     return (
       <>
-        {/* One army under the other: they are read in turn, not compared column by column. */}
+        {/* One army under the other: they are read in turn, not compared column by column. What each side
+            came away with closes its own block — the plunder the attacker took, the Wall the defender
+            was left with. */}
         <div className="rp-sides rp-stack">
-          <Side side={p.attacker} title="Attacker" />
-          {p.defender
-            ? <Side side={p.defender} title="Defender" />
-            : <p className="rp-blind">Nobody came back to say what stood there.</p>}
+          <Side
+            side={p.attacker}
+            title="Attacker"
+            foot={
+              <>
+                <img src={goodsUrl} alt="" />
+                <span className="rp-foot-name">Stolen</span>
+                {p.plunder ? <Goods of={p.plunder} /> : <span className="rp-blind">nothing</span>}
+              </>
+            }
+          />
+          {p.defender ? (
+            <Side
+              side={p.defender}
+              title="Defender"
+              foot={p.wall && (
+                <>
+                  <img src={wallUrl} alt="" />
+                  <span className="rp-foot-name">Wall</span>
+                  <span className="rp-wall">{p.wall.before} → {p.wall.after}</span>
+                </>
+              )}
+            />
+          ) : (
+            <p className="rp-blind">Nobody came back to say what stood there.</p>
+          )}
         </div>
-        <dl className="b-info-now rp-facts">
-          {p.wall && <><dt>Wall</dt><dd>{p.wall.before} → {p.wall.after}</dd></>}
-          <dt>Plunder</dt>
-          <dd>{p.plunder ? <Goods of={p.plunder} /> : 'nothing'}</dd>
-        </dl>
       </>
     )
   }
