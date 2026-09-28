@@ -222,13 +222,25 @@ class WorldApiTest : ApiTestBase() {
         // The occupied slot is not listed as free; the city tile is GRASS; everything is inside the rectangle.
         val slots = map["slots"].map { it["x"].asInt() to it["y"].asInt() }
         assertThat(slots).isNotEmpty.doesNotContain(cx to cy)
-        assertThat(map["barbarians"].size()).isGreaterThan(0)
         for (node in map["slots"] + map["barbarians"]) {
             assertThat(node["x"].asInt()).isBetween(sx, ex)
             assertThat(node["y"].asInt()).isBetween(sy, ey)
         }
         val width = ex - sx + 1
         assertThat(map["terrain"][(cy - sy) * width + (cx - sx)].asInt()).isEqualTo(0)
+
+        // Barbarians are listed too, asked for around one that exists: a window round the city holds a
+        // village only by chance, and about one run in twenty it holds none.
+        val village = barbarianVillageRepository.findAll().first { it.worldId == id }
+        val vx = village.x.toInt()
+        val vy = village.y.toInt()
+        val round = json(
+            get(
+                "/api/v1/worlds/$id/map?startX=${vx - 2}&startY=${vy - 2}&endX=${vx + 2}&endY=${vy + 2}",
+                playerToken,
+            ).andExpect { status { isOk() } },
+        )
+        assertThat(round["barbarians"].map { it["x"].asInt() to it["y"].asInt() }).contains(vx to vy)
     }
 
     @Test
