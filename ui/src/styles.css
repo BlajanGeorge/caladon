@@ -754,7 +754,17 @@ input { font: inherit; cursor: text; }
 
 /* ---- Ranking ---------------------------------------------------------------------------------- */
 
-.rk-body { flex: 1; overflow: auto; padding: 22px; display: flex; justify-content: center; }
+/* The standings hang over a battlefield rather than over nothing; the scrim keeps the table readable
+   however busy the painting is. */
+.rk-body {
+  position: relative; flex: 1; overflow: auto; padding: 22px; display: flex; justify-content: center;
+  background: url('@assets/sprites/bg-battle.jpg') center / cover no-repeat fixed, #0c0d0b;
+}
+.rk-body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, rgba(8,9,11,.45), rgba(8,9,11,.82));
+}
+.rk-body > * { position: relative; }
 .rk-panel {
   width: min(1100px, 100%); align-self: flex-start;
   padding: 18px 20px 16px; color: var(--overlay-text);
