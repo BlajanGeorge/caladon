@@ -96,9 +96,9 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
           return (
             <li key={type} className={at === 0 ? 'blocked' : 'ready'}>
               <img className="study-icon" src={UNIT_ICONS[type]} alt="" />
-              <span className="study-name">
+              <span className="study-name send-name">
                 {u.name}
-                <em>{at.toLocaleString()} at home</em>
+                <b>{at.toLocaleString()}</b>
               </span>
               <span className="study-action">
                 <input
@@ -112,12 +112,12 @@ export function SendWindow({ units, detail, busy, target, only, className, onSen
                 />
                 <button
                   type="button"
-                  className="study-go"
+                  className="cave-max"
                   disabled={at === 0}
-                  title={`Send every ${u.name} at home`}
+                  title={`Send every ${u.name} at home: ${at.toLocaleString()}`}
                   onClick={() => setCounts((c) => ({ ...c, [type]: String(at) }))}
                 >
-                  all
+                  Max
                 </button>
               </span>
             </li>
