@@ -73,6 +73,7 @@ interface Props {
 export function CityScene({ buildings, city, cities, onPickCity, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver, onSpy }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const switchRef = useRef<HTMLButtonElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   /**
    * The list of the player's other cities, drawn where the name is rather than inside the panel: the
    * panel scrolls, and a list that scrolls with it would be cut off at its edge.
@@ -90,19 +91,27 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
     if (r) setSwitcher({ x: r.left, y: r.bottom + 6, w: r.width })
   }
 
-  // Anything else the player does closes the list: a click elsewhere, Escape, or the view moving.
+  /**
+   * Anything else the player does closes the list: a press elsewhere, Escape, or the window resizing
+   * under it. The list counts as inside — taking it away on the press would leave the release with
+   * nothing to land on, and the city would never be picked.
+   */
   useEffect(() => {
     if (!switcher) return
     const away = (e: MouseEvent) => {
-      if (!switchRef.current?.contains(e.target as Node)) setSwitcher(null)
+      const at = e.target as Node
+      if (switchRef.current?.contains(at) || listRef.current?.contains(at)) return
+      setSwitcher(null)
     }
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setSwitcher(null) }
+    const gone = () => setSwitcher(null)
     document.addEventListener('mousedown', away)
     document.addEventListener('keydown', key)
-    window.addEventListener('resize', () => setSwitcher(null), { once: true })
+    window.addEventListener('resize', gone)
     return () => {
       document.removeEventListener('mousedown', away)
       document.removeEventListener('keydown', key)
+      window.removeEventListener('resize', gone)
     }
   }, [switcher])
 
@@ -375,7 +384,7 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
 
       {/* The panel's own parchment and gold edge, drawn over the view so the panel cannot clip it. */}
       {switcher && (
-        <ul className="cp-cities" role="listbox" style={{ left: switcher.x, top: switcher.y, minWidth: switcher.w }}>
+        <ul ref={listRef} className="cp-cities" role="listbox" style={{ left: switcher.x, top: switcher.y, minWidth: switcher.w }}>
           {cities.map((c) => (
             <li key={c.id}>
               <button
