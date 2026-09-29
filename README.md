@@ -53,6 +53,16 @@ PGPASSWORD=caladon psql -h localhost -p 5433 -U caladon -d caladon \
   -v ON_ERROR_STOP=1 -f scripts/honest-points.sql
 ```
 
+## A city with everything
+
+```bash
+PGPASSWORD=caladon psql -h localhost -p 5433 -U caladon -d caladon \
+  -v ON_ERROR_STOP=1 -v city=151 -f scripts/max-city.sql
+```
+
+Every building to the top of its own ladder, with the city's points, free population and stocks
+recounted to match, for looking at a city that has everything.
+
 ## A known player state
 
 Joining a second world from the lobby founds a city there and leaves you looking at an empty map with
