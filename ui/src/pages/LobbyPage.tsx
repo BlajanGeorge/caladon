@@ -42,6 +42,10 @@ export function LobbyPage() {
     }
   }
 
+  // The worlds already played in come first, and are the short list; the rest may be many.
+  const mine = worlds?.filter((w) => w.joined) ?? []
+  const open = worlds?.filter((w) => !w.joined) ?? []
+
   function play(world: PlayableWorld) {
     navigate(`/worlds/${world.id}/city`, { state: { worldName: world.name } })
   }
@@ -58,26 +62,44 @@ export function LobbyPage() {
           ) : worlds.length === 0 ? (
             <p className="rk-note">No world is open for play. Come back later.</p>
           ) : (
-            <ul className="lb-list">
-              {worlds.map((w) => (
-                <li key={w.id} className="lb-row">
-                  <img className="lb-mark" src={worldUrl} alt="" />
-                  <span className="lb-name">{w.name}</span>
-                  {w.joined ? (
-                    <button type="button" className="b-info-action lb-btn lb-go" onClick={() => play(w)}>Enter</button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="b-info-action lb-btn lb-join"
-                      disabled={busy === w.id}
-                      onClick={() => setJoining(w)}
-                    >
-                      Settle
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <>
+              {mine.length > 0 && (
+                <section className="lb-group">
+                  <h2>Your worlds</h2>
+                  <ul className="lb-list">
+                    {mine.map((w) => (
+                      <li key={w.id} className="lb-row">
+                        <img className="lb-mark" src={worldUrl} alt="" />
+                        <span className="lb-name">{w.name}</span>
+                        <button type="button" className="b-info-action lb-btn lb-go" onClick={() => play(w)}>Enter</button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {open.length > 0 && (
+                <section className="lb-group">
+                  <h2>Open to settle</h2>
+                  <ul className="lb-list">
+                    {open.map((w) => (
+                      <li key={w.id} className="lb-row">
+                        <img className="lb-mark" src={worldUrl} alt="" />
+                        <span className="lb-name">{w.name}</span>
+                        <button
+                          type="button"
+                          className="b-info-action lb-btn lb-join"
+                          disabled={busy === w.id}
+                          onClick={() => setJoining(w)}
+                        >
+                          Settle
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </>
           )}
 
           {joining && (

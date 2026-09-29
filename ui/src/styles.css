@@ -975,6 +975,13 @@ input { font: inherit; cursor: text; }
   margin: 0 0 14px; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;
   color: var(--overlay-text);
 }
+/* The worlds the player is in, and the worlds they could be in: two lists, because the second can run
+   long and a way in should never be looked for among them. */
+.lb-group + .lb-group { margin-top: 20px; }
+.lb-group h2 {
+  margin: 0 0 8px; font-family: "Cinzel", Georgia, serif; font-size: 12px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--overlay-muted);
+}
 .lb-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
 /* Mark and name on one line, with the way in held to the right edge. */
 .lb-row {
