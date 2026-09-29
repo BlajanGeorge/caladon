@@ -386,7 +386,6 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
                 onClick={() => { onPickCity(c); setSwitcher(null) }}
               >
                 <span className="cp-city-name">{c.name}</span>
-                <span className="cp-city-meta">{c.x}, {c.y}</span>
               </button>
             </li>
           ))}

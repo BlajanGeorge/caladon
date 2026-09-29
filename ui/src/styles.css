@@ -248,7 +248,8 @@ input { font: inherit; cursor: text; }
 .cp-switch {
   display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; max-width: 100%;
   margin: -2px -6px; padding: 2px 8px 2px 6px; border: 1px solid transparent; border-radius: 5px;
-  background: transparent; cursor: pointer; text-align: left;
+  background: transparent; text-align: left;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }
 .cp-switch:hover { border-color: rgba(90,70,40,.45); background: rgba(255,245,210,.35); }
 .cp-switch:focus-visible { outline: 2px solid rgba(199,154,68,.8); outline-offset: 1px; }
@@ -267,16 +268,16 @@ input { font: inherit; cursor: text; }
   box-shadow: 0 10px 24px rgba(0,0,0,.55);
 }
 .cp-city {
-  display: flex; align-items: baseline; gap: 14px; width: 100%;
-  padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; cursor: pointer;
+  display: block; width: 100%;
+  padding: 6px 10px; border: 0; border-radius: 6px; background: transparent;
   text-align: left; color: #2c2216;
+  cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }
 .cp-city:hover { background: rgba(255,245,210,.45); }
 .cp-city-name {
-  flex: 1 1 auto; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 14px;
-  letter-spacing: .04em; text-shadow: 0 1px 0 rgba(255,245,210,.5);
+  font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 14px;
+  letter-spacing: .04em; white-space: nowrap; text-shadow: 0 1px 0 rgba(255,245,210,.5);
 }
-.cp-city-meta { font-size: 11px; color: #6b5a3c; font-variant-numeric: tabular-nums; }
 /* Where the player already is: named, but plainly not a place to go. */
 .cp-city.picked .cp-city-name { color: #6b5a3c; }
 .cp-section { display: flex; flex-direction: column; gap: 4px; }
