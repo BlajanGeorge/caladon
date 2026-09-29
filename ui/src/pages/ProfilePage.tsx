@@ -8,24 +8,33 @@ import { lastWorld } from '../lastWorld'
 
 const MIN_PASSWORD = 8
 
-/** Who you are, and the one thing worth changing here. */
+/** What a screen inside the game sends with it, so the bar can carry the game onwards. */
 interface NavState {
   worldId?: number
   worldName?: string
   city?: OwnedCity
 }
 
+export interface BarWorld { id: number; name?: string }
+
+/**
+ * Which world the top bar points back into, and whether it points into one at all.
+ *
+ * A player who opened this from the lobby is in no world, and the bar must not offer them a city, a
+ * map, reports or standings. What they were sent with says so: arriving from anywhere in the game
+ * carries it, naming the world or plainly leaving it out. Only a page opened cold, by link or by
+ * bookmark, carries nothing at all, and only then is the world they were last in worth guessing at.
+ */
+export function worldForBar(sent: NavState | null, remembered: BarWorld | null): BarWorld | null {
+  if (!sent) return remembered
+  return sent.worldId !== undefined ? { id: sent.worldId, name: sent.worldName } : null
+}
+
 export function ProfilePage() {
   // Where the player came from, so the bar can still take them back into the world.
-  const from = (useLocation().state ?? {}) as NavState
-  /**
-   * Which world the bar points back into. Whatever the player came from, failing that the last one they
-   * were in, and failing that whichever they have joined — the bar should carry the whole game however
-   * this page was reached.
-   */
-  const [back, setBack] = useState<{ id: number; name?: string } | null>(
-    from.worldId !== undefined ? { id: from.worldId, name: from.worldName } : lastWorld(),
-  )
+  const sent = useLocation().state as NavState | null
+  const from = sent ?? {}
+  const [back, setBack] = useState<BarWorld | null>(() => worldForBar(sent, lastWorld()))
   const [profile, setProfile] = useState<Profile | null>(null)
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -38,12 +47,13 @@ export function ProfilePage() {
     authApi.me().then(setProfile).catch(() => setError('Could not read your account'))
   }, [])
 
+  // Opened cold with nothing remembered: whichever world the player has joined will do.
   useEffect(() => {
-    if (back) return
+    if (sent || back) return
     worldsApi.mine().then((worlds) => {
       if (worlds.length > 0) setBack({ id: worlds[0].id, name: worlds[0].name })
     }).catch(() => { /* no world to go back to: the bar simply offers less */ })
-  }, [back])
+  }, [sent, back])
 
   // The grey button says what is still missing; the page says nothing until something happens.
   const ready = current !== '' && next.length >= MIN_PASSWORD && next === again
