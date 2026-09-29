@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import type {
   BuildingType, BuildingView, CityDetail, MovementKind, Movements, OwnedCity, UnitType, UnitView,
 } from '../api/worlds'
@@ -72,12 +72,40 @@ interface Props {
  */
 export function CityScene({ buildings, city, cities, onPickCity, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver, onSpy }: Props) {
   const ref = useRef<HTMLDivElement>(null)
+  const switchRef = useRef<HTMLButtonElement>(null)
+  /**
+   * The list of the player's other cities, drawn where the name is rather than inside the panel: the
+   * panel scrolls, and a list that scrolls with it would be cut off at its edge.
+   */
+  const [switcher, setSwitcher] = useState<{ x: number; y: number; w: number } | null>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
   const [hover, setHover] = useState<string | null>(null)
   // One window at a time: a building's own, or the Academy's studies.
   const [window_, setWindow] = useState<
     { kind: 'building'; type: string } | { kind: 'studies' } | { kind: 'recruit' } | { kind: 'buildings' } | { kind: 'send' } | { kind: 'cave' } | { kind: 'marches' } | { kind: 'arrivals' } | null
   >(null)
+  const toggleSwitcher = () => {
+    if (switcher) { setSwitcher(null); return }
+    const r = switchRef.current?.getBoundingClientRect()
+    if (r) setSwitcher({ x: r.left, y: r.bottom + 6, w: r.width })
+  }
+
+  // Anything else the player does closes the list: a click elsewhere, Escape, or the view moving.
+  useEffect(() => {
+    if (!switcher) return
+    const away = (e: MouseEvent) => {
+      if (!switchRef.current?.contains(e.target as Node)) setSwitcher(null)
+    }
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setSwitcher(null) }
+    document.addEventListener('mousedown', away)
+    document.addEventListener('keydown', key)
+    window.addEventListener('resize', () => setSwitcher(null), { once: true })
+    return () => {
+      document.removeEventListener('mousedown', away)
+      document.removeEventListener('keydown', key)
+    }
+  }, [switcher])
+
   const open = window_?.kind === 'building' ? window_.type : null
   const studies = window_?.kind === 'studies'
   const recruiting = window_?.kind === 'recruit'
@@ -294,17 +322,17 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
         <div className="cp-head">
           {/* One city is just its name; several make the name the way to the others. */}
           {cities.length > 1 ? (
-            <select
+            <button
+              ref={switchRef}
+              type="button"
               className="cp-name cp-switch"
-              aria-label="Which of your cities"
-              value={city?.id ?? ''}
-              onChange={(e) => {
-                const next = cities.find((c) => c.id === Number(e.target.value))
-                if (next) onPickCity(next)
-              }}
+              aria-haspopup="listbox"
+              aria-expanded={switcher !== null}
+              onClick={toggleSwitcher}
             >
-              {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+              {shown?.name ?? 'Your city'}
+              <span className="cp-caret" aria-hidden="true" />
+            </button>
           ) : (
             <span className="cp-name">{shown?.name ?? 'Your city'}</span>
           )}
@@ -344,6 +372,26 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
           </ul>
         </section>
       </aside>
+
+      {/* The panel's own parchment and gold edge, drawn over the view so the panel cannot clip it. */}
+      {switcher && (
+        <ul className="cp-cities" role="listbox" style={{ left: switcher.x, top: switcher.y, minWidth: switcher.w }}>
+          {cities.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={c.id === city?.id}
+                className={'cp-city' + (c.id === city?.id ? ' picked' : '')}
+                onClick={() => { onPickCity(c); setSwitcher(null) }}
+              >
+                <span className="cp-city-name">{c.name}</span>
+                <span className="cp-city-meta">{c.x}, {c.y}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Anchored to the counts' top-left corner and drawn to their left, clear of the panel's edge. */}
       {tip && (

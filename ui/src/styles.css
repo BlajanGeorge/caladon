@@ -246,15 +246,39 @@ input { font: inherit; cursor: text; }
 /* With more than one city the name becomes the way between them: the same heading, with a caret and a
    hit area, rather than a control bolted beside it. */
 .cp-switch {
-  appearance: none; align-self: flex-start; max-width: 100%;
-  margin: -2px -6px; padding: 2px 22px 2px 6px; border: 1px solid transparent; border-radius: 5px;
-  background: transparent url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%236b5a3c'/%3E%3C/svg%3E") no-repeat right 7px center / 9px 6px;
-  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; max-width: 100%;
+  margin: -2px -6px; padding: 2px 8px 2px 6px; border: 1px solid transparent; border-radius: 5px;
+  background: transparent; cursor: pointer; text-align: left;
 }
-.cp-switch:hover { border-color: rgba(90,70,40,.45); background-color: rgba(255,245,210,.35); }
+.cp-switch:hover { border-color: rgba(90,70,40,.45); background: rgba(255,245,210,.35); }
 .cp-switch:focus-visible { outline: 2px solid rgba(199,154,68,.8); outline-offset: 1px; }
-/* The list itself is the browser's, drawn on the system's own ground: give it readable colours. */
-.cp-switch option { background: #efe3c6; color: #2c2216; }
+/* Drawn rather than a glyph, so it keeps the heading's ink colour at any size. */
+.cp-caret {
+  width: 0; height: 0; flex: 0 0 auto; margin-top: 3px;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid #6b5a3c;
+}
+.cp-switch:hover .cp-caret { border-top-color: #2c2216; }
+/* The list of cities: the panel's own parchment and gold edge, over the view so nothing clips it. */
+.cp-cities {
+  position: fixed; z-index: 40; margin: 0; padding: 5px; list-style: none;
+  border: var(--overlay-border); border-radius: 10px;
+  background: url('@assets/sprites/panel-parchment.png') center / cover, #b59c72;
+  box-shadow: 0 10px 24px rgba(0,0,0,.55);
+}
+.cp-city {
+  display: flex; align-items: baseline; gap: 14px; width: 100%;
+  padding: 6px 10px; border: 0; border-radius: 6px; background: transparent; cursor: pointer;
+  text-align: left; color: #2c2216;
+}
+.cp-city:hover { background: rgba(255,245,210,.45); }
+.cp-city-name {
+  flex: 1 1 auto; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 14px;
+  letter-spacing: .04em; text-shadow: 0 1px 0 rgba(255,245,210,.5);
+}
+.cp-city-meta { font-size: 11px; color: #6b5a3c; font-variant-numeric: tabular-nums; }
+/* Where the player already is: named, but plainly not a place to go. */
+.cp-city.picked .cp-city-name { color: #6b5a3c; }
 .cp-section { display: flex; flex-direction: column; gap: 4px; }
 .cp-section h2 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 12px; font-weight: 700;
