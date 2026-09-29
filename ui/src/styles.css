@@ -23,17 +23,6 @@ a { color: var(--accent); }
 button { font: inherit; cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer; }
 input { font: inherit; cursor: text; }
 
-.topbar {
-  display: flex; align-items: center; gap: 16px; height: 52px; padding: 0 20px;
-  background: #24391f; color: #e9efe0; box-shadow: var(--shadow);
-}
-.topbar .brand { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
-.topbar .world { font-weight: 600; }
-.topbar .spacer { flex: 1; }
-.topbar .nick { opacity: .85; }
-.topbar button, .topbar a.btn { background: transparent; color: inherit; border: 1px solid rgba(255,255,255,.35); border-radius: 8px; padding: 6px 12px; text-decoration: none; }
-.topbar button:hover, .topbar a.btn:hover { background: rgba(255,255,255,.1); }
-
 /* ---- Map top bar (full-width HUD) ---- */
 .map-topbar {
   position: relative; z-index: 4;
@@ -139,9 +128,6 @@ input { font: inherit; cursor: text; }
 .muted { color: var(--muted); }
 .links { margin-top: 14px; font-size: 14px; }
 
-.world-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-.world-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #fff; border: 1px solid var(--border); border-radius: 10px; }
-.world-row .name { font-weight: 600; }
 .empty { text-align: center; padding: 32px; color: var(--muted); }
 
 .city-card dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0 0 20px; }
@@ -978,6 +964,33 @@ input { font: inherit; cursor: text; }
 /* A window opened from the map floats over it, centred rather than pinned to a city's plot. */
 .map-window { left: 50%; top: 80px; transform: translateX(-50%); }
 .b-info.studies.map-window { left: 50%; transform: translateX(-50%); }
+
+/* ---- Lobby -------------------------------------------------------------------------------------- */
+
+/* The same battlefield and dark panel as the standings and the profile: choosing a world is part of
+   the game, not part of the login. */
+.lb-body { align-items: flex-start; min-height: 0; }
+.lb-panel { width: min(560px, 100%); position: relative; }
+.lb-panel h1 {
+  margin: 0 0 14px; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;
+  color: var(--overlay-text);
+}
+.lb-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+/* Mark, name and standing on one line, with the way in held to the right edge. */
+.lb-row {
+  display: grid; grid-template-columns: 34px 1fr auto auto; align-items: center; gap: 14px;
+  padding: 10px 14px; border: 1px solid rgba(122,102,54,.3); border-radius: 10px;
+  background: rgba(30, 33, 38, .6);
+}
+.lb-row:hover { border-color: rgba(160,132,68,.55); background: rgba(38, 42, 48, .7); }
+.lb-mark { width: 34px; height: 34px; display: block; }
+.lb-name {
+  font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .05em; color: var(--overlay-text);
+}
+.lb-state { font-size: 12px; color: var(--overlay-muted); }
+/* Two different buttons — the gold way in, the quieter way to settle — held to one size, so the rows
+   they sit in are the same height. */
+.lb-go, .lb-join { min-width: 92px; height: 32px; margin: 0; padding: 0 14px; line-height: 1; }
 
 /* ---- Profile ------------------------------------------------------------------------------------ */
 
