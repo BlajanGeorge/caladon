@@ -64,11 +64,11 @@ export function LobbyPage() {
                   <img className="lb-mark" src={worldUrl} alt="" />
                   <span className="lb-name">{w.name}</span>
                   {w.joined ? (
-                    <button type="button" className="b-info-action lb-go" onClick={() => play(w)}>Enter</button>
+                    <button type="button" className="b-info-action lb-btn lb-go" onClick={() => play(w)}>Enter</button>
                   ) : (
                     <button
                       type="button"
-                      className="cave-max lb-join"
+                      className="b-info-action lb-btn lb-join"
                       disabled={busy === w.id}
                       onClick={() => setJoining(w)}
                     >

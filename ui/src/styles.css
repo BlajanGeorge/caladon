@@ -987,9 +987,14 @@ input { font: inherit; cursor: text; }
 .lb-name {
   font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .05em; color: var(--overlay-text);
 }
-/* Two different buttons — the gold way in, the quieter way to settle — held to one size, so the rows
-   they sit in are the same height. */
-.lb-go, .lb-join { min-width: 92px; height: 32px; margin: 0; padding: 0 14px; line-height: 1; }
+/* One button, twice: the way into a world and the way to settle one are the same shape and size, and
+   differ only in how loudly they ask to be pressed. */
+.lb-btn {
+  width: auto; min-width: 104px; height: 34px; margin: 0; padding: 0 16px; line-height: 1;
+}
+.lb-join { color: var(--overlay-muted); background: rgba(10,11,13,.55); }
+.lb-join:hover:not(:disabled) { color: var(--overlay-text); background: rgba(122,102,54,.3); }
+.lb-join:disabled { opacity: .4; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
 
 /* ---- Profile ------------------------------------------------------------------------------------ */
 
