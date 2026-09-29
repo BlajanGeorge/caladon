@@ -943,7 +943,9 @@ input { font: inherit; cursor: text; }
 /* The same battlefield and dark panel the standings use: this is a page of the game, not of the login. */
 /* The shell above is a flex column, so the page fills what the bar leaves and its picture with it. */
 .pf-body { align-items: flex-start; min-height: 0; }
-.pf-panel { width: min(640px, 100%); }
+/* Two panels, one for who you are and one for the password, stacked down the page. */
+.pf-stack { width: min(640px, 100%); display: flex; flex-direction: column; gap: 18px; }
+.pf-panel { width: 100%; }
 .pf-panel h1 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;
   color: var(--overlay-text);
@@ -953,7 +955,7 @@ input { font: inherit; cursor: text; }
    inside a building's window does not reach here, so the page states it. */
 .pf-facts {
   display: grid; grid-template-columns: 130px 1fr; gap: 8px 24px; align-items: baseline;
-  margin: 0 0 22px; font-size: 13px;
+  margin: 0; font-size: 13px;
 }
 .pf-facts dt { color: var(--overlay-muted); }
 .pf-facts dd { margin: 0; font-weight: 600; color: var(--overlay-text); }
@@ -962,9 +964,10 @@ input { font: inherit; cursor: text; }
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 13px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--overlay-muted);
 }
-.pf-fields { display: flex; flex-wrap: wrap; gap: 12px; }
+/* One field under another: three passwords side by side read as a puzzle. */
+.pf-fields { display: flex; flex-direction: column; gap: 10px; }
 .pf-fields label {
-  flex: 1 1 160px; display: flex; flex-direction: column; gap: 6px;
+  display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 12px;
   font-size: 12px; color: var(--overlay-muted);
 }
 .pf-fields input { width: 100%; text-align: left; padding: 8px 10px; }

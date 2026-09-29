@@ -80,19 +80,21 @@ export function ProfilePage() {
         city={from.city}
       />
       <main className="rk-body pf-body">
-      <div className="rk-panel pf-panel">
-        <div className="rk-head">
-          <h1>{profile?.nickname ?? 'Profile'}</h1>
-          <button type="button" className="cave-max pf-back" onClick={() => navigate(-1)}>Back</button>
+      <div className="pf-stack">
+        <div className="rk-panel pf-panel">
+          <div className="rk-head">
+            <h1>{profile?.nickname ?? 'Profile'}</h1>
+            <button type="button" className="cave-max pf-back" onClick={() => navigate(-1)}>Back</button>
+          </div>
+
+          <dl className="b-info-now pf-facts">
+            <dt>Email</dt><dd>{profile?.email ?? '…'}</dd>
+            <dt>Playing since</dt>
+            <dd>{profile ? new Date(profile.since).toLocaleDateString(undefined, { dateStyle: 'long' }) : '…'}</dd>
+          </dl>
         </div>
 
-        <dl className="b-info-now pf-facts">
-          <dt>Email</dt><dd>{profile?.email ?? '…'}</dd>
-          <dt>Playing since</dt>
-          <dd>{profile ? new Date(profile.since).toLocaleDateString(undefined, { dateStyle: 'long' }) : '…'}</dd>
-        </dl>
-
-        <form className="pf-form" onSubmit={submit}>
+        <form className="rk-panel pf-panel pf-form" onSubmit={submit}>
           <h2>Change your password</h2>
           <div className="pf-fields">
             <label>
@@ -138,7 +140,7 @@ export function ProfilePage() {
             </button>
           </div>
         </form>
-        </div>
+      </div>
       </main>
     </div>
   )
