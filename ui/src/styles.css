@@ -976,9 +976,9 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-text);
 }
 .lb-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-/* Mark, name and standing on one line, with the way in held to the right edge. */
+/* Mark and name on one line, with the way in held to the right edge. */
 .lb-row {
-  display: grid; grid-template-columns: 34px 1fr auto auto; align-items: center; gap: 14px;
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 14px;
   padding: 10px 14px; border: 1px solid rgba(122,102,54,.3); border-radius: 10px;
   background: rgba(30, 33, 38, .6);
 }
@@ -987,7 +987,6 @@ input { font: inherit; cursor: text; }
 .lb-name {
   font-family: "Cinzel", Georgia, serif; font-size: 15px; letter-spacing: .05em; color: var(--overlay-text);
 }
-.lb-state { font-size: 12px; color: var(--overlay-muted); }
 /* Two different buttons — the gold way in, the quieter way to settle — held to one size, so the rows
    they sit in are the same height. */
 .lb-go, .lb-join { min-width: 92px; height: 32px; margin: 0; padding: 0 14px; line-height: 1; }

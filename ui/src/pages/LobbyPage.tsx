@@ -63,7 +63,6 @@ export function LobbyPage() {
                 <li key={w.id} className="lb-row">
                   <img className="lb-mark" src={worldUrl} alt="" />
                   <span className="lb-name">{w.name}</span>
-                  <span className="lb-state">{w.joined ? 'You hold land here' : 'Open to settle'}</span>
                   {w.joined ? (
                     <button type="button" className="b-info-action lb-go" onClick={() => play(w)}>Enter</button>
                   ) : (
