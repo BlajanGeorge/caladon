@@ -965,6 +965,39 @@ input { font: inherit; cursor: text; }
 .map-window { left: 50%; top: 80px; transform: translateX(-50%); }
 .b-info.studies.map-window { left: 50%; transform: translateX(-50%); }
 
+/* ---- Logging in and registering ------------------------------------------------------------------ */
+
+/* The way into the game looks like the game: the battlefield behind, the dark panel over it. */
+.au-body { align-items: flex-start; min-height: 0; padding-top: 8vh; }
+.au-panel { width: min(400px, 100%); }
+.au-brand {
+  margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 30px; font-weight: 700;
+  letter-spacing: .14em; text-align: center; color: var(--overlay-text);
+  text-shadow: 0 2px 10px rgba(0,0,0,.7);
+}
+.au-title {
+  margin: 4px 0 20px; font-family: "Cinzel", Georgia, serif; font-size: 12px; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase; text-align: center; color: var(--overlay-muted);
+}
+.au-fields { display: flex; flex-direction: column; gap: 14px; }
+/* Label above its field: the labels differ in length and a column of them would read as a table. */
+.au-field { display: flex; flex-direction: column; gap: 5px; }
+.au-field > span { font-size: 12px; letter-spacing: .04em; color: var(--overlay-muted); }
+.au-input {
+  width: 100%; padding: 9px 12px; font-size: 14px;
+  color: var(--overlay-text); background: rgba(10,11,13,.6);
+  border: var(--overlay-border); border-radius: 8px;
+}
+.au-input:focus { outline: none; border-color: rgba(199,154,68,.8); background: rgba(10,11,13,.75); }
+.au-input.invalid { border-color: rgba(178,58,46,.8); }
+.au-go { width: 100%; margin-top: 20px; height: 38px; }
+.au-go:disabled { opacity: .45; cursor: url('@assets/sprites/cursor-point.png') 1 0, default; }
+.au-bad { margin: 0; font-size: 12px; color: #d59b7a; }
+/* The error above the fields needs the room the ones under them do not. */
+.au-panel > .au-bad { margin-bottom: 14px; }
+.au-links { margin: 14px 0 0; font-size: 13px; text-align: center; color: var(--overlay-muted); }
+.au-links a { color: #c79a44; }
+
 /* ---- Lobby -------------------------------------------------------------------------------------- */
 
 /* The same battlefield and dark panel as the standings and the profile: choosing a world is part of

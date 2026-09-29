@@ -49,32 +49,37 @@ export function RegisterPage() {
   }
 
   const field = (name: RegisterField, label: string, type = 'text') => (
-    <div className="field">
-      <label htmlFor={name}>{label}</label>
+    <label className="au-field" htmlFor={name}>
+      <span>{label}</span>
       <input
         id={name}
         type={type}
         value={values[name]}
-        className={touched[name] && errors[name] ? 'invalid' : ''}
+        className={'au-input' + (touched[name] && errors[name] ? ' invalid' : '')}
         onChange={(e) => update(name, e.target.value)}
         onBlur={() => setTouched((t) => ({ ...t, [name]: true }))}
         autoComplete={type === 'password' ? 'new-password' : name === 'email' ? 'email' : 'username'}
       />
-      {touched[name] && errors[name] && <span className="error">{errors[name]}</span>}
-    </div>
+      {touched[name] && errors[name] && <span className="au-bad">{errors[name]}</span>}
+    </label>
   )
 
   return (
-    <main className="page">
-      <form className="card" onSubmit={submit} noValidate>
-        <h1>Create account</h1>
-        {field('email', 'Email', 'email')}
-        {field('nickname', 'Nickname')}
-        {field('password', 'Password', 'password')}
-        {field('confirm', 'Confirm password', 'password')}
-        <button className="primary" type="submit" disabled={!valid || submitting}>Register</button>
-        <p className="links">Already have an account? <Link to="/login">Log in</Link></p>
-      </form>
-    </main>
+    <div className="city-shell">
+      <main className="rk-body au-body">
+        <form className="rk-panel au-panel" onSubmit={submit} noValidate>
+          <h1 className="au-brand">Caladon</h1>
+          <h2 className="au-title">Create account</h2>
+          <div className="au-fields">
+            {field('email', 'Email', 'email')}
+            {field('nickname', 'Nickname')}
+            {field('password', 'Password', 'password')}
+            {field('confirm', 'Confirm password', 'password')}
+          </div>
+          <button className="b-info-action au-go" type="submit" disabled={!valid || submitting}>Register</button>
+          <p className="au-links">Already have an account? <Link to="/login">Log in</Link></p>
+        </form>
+      </main>
+    </div>
   )
 }

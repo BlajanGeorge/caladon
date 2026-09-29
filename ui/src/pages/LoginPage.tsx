@@ -4,6 +4,7 @@ import { ApiError } from '../api/client'
 import { authApi } from '../api/auth'
 import { useToast } from '../components/Toast'
 
+/** The way in: the game's own battlefield and dark panel, before there is any world to show. */
 export function LoginPage() {
   const navigate = useNavigate()
   const toast = useToast()
@@ -28,21 +29,45 @@ export function LoginPage() {
   }
 
   return (
-    <main className="page">
-      <form className="card" onSubmit={submit} noValidate>
-        <h1>Log in</h1>
-        {error && <div className="form-error" role="alert">{error}</div>}
-        <div className="field">
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-        </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
-        </div>
-        <button className="primary" type="submit" disabled={!email || !password || submitting}>Log in</button>
-        <p className="links">No account yet? <Link to="/register">Register</Link></p>
-      </form>
-    </main>
+    <div className="city-shell">
+      <main className="rk-body au-body">
+        <form className="rk-panel au-panel" onSubmit={submit} noValidate>
+          <h1 className="au-brand">Caladon</h1>
+          <h2 className="au-title">Log in</h2>
+
+          {error && <p className="au-bad" role="alert">{error}</p>}
+
+          <div className="au-fields">
+            <label className="au-field" htmlFor="email">
+              <span>Email</span>
+              <input
+                id="email"
+                className="au-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </label>
+            <label className="au-field" htmlFor="password">
+              <span>Password</span>
+              <input
+                id="password"
+                className="au-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </label>
+          </div>
+
+          <button className="b-info-action au-go" type="submit" disabled={!email || !password || submitting}>
+            Log in
+          </button>
+          <p className="au-links">No account yet? <Link to="/register">Register</Link></p>
+        </form>
+      </main>
+    </div>
   )
 }
