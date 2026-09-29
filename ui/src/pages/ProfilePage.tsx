@@ -46,15 +46,16 @@ export function ProfilePage() {
     }).catch(() => { /* no world to go back to: the bar simply offers less */ })
   }, [back])
 
+  // What is still missing, where saying it helps. An empty current password needs no telling.
   const refusal =
-    !current ? 'Your current password'
-      : next.length < MIN_PASSWORD ? `At least ${MIN_PASSWORD} characters`
-      : next !== again ? 'The two do not match'
+    next.length < MIN_PASSWORD && next ? `At least ${MIN_PASSWORD} characters`
+      : next && again && next !== again ? 'The two do not match'
       : null
+  const ready = current !== '' && next.length >= MIN_PASSWORD && next === again
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (refusal) return
+    if (!ready) return
     setBusy(true)
     setError(null)
     try {
@@ -135,7 +136,7 @@ export function ProfilePage() {
                 : done ? <span className="pf-good">Changed. Anywhere else you were signed in has been signed out.</span>
                 : refusal ?? 'Everywhere else you are signed in will be signed out.'}
             </span>
-            <button type="submit" className="b-info-action send-off" disabled={busy || refusal !== null}>
+            <button type="submit" className="b-info-action send-off" disabled={busy || !ready}>
               Change
             </button>
           </div>
