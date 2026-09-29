@@ -921,6 +921,10 @@ input { font: inherit; cursor: text; }
 .rp-verdict.lost { color: #d59b7a; }
 .rp-facts { margin-top: 12px; }
 .rp-blind { margin: 10px 0 0; font-size: 13px; color: var(--overlay-muted); }
+/* Whose city a spy report is about, said once above all its blocks. */
+.rp-who {
+  margin: 10px 0 0; font-family: "Cinzel", Georgia, serif; font-size: 14px; color: #d8cfb4;
+}
 /* What a mission cost, above everything it bought. */
 .rp-cost { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; }
 .rp-cost img { width: 22px; height: 22px; display: block; }

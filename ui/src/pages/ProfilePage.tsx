@@ -46,11 +46,7 @@ export function ProfilePage() {
     }).catch(() => { /* no world to go back to: the bar simply offers less */ })
   }, [back])
 
-  // What is still missing, where saying it helps. An empty current password needs no telling.
-  const refusal =
-    next.length < MIN_PASSWORD && next ? `At least ${MIN_PASSWORD} characters`
-      : next && again && next !== again ? 'The two do not match'
-      : null
+  // The grey button says what is still missing; the page says nothing until something happens.
   const ready = current !== '' && next.length >= MIN_PASSWORD && next === again
 
   async function submit(e: React.FormEvent) {
@@ -133,8 +129,8 @@ export function ProfilePage() {
           <div className="send-go">
             <span className="send-why">
               {error ? <span className="pf-bad">{error}</span>
-                : done ? <span className="pf-good">Changed. Anywhere else you were signed in has been signed out.</span>
-                : refusal ?? 'Everywhere else you are signed in will be signed out.'}
+                : done ? <span className="pf-good">Changed.</span>
+                : null}
             </span>
             <button type="submit" className="b-info-action send-off" disabled={busy || !ready}>
               Change

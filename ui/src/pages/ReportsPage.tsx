@@ -163,21 +163,18 @@ function Body({ report }: { report: Report }) {
 
   if (report.kind === 'ESPIONAGE') {
     const p = report.payload as SpyPayload
-    const where = <em>{report.otherPlayer} · {report.otherCity}</em>
+    // Whose city this was, said once at the top: every block below is about that same city.
+    const where = <p className="rp-who">{report.otherPlayer} · {report.otherCity}</p>
     if (!p.seen) {
       return (
         <>
+          {where}
           <p className="rp-cost">
             <img src={silverUrl} alt="" />
             <span className="rp-foot-name">Silver spent</span>
             <b>{p.silver.toLocaleString()}</b>
           </p>
-          <div className="rp-sides rp-stack">
-            <div className="rp-side">
-              <h4>The city {where}</h4>
-              <p className="rp-blind">Nothing was learned.</p>
-            </div>
-          </div>
+          <p className="rp-blind">Nothing was learned.</p>
           <p className="rp-verdict lost">Your spy was caught</p>
         </>
       )
@@ -185,7 +182,8 @@ function Body({ report }: { report: Report }) {
     const seen = p.seen
     return (
       <>
-        {/* What it cost leads, then what was learned: resources, troops, buildings, a block each. */}
+        {/* Whose city, then what it cost, then what was learned: resources, troops, buildings. */}
+        {where}
         <p className="rp-cost">
           <img src={silverUrl} alt="" />
           <span className="rp-foot-name">Silver spent</span>
@@ -193,7 +191,7 @@ function Body({ report }: { report: Report }) {
         </p>
         <div className="rp-sides rp-stack">
           <div className="rp-side">
-            <h4>Resources {where}</h4>
+            <h4>Resources</h4>
             <table className="rp-units">
               <tbody>
                 <tr><td className="rp-unit"><img src={woodUrl} alt="" />Wood</td><td>{seen.resources.wood.toLocaleString()}</td></tr>
@@ -203,7 +201,7 @@ function Body({ report }: { report: Report }) {
             </table>
           </div>
           <div className="rp-side">
-            <h4>Troops {where}</h4>
+            <h4>Troops</h4>
             <table className="rp-units">
               <tbody>
                 {seen.units.length === 0 && (
@@ -219,7 +217,7 @@ function Body({ report }: { report: Report }) {
             </table>
           </div>
           <div className="rp-side">
-            <h4>Buildings {where}</h4>
+            <h4>Buildings</h4>
             <table className="rp-units">
               <tbody>
                 {seen.buildings.map((b) => (
@@ -243,17 +241,13 @@ function Body({ report }: { report: Report }) {
   const p = report.payload as CaughtPayload
   return (
     <>
+      <p className="rp-who">{p.player} · {p.city}</p>
       <p className="rp-cost">
         <img src={silverUrl} alt="" />
         <span className="rp-foot-name">Silver wasted</span>
         <b>{p.silver.toLocaleString()}</b>
       </p>
-      <div className="rp-sides rp-stack">
-        <div className="rp-side">
-          <h4>The spy <em>{p.player} · {p.city}</em></h4>
-          <p className="rp-blind">Nothing of yours was seen.</p>
-        </div>
-      </div>
+      <p className="rp-blind">Nothing of yours was seen.</p>
       <p className="rp-verdict won">You caught a spy, and learned nothing more than that</p>
     </>
   )
