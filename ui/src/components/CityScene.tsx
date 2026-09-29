@@ -204,14 +204,16 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
           ) : (
             <span
               key={type}
-              className={'plot-label' + (level === 0 ? ' empty' : '')}
+              className={'plot-label' + (level ? '' : ' empty')}
               style={anchorPercent(plot)}
+              aria-label={level ? undefined : name}
               onMouseEnter={() => setHover(type)}
               onMouseLeave={() => setHover((h) => (h === type ? null : h))}
               onClick={() => setWindow({ kind: 'building', type })}
             >
-              {/* An unbuilt plot says what could stand there, not that it is at level 0. */}
-              {name}{level ? ` ${level}` : ''}
+              {/* Nothing stands here yet, so nothing is written here: the plot is bare ground, and it
+                  says what could go on it only when the pointer is over it. */}
+              {level ? `${name} ${level}` : null}
             </span>
           )
         })}

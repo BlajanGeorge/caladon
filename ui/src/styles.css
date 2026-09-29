@@ -634,6 +634,11 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-text);
 }
 .study-action b.no { color: #d59b7a; font-weight: 600; white-space: nowrap; }
+/* A blocked building can name three requirements at once, which is wider than the column it sits in.
+   The column shrinks, and a line that cannot wrap then runs left across the costs beside it — so this
+   one wraps. */
+.build-list .study-action { min-width: 230px; }
+.build-list .study-action b.no { white-space: normal; text-align: right; line-height: 1.35; }
 .study-go {
   width: 30px; height: 26px; padding: 0; font-size: 12px; line-height: 1;
   color: var(--overlay-text); background: rgba(122,102,54,.3);
@@ -764,8 +769,13 @@ input { font: inherit; cursor: text; }
   /* A plot with nothing on it is still the way into that building's window, so it takes clicks. */
   cursor: url('@assets/sprites/cursor-point.png') 1 0, pointer;
 }
-.city-scene .plot-label.empty { color: #cfc7b0; background: rgba(20, 22, 26, .45); font-weight: 500; }
 .city-scene .plot-label:hover { background: rgba(20, 22, 26, .85); color: #fff3d4; }
+/* Bare ground: no label at all, only the hit area that opens what could be built there. The name
+   still comes on hover, as it does for a building that is standing. */
+.city-scene .plot-label.empty {
+  width: 66px; height: 34px; padding: 0; background: transparent;
+}
+.city-scene .plot-label.empty:hover { background: rgba(20, 22, 26, .35); }
 /* Hidden panels (SHOW_PANELS) keep their old layout when re-enabled. */
 .city-main { max-width: 1100px; margin: 24px auto 48px; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
 .city-main .city-card { max-width: 560px; }
