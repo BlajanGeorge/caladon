@@ -41,6 +41,18 @@ Generating a world takes a moment: terrain, city slots and barbarian villages ar
 it is opened for play. Only an administrator may do it, so the script keeps a development account of
 its own, registered the first time it runs — see the top of the file.
 
+## Honest points
+
+A city's points are the points of its buildings, and a player's are the points of their cities. The
+number on the city is a counter the game keeps as levels complete, so it is only ever as true as the
+rows it was counted from — a city seeded straight into the database, or a level set by hand, puts it
+out. This recounts every city, and gives a seeded city the buildings its points claimed.
+
+```bash
+PGPASSWORD=caladon psql -h localhost -p 5433 -U caladon -d caladon \
+  -v ON_ERROR_STOP=1 -f scripts/honest-points.sql
+```
+
 ## A known player state
 
 Joining a second world from the lobby founds a city there and leaves you looking at an empty map with
