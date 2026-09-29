@@ -31,6 +31,16 @@ java -jar app/target/app-0.1.0-SNAPSHOT.jar
 Configuration (all optional for local development): `CALADON_DB_URL`, `CALADON_DB_USER`,
 `CALADON_DB_PASSWORD`, `CALADON_JWT_SECRET` (at least 32 bytes; **must** be set outside local dev).
 
+## A new world
+
+```bash
+scripts/new-world.sh "Caladon III"
+```
+
+Generating a world takes a moment: terrain, city slots and barbarian villages are all laid out before
+it is opened for play. Only an administrator may do it, so the script keeps a development account of
+its own, registered the first time it runs — see the top of the file.
+
 ## A known player state
 
 Joining a second world from the lobby founds a city there and leaves you looking at an empty map with
