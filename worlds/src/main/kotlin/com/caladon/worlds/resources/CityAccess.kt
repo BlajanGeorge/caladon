@@ -74,6 +74,14 @@ class CityAccess(
      * The other end of a movement: loaded and advanced with no ownership check, the caller holding both
      * city locks (see [MovementService.processArrivals]).
      */
+    /**
+     * Opens a city for an order it may only give while nobody is holding it. A city under occupation
+     * builds nothing, trains nothing, studies nothing and sends nothing: it is not its owner's to
+     * command until the hold is broken, and it is never the garrison's.
+     */
+    fun openForOrder(worldId: Long, cityId: Long, userId: Long, role: Role): CityState =
+        open(worldId, cityId, userId, role).also { if (it.city.occupied) throw WorldException.Occupied() }
+
     fun advanceForMovement(cityId: Long): CityState? {
         val city = cityRepository.findById(cityId).orElse(null) ?: return null
         val res = cityResourcesRepository.findById(cityId).orElse(null) ?: return null
@@ -127,6 +135,20 @@ class CityAccess(
         state.settleTo(now)
         for (s in state.studies.values) if (!s.applied && !s.completesAt.isAfter(now)) { s.applied = true; studyRepository.save(s) }
         movements.getObject().processArrivals(state)
+    }
+
+    /**
+     * Throws away everything a city had ordered. A city being held builds, trains and studies nothing,
+     * and what it had going when the garrison arrived does not wait for it.
+     */
+    fun clearOrders(state: CityState) {
+        buildOrderRepository.deleteAll(state.buildOrders)
+        state.buildOrders.clear()
+        recruitOrderRepository.deleteAll(state.recruitOrders)
+        state.recruitOrders.clear()
+        val running = state.studies.values.filter { it.completesAt.isAfter(state.now) }
+        studyRepository.deleteAll(running)
+        for (st in running) state.studies.remove(st.id.unit)
     }
 
     private fun recruitSeconds(u: com.caladon.worlds.rules.Unit, barracks: Int): Long =

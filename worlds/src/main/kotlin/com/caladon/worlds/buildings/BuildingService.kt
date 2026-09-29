@@ -57,7 +57,7 @@ class BuildingService(
     /** Orders the next level of [building]: requirements, queue slots, then payment, then the timed order. */
     @Transactional
     fun upgrade(worldId: Long, cityId: Long, userId: Long, role: Role, building: Building): CityState {
-        val state = cityAccess.open(worldId, cityId, userId, role)
+        val state = cityAccess.openForOrder(worldId, cityId, userId, role)
         val queuedHere = state.buildOrders.count { it.building == building }
         val target = state.level(building) + queuedHere + 1
         if (target > building.maxLevel) throw WorldException.MaxLevel()

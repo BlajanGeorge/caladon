@@ -37,6 +37,7 @@ class CityController(
     private val movementService: MovementService,
     private val caveService: CaveService,
     private val citySupportRepository: CitySupportRepository,
+    private val userRepository: com.caladon.users.repository.UserRepository,
 ) {
     @GetMapping
     @Transactional
@@ -204,6 +205,12 @@ class CityController(
             studyQueueSlots = BuildingRules.studySlots(state.level(Building.ACADEMY)),
             worldSpeed = ResourceConstants.WORLD_SPEED,
             spySpeed = MovementRules.SPY_SPEED,
+            occupation = state.city.occupiedByUserId?.let { holder ->
+                OccupationResponse(
+                    player = userRepository.findById(holder).orElse(null)?.nickname ?: "",
+                    endsAt = requireNotNull(state.city.occupationEndsAt),
+                )
+            },
         )
     }
 

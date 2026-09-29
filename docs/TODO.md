@@ -23,5 +23,4 @@ what is still owed, newest first. Cross off by deleting the line in the commit t
 - The bar's improvements the user has in mind for the Marches and Arrivals sections.
 - Combat numbers are a first cut: the arm split, the Wall factor and the loss curve want tuning against
   Tribal Wars rather than being merely plausible.
-- A Nobleman does not lower loyalty. With conquest, a player should be able to attack a city of his own
-  that another player is holding — until then his own cities are never targets.
+- Conquest has no beginner protection: nothing stops the first large player emptying the map.

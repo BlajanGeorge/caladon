@@ -1078,9 +1078,7 @@ becomes empty; nothing else shifts), and its medallion stops being drawn.
 
 ### Later, not designed here
 
-The Nobleman's conquest mechanics (loyalty, nobles per city, Tribal Wars' coin cost per noble), scouting
-**reports** and battle reports, rams and catapults doing damage, and the combat numbers above being tuned
-against Tribal Wars rather than merely plausible.
+The combat numbers above being tuned against Tribal Wars rather than merely plausible.
 
 ### Persistence
 
@@ -1197,6 +1195,57 @@ support and spying. Each opens the window it needs, with the target already chos
 offers nothing: troops are sent from it, not to it.
 
 ---
+
+## Conquest
+
+A city is taken by **holding** it, not by wearing it down. There is no loyalty and no dice.
+
+An attack that wins and still has a Nobleman standing, with at least one other man beside him, does not
+turn around. It stays where it is, and the city is **held** for `ConquestRules.OCCUPATION_HOURS` (12 at
+world speed 1). When that passes, the city changes hands. Before it passes, anybody may come and break
+the hold — the owner from another of his cities, an ally, or a third party who wants the city himself.
+
+A Nobleman alone holds nothing. The moment he is the last one standing, the hold is over.
+
+### While a city is held
+
+It does nothing. It produces no resources (`CityState.rate` is zero), builds nothing, trains nothing,
+studies nothing and sends nothing: every order is refused with `OCCUPIED`, through
+`CityAccess.openForOrder`. Whatever it had in its queues when the garrison arrived is thrown away.
+
+Everything it had lent to other cities turns for home the moment it is held — one chance to arrive and
+break the hold. If the city falls first there is nowhere left to land, and they are lost.
+
+The garrison is ordinary **support**: `city_support` rows owned by the cities that sent the troops,
+hosted by the city they hold. Nothing special defends a held city, because the garrison already defends
+it exactly the way any support does — a counter-attack meets it through the same `MovementRules.resolve`.
+
+### When it falls
+
+The city changes hands with the garrison still in it, which is now the new owner's support in his own
+new city. Everything of the old owner's that was outside its walls is lost: movements it still had on
+the road, and troops it had lent elsewhere, including the ones it called home which did not arrive.
+Production starts again from that moment, under the new owner. Both sides get a `CONQUEST` report.
+
+The standings need no work: a player's points are the points of the cities they own, summed per world,
+so they follow the city.
+
+### One consequence
+
+A player may not attack or spy on a city of his own (`OWN_CITY`) — **unless it is held**. Then the men
+in it are not his, and an attack from another of his cities is the only way to get it back.
+
+### Persistence
+
+```
+city.occupied_by_user_id  FK users NULL   -- who is holding it
+city.occupation_ends_at   timestamptz NULL -- when it changes hands
+                                           -- both or neither (ck_city_occupation)
+```
+
+The end of a hold is a **due event** like an arrival, run lazily by `MovementService.processArrivals` in
+the order it fell due — an attack landing a minute before the hold is up still breaks it — and caught by
+`CitySweeper` for a city nobody touches.
 
 ## Reports
 

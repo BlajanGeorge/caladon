@@ -65,7 +65,12 @@ data class CityDetailResponse(
     val worldSpeed: Double,
     /** Minutes per field a spy travels, for the same reason. */
     val spySpeed: Int,
+    /** Set while someone's troops are holding this city; null the rest of the time. */
+    val occupation: OccupationResponse?,
 )
+
+/** Who is holding a city and until when: the city does nothing at all until this passes or is broken. */
+data class OccupationResponse(val player: String, val endsAt: java.time.Instant)
 
 /**
  * A unit type's three counts, kept apart in the database: [home] are the city's own troops standing

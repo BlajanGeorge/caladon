@@ -13,7 +13,7 @@ describe('MapCache', () => {
     const cache = new MapCache()
     cache.setWindow(res(10, 10, 19, 19, 1, {
       slots: [{ x: 12, y: 12 }],
-      cities: [{ id: 1, x: 15, y: 15, name: 'Thal', points: 3, owner: 'g' }],
+      cities: [{ id: 1, x: 15, y: 15, name: 'Thal', points: 3, owner: 'g', held: false }],
       barbarians: [{ x: 18, y: 11 }],
     }))
     expect(cache.terrainAt(10, 10)).toBe(1)
@@ -27,7 +27,7 @@ describe('MapCache', () => {
   it('mergeArea replaces entities inside the area only and updates terrain', () => {
     const cache = new MapCache()
     cache.setWindow(res(0, 0, 9, 9, 0, { slots: [{ x: 1, y: 1 }, { x: 8, y: 8 }] }))
-    cache.mergeArea(res(0, 0, 4, 4, 2, { cities: [{ id: 7, x: 1, y: 1, name: 'New', points: 0, owner: 'a' }] }))
+    cache.mergeArea(res(0, 0, 4, 4, 2, { cities: [{ id: 7, x: 1, y: 1, name: 'New', points: 0, owner: 'a', held: false }] }))
 
     expect(cache.entityAt(1, 1)?.kind).toBe('city') // the slot got occupied
     expect(cache.entityAt(8, 8)?.kind).toBe('slot') // outside the area: untouched

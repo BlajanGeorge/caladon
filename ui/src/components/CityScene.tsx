@@ -350,6 +350,14 @@ export function CityScene({ buildings, city, cities, onPickCity, detail, units, 
           <span className="cp-meta">{shown ? `${shown.points.toLocaleString()} points` : '…'}</span>
         </div>
 
+        {/* The city is not its owner's to command while this stands, so it is said before anything else. */}
+        {detail?.occupation && (
+          <p className="cp-held">
+            <b>Held by {detail.occupation.player}</b>
+            <span>Nothing is built, trained or produced here until the garrison is broken.</span>
+          </p>
+        )}
+
         <section className="cp-section">
           <h2>Resources</h2>
           <ResourceStrip resources={detail?.resources} population={detail?.population} withNames />

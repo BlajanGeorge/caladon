@@ -60,7 +60,7 @@ class ArmyService(
     @Transactional
     fun recruit(worldId: Long, cityId: Long, userId: Long, role: Role, unit: Unit, count: Int): CityState {
         if (count < 1 || count > MAX_ORDER) throw WorldException.InvalidCount()
-        val state = cityAccess.open(worldId, cityId, userId, role)
+        val state = cityAccess.openForOrder(worldId, cityId, userId, role)
         val barracks = state.level(Building.BARRACKS)
         if (barracks < unit.barracksLevel) throw WorldException.RequirementsNotMet(mapOf(Building.BARRACKS.name to unit.barracksLevel.toString()))
         if (!state.isStudied(unit)) throw WorldException.NotStudied()
@@ -85,7 +85,7 @@ class ArmyService(
 
     @Transactional
     fun study(worldId: Long, cityId: Long, userId: Long, role: Role, unit: Unit): CityState {
-        val state = cityAccess.open(worldId, cityId, userId, role)
+        val state = cityAccess.openForOrder(worldId, cityId, userId, role)
         val needed = unit.academyLevel ?: throw WorldException.AlreadyStudied()
         if (state.studies.containsKey(unit)) throw WorldException.AlreadyStudied()
         val academy = state.level(Building.ACADEMY)

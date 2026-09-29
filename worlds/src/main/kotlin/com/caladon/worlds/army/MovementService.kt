@@ -8,6 +8,7 @@ import com.caladon.worlds.report.BattlePayload
 import com.caladon.worlds.report.BattleRole
 import com.caladon.worlds.report.BuildingLevelPayload
 import com.caladon.worlds.report.CaughtPayload
+import com.caladon.worlds.report.ConquestPayload
 import com.caladon.worlds.report.EspionagePayload
 import com.caladon.worlds.report.ReportService
 import com.caladon.worlds.report.ResourcesPayload
@@ -24,6 +25,8 @@ import com.caladon.worlds.resources.CityState
 import com.caladon.worlds.rules.BarbarianRules
 import com.caladon.worlds.rules.Building
 import com.caladon.worlds.rules.BuildingRules
+import com.caladon.worlds.domain.Resource
+import com.caladon.worlds.rules.ConquestRules
 import com.caladon.worlds.rules.Cost
 import com.caladon.worlds.rules.MovementRules
 import com.caladon.worlds.rules.Unit
@@ -128,7 +131,7 @@ class MovementService(
         worldId: Long, cityId: Long, userId: Long, role: Role,
         kind: MovementKind, targetX: Int, targetY: Int, units: Map<Unit, Int>,
     ): CityState {
-        val state = cityAccess.open(worldId, cityId, userId, role)
+        val state = cityAccess.openForOrder(worldId, cityId, userId, role)
         val wanted = units.filterValues { it > 0 }
         if (wanted.isEmpty()) throw WorldException.NoUnits()
         val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY)
@@ -136,8 +139,11 @@ class MovementService(
         if (targetId == null && villageId == null) throw WorldException.CityNotFound()
         if (villageId != null && kind != MovementKind.ATTACK) throw WorldException.NoOneThere()
         if (targetId == state.cityId) throw WorldException.SameCity()
-        // Support is how a player's cities help each other; an attack on one would be robbing himself.
-        if (kind == MovementKind.ATTACK && targetId != null && ownerOf(targetId) == userId) throw WorldException.OwnCity()
+        // Support is how a player's cities help each other; an attack on one would be robbing himself —
+        // unless somebody is holding it, and then the men in it are not his and it is the only way back.
+        if (kind == MovementKind.ATTACK && targetId != null && ownerOf(targetId) == userId && !isHeld(targetId)) {
+            throw WorldException.OwnCity()
+        }
         val short = wanted.mapNotNull { (u, n) ->
             val home = state.units[u]?.count ?: 0
             if (home < n) u.name to (n - home).toString() else null
@@ -174,15 +180,16 @@ class MovementService(
     @Transactional
     fun spy(worldId: Long, cityId: Long, userId: Long, role: Role, targetX: Int, targetY: Int, silver: Long): CityState {
         if (silver <= 0) throw WorldException.InvalidAmount()
-        val state = cityAccess.open(worldId, cityId, userId, role)
+        val state = cityAccess.openForOrder(worldId, cityId, userId, role)
         val targetId = mapQueryDao.cityIdAt(worldId, targetX, targetY) ?: run {
             // Nothing to learn at a village: it has no buildings, no stocks worth a mission and no Cave.
             if (mapQueryDao.barbarianIdAt(worldId, targetX, targetY) != null) throw WorldException.NoOneThere()
             throw WorldException.CityNotFound()
         }
         if (targetId == state.cityId) throw WorldException.SameCity()
-        // Nothing in a player's own city is hidden from him, so there is nothing to buy a look at.
-        if (ownerOf(targetId) == userId) throw WorldException.OwnCity()
+        // Nothing in a player's own city is hidden from him, so there is nothing to buy a look at — but
+        // what a garrison holding it has is another matter.
+        if (ownerOf(targetId) == userId && !isHeld(targetId)) throw WorldException.OwnCity()
         if (state.level(Building.CAVE) < 1) throw WorldException.RequirementsNotMet(mapOf(Building.CAVE.name to "1"))
         if (state.resources.caveSilver < silver) {
             throw WorldException.NotEnoughSilver((silver - state.resources.caveSilver).toString())
@@ -260,9 +267,11 @@ class MovementService(
     // ---- arrival ----
 
     /**
-     * Runs every movement of this city whose arrival has passed, newest state first. Loading the other end
-     * advances it too, which would come straight back here: the flag keeps one pass at a time, and the
-     * other city's own movements wait for its next touch or for the sweeper.
+     * Runs everything of this city's that is due, in the order it fell due: arrivals, and the moment a
+     * city that is being held changes hands. The order matters — an attack landing a minute before the
+     * hold is up still breaks it. Loading the other end advances it too, which would come straight back
+     * here: the flag keeps one pass at a time, and the other city's own movements wait for its next
+     * touch or for the sweeper.
      */
     fun processArrivals(state: CityState) {
         if (processing.get()) return
@@ -270,8 +279,13 @@ class MovementService(
         try {
             var guard = 0
             while (guard++ < MAX_ARRIVALS) {
-                val due = movementRepository.findDueFor(state.cityId, state.now).firstOrNull() ?: break
-                apply(due, state)
+                val due = movementRepository.findDueFor(state.cityId, state.now).firstOrNull()
+                val held = state.city.occupationEndsAt?.takeIf { !it.isAfter(state.now) }
+                when {
+                    due == null && held == null -> break
+                    held != null && (due == null || !held.isAfter(due.arrivesAt)) -> conquer(state)
+                    else -> apply(requireNotNull(due), state)
+                }
             }
         } finally {
             processing.set(false)
@@ -398,7 +412,88 @@ class MovementService(
             m.applied = true
             return
         }
+        // Whoever was holding this city was the defence, and the defence is dead: the hold is over.
+        if (target.city.occupied) breakHold(target)
+        // A Nobleman who came through the battle with men beside him stays, and the city is held.
+        if (ConquestRules.canHold(survivors) && target.city.ownerUserId != origin.city.ownerUserId) {
+            beginHold(m, origin, target, survivors)
+            return
+        }
         turnAround(m, survivors, origin, target)
+    }
+
+    /**
+     * The attack stays where it stands. Its troops become ordinary support — owned by the city that sent
+     * them, hosted by the city they hold — so a counter-attack meets them exactly as it meets any
+     * defence, and so they are already the new garrison if the hold runs out. The city itself stops:
+     * its queues go, and what it lent to others is called home to try to save it.
+     */
+    private fun beginHold(m: CityMovement, origin: CityState, target: CityState, garrison: Map<Unit, Int>) {
+        for ((u, n) in garrison) {
+            val id = CitySupportId(target.cityId, m.originCityId, u)
+            val row = citySupportRepository.findById(id).orElse(null)
+            citySupportRepository.save(if (row == null) CitySupport(id, n) else row.also { it.count += n })
+        }
+        target.city.occupiedByUserId = origin.city.ownerUserId
+        target.city.occupationEndsAt = target.now.plusSeconds(ConquestRules.occupationSeconds())
+        cityAccess.clearOrders(target)
+        callHome(target)
+        m.applied = true
+    }
+
+    /** The hold is broken and the city is its owner's again, working, with nothing standing in it. */
+    private fun breakHold(target: CityState) {
+        target.city.occupiedByUserId = null
+        target.city.occupationEndsAt = null
+    }
+
+    /**
+     * The hold ran its course. The city changes hands with the garrison still in it, which is now the new
+     * owner's support in his own new city. Everything of the old owner's that was not in the city is
+     * lost: troops on the road have no home to come back to, and troops he had lent elsewhere are cut
+     * off — including the ones this city called home and which did not arrive in time.
+     */
+    private fun conquer(state: CityState) {
+        val loser = state.city.ownerUserId
+        val winner = requireNotNull(state.city.occupiedByUserId)
+        val stranded = movementRepository.findAllByOriginCityIdAndAppliedFalseOrderByArrivesAtAscIdAsc(state.cityId)
+        movementUnitRepository.deleteAll(movementUnitRepository.findAllByIdMovementIdIn(stranded.mapNotNull { it.id }))
+        movementRepository.deleteAll(stranded)
+        citySupportRepository.deleteAll(citySupportRepository.findAllByIdOwnerCityId(state.cityId))
+        cityAccess.clearOrders(state)
+        state.city.ownerUserId = winner
+        state.city.occupiedByUserId = null
+        state.city.occupationEndsAt = null
+        // The city produces again under its new owner, from now rather than from before it was held.
+        for (r in Resource.entries) state.resources.setSettledAt(r, state.now)
+        writeConquestReports(state, winner = winner, loser = loser)
+    }
+
+    /**
+     * Every man this city has standing in another turns for home the moment it is held: they have one
+     * chance to arrive and break the hold. If the city falls before they land there is nowhere left to
+     * land, and they are lost with everything else that was outside its walls.
+     */
+    private fun callHome(target: CityState) {
+        val lent = citySupportRepository.findAllByIdOwnerCityId(target.cityId)
+        for ((hostId, rows) in lent.groupBy { it.id.hostCityId }) {
+            val places = refs(setOf(hostId, target.cityId))
+            val host = places[hostId] ?: continue
+            val home = places[target.cityId] ?: continue
+            val units = rows.associate { it.id.unit to it.count }
+            val seconds = MovementRules.travelSeconds(
+                MovementRules.distance(host.x, host.y, home.x, home.y), MovementRules.slowestSpeed(units),
+            )
+            val movement = movementRepository.save(
+                CityMovement(
+                    worldId = target.city.worldId, originCityId = target.cityId, targetCityId = hostId,
+                    kind = MovementKind.SUPPORT, direction = MovementDirection.HOMEWARD,
+                    departsAt = target.now, arrivesAt = target.now.plusSeconds(seconds),
+                ),
+            )
+            writeUnits(requireNotNull(movement.id), units)
+            citySupportRepository.deleteAll(rows)
+        }
     }
 
     /**
@@ -532,6 +627,35 @@ class MovementService(
     /** The population a side killed: what it is paid in battle points. */
     private fun killed(before: Map<Unit, Int>, after: Map<Unit, Int>): Long =
         before.entries.sumOf { (u, n) -> u.population.toLong() * (n - (after[u] ?: 0)) }
+
+    /**
+     * The one thing both sides want to have in writing. The conqueror and the loser get the same account
+     * of it: who took the city, from whom, and what was standing in it when the hold ran out.
+     */
+    private fun writeConquestReports(state: CityState, winner: Long, loser: Long) {
+        val garrison = citySupportRepository.findAllByIdHostCityId(state.cityId)
+            .groupBy { it.id.unit }
+            .map { (u, rows) -> UnitCountPayload(u, u.displayName, rows.sumOf { it.count }) }
+            .sortedBy { it.type.ordinal }
+        val names = nicknames(setOf(winner, loser))
+        val conqueror = names[winner] ?: ""
+        val beaten = names[loser] ?: ""
+        val payload = ConquestPayload(taken = true, conqueror = conqueror, loser = beaten, garrison = garrison)
+        reportService.write(
+            worldId = state.city.worldId, ownerUserId = winner, kind = ReportService.Kind.CONQUEST,
+            createdAt = state.now, subjectCity = state.city.name, otherCity = state.city.name,
+            otherPlayer = beaten, won = true, summary = "${state.city.name} is yours", payload = payload,
+        )
+        reportService.write(
+            worldId = state.city.worldId, ownerUserId = loser, kind = ReportService.Kind.CONQUEST,
+            createdAt = state.now, subjectCity = state.city.name, otherCity = state.city.name,
+            otherPlayer = conqueror, won = false, summary = "${state.city.name} is lost", payload = payload,
+        )
+    }
+
+    private fun nicknames(userIds: Set<Long>): Map<Long, String> =
+        jdbc.queryForList("SELECT id, nickname FROM users WHERE id IN (:ids)", mapOf("ids" to userIds))
+            .associate { (it["id"] as Number).toLong() to it["nickname"] as String }
 
     private fun writeBattleReports(
         origin: CityState,
@@ -770,6 +894,8 @@ class MovementService(
 
     /** Who holds a city, for the errands a player may not aim at his own. */
     private fun ownerOf(cityId: Long): Long? = cityRepository.findById(cityId).orElse(null)?.ownerUserId
+
+    private fun isHeld(cityId: Long): Boolean = cityRepository.findById(cityId).orElse(null)?.occupied == true
 
     private data class CityRef(val name: String, val x: Int, val y: Int, val player: String)
 

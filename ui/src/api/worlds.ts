@@ -29,6 +29,8 @@ export interface MapCity extends Tile {
   name: string
   points: number
   owner: string
+  /** True while someone's troops are holding it: even its own owner may attack it then. */
+  held: boolean
 }
 
 /** A barbarian village: a tile that can be raided, hardening as it is. */
@@ -162,6 +164,8 @@ export interface CityDetail extends OwnedCity {
   worldSpeed: number
   /** Minutes per field a spy travels. */
   spySpeed: number
+  /** Set while someone's troops are holding this city; the city does nothing at all until it clears. */
+  occupation: { player: string; endsAt: string } | null
 }
 
 export interface NextLevel {
@@ -278,9 +282,9 @@ export interface Ranking {
   rows: Standing[]
 }
 
-export type ReportKind = 'BATTLE' | 'ESPIONAGE' | 'ESPIONAGE_CAUGHT'
+export type ReportKind = 'BATTLE' | 'ESPIONAGE' | 'ESPIONAGE_CAUGHT' | 'CONQUEST'
 /** What the list may be narrowed to: a group, since spying covers a run and one caught. */
-export type ReportFilter = 'BATTLE' | 'SPYING'
+export type ReportFilter = 'BATTLE' | 'SPYING' | 'CONQUEST'
 
 export interface ReportUnit {
   type: UnitType
@@ -323,6 +327,14 @@ export interface CaughtPayload {
   silver: number
 }
 
+/** A city changing hands: who took it from whom, and what was standing in it when the hold ran out. */
+export interface ConquestPayload {
+  taken: boolean
+  conqueror: string
+  loser: string
+  garrison: { type: UnitType; name: string; count: number }[]
+}
+
 export interface Report {
   id: number
   kind: ReportKind
@@ -335,7 +347,7 @@ export interface Report {
   summary: string
   /** Which side of a battle the reader was on; null for a spy report. */
   role: 'ATTACKER' | 'DEFENDER' | 'SUPPORTER' | null
-  payload?: BattlePayload | SpyPayload | CaughtPayload
+  payload?: BattlePayload | SpyPayload | CaughtPayload | ConquestPayload
 }
 
 export interface Reports {

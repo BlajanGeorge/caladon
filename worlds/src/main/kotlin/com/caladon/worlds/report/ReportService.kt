@@ -17,7 +17,7 @@ import java.time.Instant
 @Service
 class ReportService(private val jdbc: NamedParameterJdbcTemplate, private val objectMapper: ObjectMapper) {
 
-    enum class Kind { BATTLE, ESPIONAGE, ESPIONAGE_CAUGHT }
+    enum class Kind { BATTLE, ESPIONAGE, ESPIONAGE_CAUGHT, CONQUEST }
 
     /** One report; [payload] is filled only when the report is read on its own. */
     data class Row(
@@ -104,6 +104,7 @@ class ReportService(private val jdbc: NamedParameterJdbcTemplate, private val ob
     enum class Filter(val kinds: List<Kind>) {
         BATTLE(listOf(Kind.BATTLE)),
         SPYING(listOf(Kind.ESPIONAGE, Kind.ESPIONAGE_CAUGHT)),
+        CONQUEST(listOf(Kind.CONQUEST)),
     }
 
     /** One page of the player's own reports, newest first, with the unread count the top bar shows. */

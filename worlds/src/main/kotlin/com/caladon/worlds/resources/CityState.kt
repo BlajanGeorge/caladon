@@ -42,7 +42,9 @@ class CityState(
 
     fun levels(): Map<Building, Int> = Building.entries.associateWith { level(it) }
 
-    fun rate(r: Resource): Double = BuildingRules.production(level(producer(r))) * ResourceConstants.WORLD_SPEED
+    /** A city under occupation produces nothing: the men who would work are dead or hiding. */
+    fun rate(r: Resource): Double =
+        if (city.occupied) 0.0 else BuildingRules.production(level(producer(r))) * ResourceConstants.WORLD_SPEED
 
     fun capacity(): Long = BuildingRules.capacity(level(Building.DEPOSIT))
 

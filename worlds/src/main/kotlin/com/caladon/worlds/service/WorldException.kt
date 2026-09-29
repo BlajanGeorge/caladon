@@ -32,6 +32,9 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
      * another player, retaking one of your own becomes a thing to allow here.)
      */
     class OwnCity : WorldException(HttpStatus.CONFLICT, "OWN_CITY")
+
+    /** A city being held by someone else's troops does nothing until the hold is broken or it falls. */
+    class Occupied : WorldException(HttpStatus.CONFLICT, "OCCUPIED")
     /** Only an attack reaches a barbarian village: there is nobody to support and nothing to learn. */
     class NoOneThere : WorldException(HttpStatus.CONFLICT, "NO_ONE_THERE")
     class NoUnits : WorldException(HttpStatus.CONFLICT, "NO_UNITS")

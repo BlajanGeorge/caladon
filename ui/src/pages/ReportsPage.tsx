@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import {
   worldsApi, type BattlePayload, type CaughtPayload, type OwnedCity, type Report, type ReportFilter,
-  type Reports, type SpyPayload,
+  type ConquestPayload, type Reports, type SpyPayload,
 } from '../api/worlds'
 import { MapTopBar } from '../components/MapTopBar'
 import { UNIT_ICONS } from '../city/unitIcons'
@@ -27,6 +27,7 @@ const KINDS: { kind: ReportFilter | ''; label: string }[] = [
   { kind: 'BATTLE', label: 'Battles' },
   // Spying covers a run of our own and one we caught; a player thinks of them as one thing.
   { kind: 'SPYING', label: 'Spying' },
+  { kind: 'CONQUEST', label: 'Conquest' },
 ]
 
 /**
@@ -37,6 +38,9 @@ function headline(r: Report): { mark: string; out: boolean; what: string } {
   if (r.kind === 'BATTLE') {
     const out = r.role === 'ATTACKER'
     return { mark: attackUrl, out, what: out ? 'Attack going out' : 'Attack coming in' }
+  }
+  if (r.kind === 'CONQUEST') {
+    return { mark: attackUrl, out: r.won, what: r.won ? 'City taken' : 'City lost' }
   }
   if (r.kind === 'ESPIONAGE') return { mark: spyUrl, out: true, what: 'Spying going out' }
   return { mark: spyUrl, out: false, what: 'Spy coming in' }
@@ -157,6 +161,37 @@ function Body({ report }: { report: Report }) {
           )}
         </div>
         <p className={'rp-verdict ' + (report.won ? 'won' : 'lost')}>{verdict(p.role, report.won)}</p>
+      </>
+    )
+  }
+
+  if (report.kind === 'CONQUEST') {
+    const p = report.payload as ConquestPayload
+    return (
+      <>
+        <p className="rp-who">{report.subjectCity}</p>
+        <div className="rp-sides rp-stack">
+          <div className="rp-side">
+            <h4>Taken by <em>{p.conqueror}</em></h4>
+            <p className="rp-blind">From {p.loser}.</p>
+          </div>
+          <div className="rp-side">
+            <h4>The garrison that held it</h4>
+            <table className="rp-units">
+              <tbody>
+                {p.garrison.map((u) => (
+                  <tr key={u.type}>
+                    <td className="rp-unit"><img src={UNIT_ICONS[u.type]} alt="" />{u.name}</td>
+                    <td>{u.count.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p className={'rp-verdict ' + (report.won ? 'won' : 'lost')}>
+          {report.won ? 'The city is yours' : 'The city is no longer yours'}
+        </p>
       </>
     )
   }

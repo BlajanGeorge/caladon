@@ -266,6 +266,16 @@ input { font: inherit; cursor: text; }
 }
 /* Where the player already is: named, but plainly not a place to go. */
 .cp-city.picked .cp-city-name { color: #6b5a3c; }
+/* Someone else's army is standing in the city: the one thing worth saying above everything else. */
+.cp-held {
+  display: flex; flex-direction: column; gap: 3px; margin: 0;
+  padding: 8px 10px; border-radius: 8px;
+  border: 1px solid rgba(140, 40, 28, .55); background: rgba(150, 52, 38, .18);
+}
+.cp-held b {
+  font-family: "Cinzel", Georgia, serif; font-size: 13px; letter-spacing: .04em; color: #7a2418;
+}
+.cp-held span { font-size: 11px; color: #6b5a3c; }
 .cp-section { display: flex; flex-direction: column; gap: 4px; }
 .cp-section h2 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 12px; font-weight: 700;
@@ -962,6 +972,13 @@ input { font: inherit; cursor: text; }
 .rp-cost { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 12px; }
 .rp-cost img { width: 22px; height: 22px; display: block; }
 .rp-cost b { font-weight: 700; font-variant-numeric: tabular-nums; color: #c79a44; }
+
+/* A city with someone else's army standing in it: the one case where a player attacks his own. */
+.map-held {
+  margin: 10px 0 0; padding: 6px 10px; border-radius: 6px;
+  border: 1px solid rgba(178,58,46,.5); background: rgba(140,58,46,.25);
+  font-size: 12px; font-weight: 700; color: #ffd9d2;
+}
 
 /* What may be sent to the field a player picked on the map, each behind its own medallion. */
 .map-errands { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }

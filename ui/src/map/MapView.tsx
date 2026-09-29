@@ -276,10 +276,12 @@ function InfoPanel(
             <dt>Points</dt><dd>{entity.city.points}</dd>
             <dt>Coordinates</dt><dd>{entity.city.x}, {entity.city.y}</dd>
           </dl>
-          {/* Nothing is sent to the city the troops are already standing in. */}
+          {entity.city.held && <p className="map-held">Held by another army</p>}
+          {/* Nothing is sent to the city the troops are already standing in. A city of the player's own
+              is no target either — unless somebody is holding it, and then it is the only way to it. */}
           {!here && errands(
             entity.city.name, entity.city.x, entity.city.y,
-            mine ? ['SUPPORT'] : ['ATTACK', 'SUPPORT', 'ESPIONAGE'],
+            mine && !entity.city.held ? ['SUPPORT'] : ['ATTACK', 'SUPPORT', 'ESPIONAGE'],
           )}
         </>
       )}

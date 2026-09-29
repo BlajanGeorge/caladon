@@ -19,7 +19,7 @@ class CaveService(private val cityAccess: CityAccess) {
     @Transactional
     fun store(worldId: Long, cityId: Long, userId: Long, role: Role, amount: Long): CityState {
         if (amount <= 0) throw WorldException.InvalidAmount()
-        val state = cityAccess.open(worldId, cityId, userId, role)
+        val state = cityAccess.openForOrder(worldId, cityId, userId, role)
         if (state.level(Building.CAVE) < 1) {
             throw WorldException.RequirementsNotMet(mapOf(Building.CAVE.name to "1"))
         }

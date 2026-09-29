@@ -59,3 +59,14 @@ data class UnitCountPayload(val type: Unit, val name: String, val count: Int)
 
 /** What a city learns when it catches a spy: by whom, and how close the thing was. */
 data class CaughtPayload(val player: String, val city: String, val silver: Long)
+
+/**
+ * A city changing hands. Both sides read the same shape: who took it from whom, and what was standing
+ * in it when the hold ran out.
+ */
+data class ConquestPayload(
+    val taken: Boolean,
+    val conqueror: String,
+    val loser: String,
+    val garrison: List<UnitCountPayload>,
+)

@@ -33,4 +33,17 @@ class City(
 
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant,
-)
+
+    /**
+     * Who is holding the city, and until when. Both are set together or not at all: a city under
+     * occupation belongs to its owner still, but does nothing and is defended by the garrison standing
+     * in it. When the moment passes it changes hands.
+     */
+    @Column(name = "occupied_by_user_id")
+    var occupiedByUserId: Long? = null,
+
+    @Column(name = "occupation_ends_at")
+    var occupationEndsAt: Instant? = null,
+) {
+    val occupied: Boolean get() = occupiedByUserId != null
+}

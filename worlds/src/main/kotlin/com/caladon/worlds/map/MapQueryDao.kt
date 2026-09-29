@@ -12,7 +12,11 @@ import java.time.Instant
 @Repository
 class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
 
-    data class CityOnMap(val id: Long, val x: Int, val y: Int, val name: String, val points: Int, val owner: String)
+    data class CityOnMap(
+        val id: Long, val x: Int, val y: Int, val name: String, val points: Int, val owner: String,
+        /** True while someone's troops are holding it: it may be attacked even by the player who owns it. */
+        val held: Boolean,
+    )
 
     /** A village as the map draws it: the level says how big it is and what raiding it will meet. */
     data class BarbarianOnMap(val id: Long, val x: Int, val y: Int, val level: Int)
@@ -47,7 +51,7 @@ class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
 
     fun citiesIn(worldId: Long, v: Viewport): List<CityOnMap> = jdbc.query(
         """
-        SELECT c.id, s.x, s.y, c.name, c.points, u.nickname
+        SELECT c.id, s.x, s.y, c.name, c.points, u.nickname, c.occupied_by_user_id IS NOT NULL AS held
         FROM city c
         JOIN city_slot s ON s.id = c.slot_id
         JOIN users u ON u.id = c.owner_user_id
@@ -56,7 +60,10 @@ class MapQueryDao(private val jdbc: NamedParameterJdbcTemplate) {
         """,
         params(worldId, v),
     ) { rs, _ ->
-        CityOnMap(rs.getLong("id"), rs.getInt("x"), rs.getInt("y"), rs.getString("name"), rs.getInt("points"), rs.getString("nickname"))
+        CityOnMap(
+            rs.getLong("id"), rs.getInt("x"), rs.getInt("y"), rs.getString("name"), rs.getInt("points"),
+            rs.getString("nickname"), rs.getBoolean("held"),
+        )
     }
 
     fun barbariansIn(worldId: Long, v: Viewport): List<BarbarianOnMap> = jdbc.query(
