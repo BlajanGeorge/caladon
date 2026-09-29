@@ -31,6 +31,21 @@ java -jar app/target/app-0.1.0-SNAPSHOT.jar
 Configuration (all optional for local development): `CALADON_DB_URL`, `CALADON_DB_USER`,
 `CALADON_DB_PASSWORD`, `CALADON_JWT_SECRET` (at least 32 bytes; **must** be set outside local dev).
 
+## A known player state
+
+Joining a second world from the lobby founds a city there and leaves you looking at an empty map with
+nothing to play against. This puts the development player back: one world, two cities, everything else
+undone.
+
+```bash
+PGPASSWORD=caladon psql -h localhost -p 5433 -U caladon -d caladon \
+  -v ON_ERROR_STOP=1 -f scripts/dev-state.sql
+```
+
+Run it as often as you like — it only does what is missing, and refuses to remove a city elsewhere that
+has been played in. The player, the world and the second city's name are the three `\set` lines at the
+top of the file.
+
 ## Run the UI
 
 ```bash
