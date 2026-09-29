@@ -12,6 +12,7 @@ import { clampCamera, needsRefetch, parseCoordinate, TILE, VISIBLE_PAD, visibleR
 import { MapCache, type Entity } from './MapCache'
 import { MapRenderer, type Camera } from './MapRenderer'
 import { MapActions, type Action } from './MapActions'
+import { session } from '../session'
 
 interface Props {
   worldId: number
@@ -200,7 +201,8 @@ export function MapView({ worldId, home }: Props) {
       {selected && (
         <InfoPanel
           entity={selected}
-          mine={selected.kind === 'city' && selected.city.x === home.x && selected.city.y === home.y}
+          here={selected.kind === 'city' && selected.city.x === home.x && selected.city.y === home.y}
+          mine={selected.kind === 'city' && selected.city.owner === session.get()?.nickname}
           onAct={(a) => { setAction(a); setSelected(null) }}
           onClose={() => setSelected(null)}
         />
@@ -238,9 +240,14 @@ function describe(entity: Entity): string {
  * What stands on a field, and what may be sent to it. A player's own city offers nothing — troops are
  * sent from it, not to it — and a barbarian village can only be raided.
  */
+/**
+ * What one field holds, and what may be sent at it. A city of the player's own is not a target: the
+ * troops there are already his, and so is everything a spy would go and look at. Support is the
+ * exception, and the reason to hold more than one.
+ */
 function InfoPanel(
-  { entity, mine, onAct, onClose }:
-  { entity: Entity; mine: boolean; onAct: (a: Action) => void; onClose: () => void },
+  { entity, here, mine, onAct, onClose }:
+  { entity: Entity; here: boolean; mine: boolean; onAct: (a: Action) => void; onClose: () => void },
 ) {
   const errands = (name: string, x: number, y: number, kinds: Action['kind'][]) => (
     <div className="map-errands">
@@ -269,7 +276,11 @@ function InfoPanel(
             <dt>Points</dt><dd>{entity.city.points}</dd>
             <dt>Coordinates</dt><dd>{entity.city.x}, {entity.city.y}</dd>
           </dl>
-          {!mine && errands(entity.city.name, entity.city.x, entity.city.y, ['ATTACK', 'SUPPORT', 'ESPIONAGE'])}
+          {/* Nothing is sent to the city the troops are already standing in. */}
+          {!here && errands(
+            entity.city.name, entity.city.x, entity.city.y,
+            mine ? ['SUPPORT'] : ['ATTACK', 'SUPPORT', 'ESPIONAGE'],
+          )}
         </>
       )}
       {entity.kind === 'slot' && (

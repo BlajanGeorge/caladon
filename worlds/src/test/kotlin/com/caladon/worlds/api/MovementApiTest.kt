@@ -239,6 +239,41 @@ class MovementApiTest : ApiTestBase() {
         assertThat(sweeper.sweep()).isZero()
     }
 
+    /** Hands a city to another player, to make two of a player's own cities out of two players'. */
+    private fun handOver(cityId: Long, email: String) {
+        val city = cityRepository.findById(cityId).orElseThrow()
+        city.ownerUserId = requireNotNull(requireNotNull(userRepository.findByEmailIgnoreCase(email)).id)
+        cityRepository.saveAndFlush(city)
+    }
+
+    @Test
+    fun `a player supports his own city but may not attack or spy on it`() {
+        val two = twoCities()
+        handOver(two.theirs, "george@caladon.test")
+        give(two.mine, Unit.SPEARMAN, 6)
+        setLevel(two.mine, Building.CAVE, 1)
+        cityResourcesRepository.findById(two.mine).orElseThrow().also { it.caveSilver = 500 }
+            .let(cityResourcesRepository::save)
+
+        send(two, "ATTACK", mapOf("SPEARMAN" to 3)).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("OWN_CITY") }
+        }
+        post(
+            "/api/v1/worlds/${two.world}/cities/${two.mine}/spy", playerToken,
+            mapOf("targetX" to two.x, "targetY" to two.y, "silver" to 100),
+        ).andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("OWN_CITY") }
+        }
+        // Neither refusal took anything: the troops are still at home and the silver is still in the Cave.
+        assertThat(cityUnitRepository.findById(CityUnitId(two.mine, Unit.SPEARMAN)).orElseThrow().count).isEqualTo(6)
+        assertThat(cityResourcesRepository.findById(two.mine).orElseThrow().caveSilver).isEqualTo(500)
+
+        // Helping one of his own cities is the whole reason to hold more than one.
+        send(two, "SUPPORT", mapOf("SPEARMAN" to 3)).andExpect { status { isOk() } }
+    }
+
     @Test
     fun `an attack on an empty city turns straight around and brings the troops home`() {
         val two = twoCities()

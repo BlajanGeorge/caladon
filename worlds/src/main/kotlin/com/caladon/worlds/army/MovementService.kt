@@ -136,6 +136,8 @@ class MovementService(
         if (targetId == null && villageId == null) throw WorldException.CityNotFound()
         if (villageId != null && kind != MovementKind.ATTACK) throw WorldException.NoOneThere()
         if (targetId == state.cityId) throw WorldException.SameCity()
+        // Support is how a player's cities help each other; an attack on one would be robbing himself.
+        if (kind == MovementKind.ATTACK && targetId != null && ownerOf(targetId) == userId) throw WorldException.OwnCity()
         val short = wanted.mapNotNull { (u, n) ->
             val home = state.units[u]?.count ?: 0
             if (home < n) u.name to (n - home).toString() else null
@@ -179,6 +181,8 @@ class MovementService(
             throw WorldException.CityNotFound()
         }
         if (targetId == state.cityId) throw WorldException.SameCity()
+        // Nothing in a player's own city is hidden from him, so there is nothing to buy a look at.
+        if (ownerOf(targetId) == userId) throw WorldException.OwnCity()
         if (state.level(Building.CAVE) < 1) throw WorldException.RequirementsNotMet(mapOf(Building.CAVE.name to "1"))
         if (state.resources.caveSilver < silver) {
             throw WorldException.NotEnoughSilver((silver - state.resources.caveSilver).toString())
@@ -763,6 +767,9 @@ class MovementService(
         val left = Duration.between(now, m.arrivesAt)
         return left <= Duration.ofMillis((whole.toMillis() * SIGHTED).toLong())
     }
+
+    /** Who holds a city, for the errands a player may not aim at his own. */
+    private fun ownerOf(cityId: Long): Long? = cityRepository.findById(cityId).orElse(null)?.ownerUserId
 
     private data class CityRef(val name: String, val x: Int, val y: Int, val player: String)
 

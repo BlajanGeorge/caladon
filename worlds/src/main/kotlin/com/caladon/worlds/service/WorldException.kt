@@ -25,6 +25,13 @@ sealed class WorldException(val status: HttpStatus, val code: String, val detail
     class AlreadyStudied : WorldException(HttpStatus.CONFLICT, "ALREADY_STUDIED")
     class NotStudied : WorldException(HttpStatus.CONFLICT, "NOT_STUDIED")
     class SameCity : WorldException(HttpStatus.CONFLICT, "SAME_CITY")
+
+    /**
+     * A player's own city is not a target. Support between them is the point of holding several; an
+     * attack or a spy on one would be fighting and robbing yourself. (When a city can be taken by
+     * another player, retaking one of your own becomes a thing to allow here.)
+     */
+    class OwnCity : WorldException(HttpStatus.CONFLICT, "OWN_CITY")
     /** Only an attack reaches a barbarian village: there is nobody to support and nothing to learn. */
     class NoOneThere : WorldException(HttpStatus.CONFLICT, "NO_ONE_THERE")
     class NoUnits : WorldException(HttpStatus.CONFLICT, "NO_UNITS")
