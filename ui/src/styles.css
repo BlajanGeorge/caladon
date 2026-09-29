@@ -954,7 +954,6 @@ input { font: inherit; cursor: text; }
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 20px; letter-spacing: .06em;
   color: var(--overlay-text);
 }
-.pf-back { margin-left: auto; height: 28px; }
 /* Label and value on one line, the values lined up well clear of the labels. The grid that does this
    inside a building's window does not reach here, so the page states it. */
 .pf-facts {

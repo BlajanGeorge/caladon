@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { authApi, type Profile } from '../api/auth'
 import { worldsApi, type OwnedCity } from '../api/worlds'
@@ -16,7 +16,6 @@ interface NavState {
 }
 
 export function ProfilePage() {
-  const navigate = useNavigate()
   // Where the player came from, so the bar can still take them back into the world.
   const from = (useLocation().state ?? {}) as NavState
   /**
@@ -79,10 +78,7 @@ export function ProfilePage() {
       <main className="rk-body pf-body">
       <div className="pf-stack">
         <div className="rk-panel pf-panel">
-          <div className="rk-head">
-            <h1>{profile?.nickname ?? 'Profile'}</h1>
-            <button type="button" className="cave-max pf-back" onClick={() => navigate(-1)}>Back</button>
-          </div>
+          <h1>{profile?.nickname ?? 'Profile'}</h1>
 
           <dl className="b-info-now pf-facts">
             <dt>Email</dt><dd>{profile?.email ?? '…'}</dd>
