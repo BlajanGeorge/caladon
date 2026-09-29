@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { authApi, type Profile } from '../api/auth'
-import type { OwnedCity } from '../api/worlds'
+import { worldsApi, type OwnedCity } from '../api/worlds'
 import { MapTopBar } from '../components/MapTopBar'
 import { lastWorld } from '../lastWorld'
 
@@ -19,8 +19,14 @@ export function ProfilePage() {
   const navigate = useNavigate()
   // Where the player came from, so the bar can still take them back into the world.
   const from = (useLocation().state ?? {}) as NavState
-  // Reached from the game, or bookmarked: either way the bar offers the whole world it belongs to.
-  const back = from.worldId !== undefined ? { id: from.worldId, name: from.worldName } : lastWorld()
+  /**
+   * Which world the bar points back into. Whatever the player came from, failing that the last one they
+   * were in, and failing that whichever they have joined — the bar should carry the whole game however
+   * this page was reached.
+   */
+  const [back, setBack] = useState<{ id: number; name?: string } | null>(
+    from.worldId !== undefined ? { id: from.worldId, name: from.worldName } : lastWorld(),
+  )
   const [profile, setProfile] = useState<Profile | null>(null)
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
@@ -32,6 +38,13 @@ export function ProfilePage() {
   useEffect(() => {
     authApi.me().then(setProfile).catch(() => setError('Could not read your account'))
   }, [])
+
+  useEffect(() => {
+    if (back) return
+    worldsApi.mine().then((worlds) => {
+      if (worlds.length > 0) setBack({ id: worlds[0].id, name: worlds[0].name })
+    }).catch(() => { /* no world to go back to: the bar simply offers less */ })
+  }, [back])
 
   const refusal =
     !current ? 'Your current password'
