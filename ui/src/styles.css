@@ -949,7 +949,14 @@ input { font: inherit; cursor: text; }
   color: var(--overlay-text);
 }
 .pf-back { margin-left: auto; height: 28px; }
-.pf-facts { margin: 0 0 20px; }
+/* Label and value on one line, the values lined up well clear of the labels. The grid that does this
+   inside a building's window does not reach here, so the page states it. */
+.pf-facts {
+  display: grid; grid-template-columns: 130px 1fr; gap: 8px 24px; align-items: baseline;
+  margin: 0 0 22px; font-size: 13px;
+}
+.pf-facts dt { color: var(--overlay-muted); }
+.pf-facts dd { margin: 0; font-weight: 600; color: var(--overlay-text); }
 .pf-form { display: flex; flex-direction: column; gap: 12px; }
 .pf-form h2 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 13px; letter-spacing: .1em;
