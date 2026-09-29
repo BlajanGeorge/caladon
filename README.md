@@ -1,6 +1,150 @@
 # Caladon
 
-Backend for a browser strategy MMO. See [ARCHITECTURE.md](ARCHITECTURE.md) for the design decisions.
+A browser strategy MMO. You are given one city on a shared map, and what you do with it is build it up,
+raise an army, and take your neighbours' cities off them. See [ARCHITECTURE.md](ARCHITECTURE.md) for the
+design decisions behind everything below.
+
+## What it looks like
+
+The city. Eleven buildings on their plots, the panel with what the city holds, and along the bottom
+everything it has going: what is being built, trained and studied, and what is on the road both ways.
+
+![The city view](docs/screenshots/city.jpg)
+
+The map, and what may be sent at a field you pick on it.
+
+![The world map](docs/screenshots/map-errands.jpg)
+
+What the city has on the road — every march in full, with what it carries and how long it has left,
+each one recallable until it lands.
+
+![Marches](docs/screenshots/marches.jpg)
+
+A battle report: what was sent, what died, what came home, what was taken, and the Wall the rams left
+behind.
+
+![A battle report](docs/screenshots/report-battle.jpg)
+
+A spy who got in, and what the silver bought.
+
+![An espionage report](docs/screenshots/report-spy.jpg)
+
+Every building's next level, what it costs, and what is blocking the ones that are blocked.
+
+![The Buildings window](docs/screenshots/buildings.jpg)
+
+The standings, by city points or by the population a player has killed attacking and defending.
+
+![The standings](docs/screenshots/ranking.jpg)
+
+## How it plays
+
+### A city is eleven buildings
+
+Every city has the same eleven, and every one of them is a ladder. A level costs
+`base × factor^(level−1)` of wood, stone and silver, takes a population to staff, and is worth points —
+the Tribal Wars curve, `P1 × 1.2^(L−1)`. **A city's points are the points of its buildings, and a
+player's points are the points of their cities.** Nothing else counts.
+
+Six exist from the moment the city is founded: **Farm**, **Woodcutter**, **Stone Mine**, **Silver Mine**,
+**Deposit** and **Town Hall**. The other five are built when the Town Hall is high enough: **Barracks**,
+**Academy**, **Wall**, **Vault** and **Cave**.
+
+Each does one thing, and the whole economy falls out of them:
+
+- The **Farm** is the only source of people. Everything else — buildings and troops alike — is paid for
+  out of it, which is what stops a city being all army.
+- The three producers make wood, stone and silver by the hour; the **Deposit** caps how much can be
+  held, and anything made over that is lost.
+- The **Town Hall** speeds up building, lengthens the build queue, and gates how far everything else may
+  be raised.
+- The **Wall** multiplies the defence of everyone standing in the city.
+- The **Vault** hides resources an attacker cannot take.
+- The **Cave** holds silver out of sight — it pays for your spying and is what another player's spies
+  must outbid to learn anything about you.
+
+### Nothing is scheduled
+
+There is no job ticking away at your city. An order carries the instant it completes, and the city is
+brought up to date the next time anybody looks at it — you, or an arriving army, or a sweeper that
+catches whatever nobody has touched in a minute. A city you have not opened for a week is exactly as far
+along as one you watched all week.
+
+### An army, and what it costs
+
+Ten unit types, trained in the **Barracks**. All but the Spearman must first be studied in the
+**Academy**, which is one-off and permanent. Every unit eats population for as long as it lives, so an
+army is a standing bill against the Farm rather than a one-time purchase.
+
+Units differ in attack, in three separate defences (against infantry, cavalry and archers), in speed —
+which sets how long a march takes, the slowest unit setting the pace — and in how much loot they carry.
+
+### Battles
+
+Tribal Wars' own arithmetic. The attacker's power is split across infantry, cavalry and archers by what
+was actually sent; the defence is weighed against each arm in that proportion, and multiplied by the
+Wall. The side with more power wins, **the loser is wiped out**, and the winner loses
+
+```
+(loser's power / winner's power) ^ 1.5
+```
+
+of itself. A close fight is ruinous to win; a rout is nearly free. The dead give their population back to
+whichever city raised them — the attacker's to the attacker, each supporter's to that supporter.
+
+Only **rams and catapults** batter the Wall, and only the Wall: two levels of siege strength take one
+level off it. Whatever the survivors can carry, they take, less what the Vault hides.
+
+### Sending troops somewhere
+
+Three errands: **attack**, **support** and **spying**. Support stays in the city it was sent to and
+defends it as if it were its own, while still belonging to the city that lent it. Anything on the road
+can be recalled before it lands, and turns for home having flown as long as it already had.
+
+Everything you have in the air is along the bottom of the city view, both ways: what you sent, what is
+coming back, and what somebody is sending at you. An incoming attack does not show what is in it until
+it is in the last quarter of its flight.
+
+### Spying
+
+There are no scouts. Spying is bought: you pay silver out of your **Cave**, and you learn what the
+target holds if you outbid the silver in *theirs*. Outbid, and you see their stocks, their buildings and
+their army; outbid by them, and you lose the silver and they get a report that someone tried. One
+mission per target at a time.
+
+### Barbarian villages
+
+Unowned villages scattered over the map. They can only be attacked, never supported or spied. A fresh
+one defends with 100 brigands; every time it is taken it hardens, to 200 and then 300, and if nobody
+bothers it for a day it softens again.
+
+They are not an infinite tap. A raid takes at most a fifth of what your own **Deposit** could hold, and
+the village's store refills slowly — so raiding the same village all afternoon is not worth the marching.
+
+### Conquest
+
+A city is taken by **holding** it. No loyalty, no dice.
+
+An attack that wins with a **Nobleman** still standing, and at least one man beside him, does not turn
+around: it stays, and the city is held for **12 hours**. Anyone may break the hold in that time — the
+owner from another of his cities, an ally, or a third party who wants the city for himself. A Nobleman
+alone holds nothing; the moment he is the last one standing, the attempt is over.
+
+A held city does nothing at all: no production, no building, no training, no studying, nothing sent. Its
+queues are thrown away, and everything it had lent to other cities turns for home with one chance to
+arrive and save it.
+
+When the hold runs out the city changes hands with the garrison still in it. Everything of the old
+owner's that was outside the walls is lost — armies on the road, troops lent elsewhere, the lot.
+
+### Reports and standings
+
+Every battle, raid and spy mission writes a report to each side, as a snapshot: what was sent, what
+died, what came home, what was taken, what the Wall was left at. A beaten attacker learns nothing —
+nobody came back to tell him.
+
+Two things are counted for the standings. **Points** are the cities you hold. **Battle points** are the
+population you have killed, kept apart as attack and defence, so the board can be read four ways.
 
 ## Modules
 
@@ -62,6 +206,20 @@ PGPASSWORD=caladon psql -h localhost -p 5433 -U caladon -d caladon \
 
 Every building to the top of its own ladder, with the city's points, free population and stocks
 recounted to match, for looking at a city that has everything.
+
+## A world worth looking at
+
+The screenshots above are of a seeded player: a city some months along, an army, something in every
+queue, troops on the road in every direction, and a few reports to read.
+
+```bash
+PGPASSWORD=caladon psql -h localhost -p 5433 -U caladon -d caladon \
+  -v ON_ERROR_STOP=1 -v player="'you@example.com'" -f scripts/demo.sql
+```
+
+It moves that player's first city into the thick of the map and fills it in. Everything it writes is
+arithmetic the game itself would have produced — points from levels, population from the Farm less what
+the buildings hold — so nothing in the screenshots is a number that could not happen.
 
 ## A known player state
 
