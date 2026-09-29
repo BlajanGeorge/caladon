@@ -46,6 +46,9 @@ interface Props {
   buildings: BuildingView[] | null
   /** The city, for the name and points; `detail` also feeds the resource strip. */
   city: OwnedCity | null
+  /** Every city the player holds in this world, so the panel's name can become a way between them. */
+  cities: OwnedCity[]
+  onPickCity: (city: OwnedCity) => void
   detail: CityDetail | null
   units: UnitView[] | null
   busy: boolean
@@ -67,7 +70,7 @@ interface Props {
  * The city view: the picture fills the whole view with the side panel floating over it, which holds the city's name, its resources and its troops. Plot labels (later:
  * building sprites) live inside the picture box, so their percentage anchors stay on the plots.
  */
-export function CityScene({ buildings, city, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver, onSpy }: Props) {
+export function CityScene({ buildings, city, cities, onPickCity, detail, units, busy, onStudy, onRecruit, onCancelStudy, onCancelRecruit, onUpgrade, onCancelBuild, movements, onRecall, onSend, onStoreSilver, onSpy }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ width: 0, height: 0, left: 0, top: 0 })
   const [hover, setHover] = useState<string | null>(null)
@@ -289,7 +292,22 @@ export function CityScene({ buildings, city, detail, units, busy, onStudy, onRec
         aria-label="City information"
       >
         <div className="cp-head">
-          <span className="cp-name">{shown?.name ?? 'Your city'}</span>
+          {/* One city is just its name; several make the name the way to the others. */}
+          {cities.length > 1 ? (
+            <select
+              className="cp-name cp-switch"
+              aria-label="Which of your cities"
+              value={city?.id ?? ''}
+              onChange={(e) => {
+                const next = cities.find((c) => c.id === Number(e.target.value))
+                if (next) onPickCity(next)
+              }}
+            >
+              {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          ) : (
+            <span className="cp-name">{shown?.name ?? 'Your city'}</span>
+          )}
           <span className="cp-meta">{shown ? `${shown.points.toLocaleString()} points` : '…'}</span>
         </div>
 

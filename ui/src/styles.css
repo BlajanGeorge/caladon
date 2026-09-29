@@ -243,6 +243,18 @@ input { font: inherit; cursor: text; }
   color: #2c2216; text-shadow: 0 1px 0 rgba(255,245,210,.5);
 }
 .cp-meta { font-size: 12px; color: #6b5a3c; }
+/* With more than one city the name becomes the way between them: the same heading, with a caret and a
+   hit area, rather than a control bolted beside it. */
+.cp-switch {
+  appearance: none; align-self: flex-start; max-width: 100%;
+  margin: -2px -6px; padding: 2px 22px 2px 6px; border: 1px solid transparent; border-radius: 5px;
+  background: transparent url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%236b5a3c'/%3E%3C/svg%3E") no-repeat right 7px center / 9px 6px;
+  cursor: pointer;
+}
+.cp-switch:hover { border-color: rgba(90,70,40,.45); background-color: rgba(255,245,210,.35); }
+.cp-switch:focus-visible { outline: 2px solid rgba(199,154,68,.8); outline-offset: 1px; }
+/* The list itself is the browser's, drawn on the system's own ground: give it readable colours. */
+.cp-switch option { background: #efe3c6; color: #2c2216; }
 .cp-section { display: flex; flex-direction: column; gap: 4px; }
 .cp-section h2 {
   margin: 0; font-family: "Cinzel", Georgia, serif; font-size: 12px; font-weight: 700;

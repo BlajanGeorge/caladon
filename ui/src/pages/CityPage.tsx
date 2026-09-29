@@ -48,6 +48,7 @@ export function CityPage() {
   const state = (useLocation().state ?? {}) as NavState
   const worldName = useWorldName(worldId, state.worldName)
   const [city, setCity] = useState<OwnedCity | null>(state.city ?? null)
+  const [cities, setCities] = useState<OwnedCity[]>([])
   const [detail, setDetail] = useState<CityDetail | null>(null)
   const [buildings, setBuildings] = useState<BuildingView[] | null>(null)
   const [army, setArmy] = useState<UnitView[] | null>(null)
@@ -65,15 +66,23 @@ export function CityPage() {
     }
   }, [navigate])
 
+  // Every city the player holds here: the one being looked at, and the others the panel can switch to.
   useEffect(() => {
-    if (city) return
     worldsApi.myCities(worldId)
-      .then((cities) => {
-        if (cities.length === 0) navigate('/lobby', { replace: true })
-        else setCity(cities[0])
+      .then((mine) => {
+        if (mine.length === 0) { navigate('/lobby', { replace: true }); return }
+        setCities(mine)
+        setCity((current) => current ?? mine[0])
       })
       .catch(leaveIfGone)
-  }, [city, worldId, navigate, leaveIfGone])
+  }, [worldId, navigate, leaveIfGone])
+
+  /** Switching city: everything on screen belongs to the old one, so it goes before the new one loads. */
+  const pickCity = useCallback((next: OwnedCity) => {
+    if (next.id === city?.id) return
+    setDetail(null); setBuildings(null); setArmy(null); setMovements(null)
+    setCity(next)
+  }, [city])
 
   // Detail + panels: fetch on entry, then on a rate-dependent cadence; paused while the tab is hidden.
   useEffect(() => {
@@ -162,7 +171,7 @@ export function CityPage() {
     <div className="city-shell">
       <MapTopBar worldName={worldName} worldId={worldId} city={city} showWorldButton />
       <main className="city-body">
-        <CityScene buildings={buildings} city={city} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} onUpgrade={onUpgrade} onCancelBuild={onCancelBuild} movements={movements} onRecall={onRecall} onSend={onSend} onStoreSilver={onStoreSilver} onSpy={onSpy} />
+        <CityScene buildings={buildings} city={city} cities={cities} onPickCity={pickCity} detail={detail} units={army} busy={busy} onStudy={onStudy} onRecruit={onRecruit} onCancelStudy={onCancelStudy} onCancelRecruit={onCancelRecruit} onUpgrade={onUpgrade} onCancelBuild={onCancelBuild} movements={movements} onRecall={onRecall} onSend={onSend} onStoreSilver={onStoreSilver} onSpy={onSpy} />
         {/* City card, buildings and army panels are hidden for now: only the picture is shown.
             The data still loads so the information panel and the scene labels work. */}
         {SHOW_PANELS && (
